@@ -1,0 +1,152 @@
+---
+title: Configuration Reference
+description: Complete reference for all GreenKube configuration options, environment variables, and Helm values.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all configuration is driven by environment variables. When deployed via Helm, these are set through `values.yaml`.
+
+## Helm Values Reference
+
+### Image
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `image.repository` | Docker image repository | `greenkube/greenkube` |
+| `image.tag` | Image tag | `0.2.0` |
+| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
+
+### Database
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `config.db.type` | Storage backend: `postgres`, `sqlite`, `elasticsearch` | `postgres` |
+| `config.db.path` | SQLite file path (if type is `sqlite`) | `/data/greenkube_data.db` |
+| `config.db.schema` | PostgreSQL schema | `public` |
+
+### Carbon & Energy
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `config.cloudProvider` | Cloud provider: `aws`, `gcp`, `azure`, `ovh`, `scaleway` | `aws` |
+| `config.defaultZone` | Fallback carbon zone (ISO country code) | `FR` |
+| `config.defaultIntensity` | Default grid intensity (gCO₂e/kWh) when API unavailable | `500.0` |
+| `config.normalizationGranularity` | Intensity lookup granularity: `hour`, `day`, `none` | `hour` |
+| `config.defaults.pue` | Power Usage Effectiveness factor | `1.3` |
+| `config.defaults.instance.vcores` | Default vCPU count for unknown instances | `1` |
+| `config.defaults.instance.minWatts` | Default min watts per vCPU | `1.0` |
+| `config.defaults.instance.maxWatts` | Default max watts per vCPU | `10.0` |
+
+### Prometheus
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `config.prometheus.url` | Prometheus URL (empty = auto-discovery) | `""` |
+| `config.prometheus.verifyCerts` | Verify TLS certificates | `true` |
+| `config.prometheus.queryRangeStep` | Range query step interval | `5m` |
+| `config.prometheus.queryRangeMaxSamples` | Max data points per range query | `10000` |
+| `config.prometheus.nodeInstanceLabel` | Node label for instance type | `label_node_kubernetes_io_instance_type` |
+
+### OpenCost
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `config.opencost.url` | OpenCost URL (empty = auto-discovery) | `""` |
+| `config.opencost.verifyCerts` | Verify TLS certificates | `true` |
+
+### Node Analysis
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `config.nodeAnalysisInterval` | Interval for node analysis | `5m` |
+| `config.nodeDataMaxAgeDays` | Max age for historical node data | `30` |
+
+### API Server
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `config.api.enabled` | Enable the API server | `true` |
+| `config.api.host` | API listen address | `0.0.0.0` |
+| `config.api.port` | API listen port | `8000` |
+
+### Recommendations
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `config.recommendations.lookbackDays` | Days of data for analysis | `7` |
+| `config.recommendations.rightsizingCpuThreshold` | CPU usage ratio triggering rightsizing | `0.3` |
+| `config.recommendations.rightsizingMemoryThreshold` | Memory usage ratio triggering rightsizing | `0.3` |
+| `config.recommendations.rightsizingHeadroom` | Safety headroom multiplier | `1.2` |
+| `config.recommendations.zombieCostThreshold` | Cost threshold for zombie detection ($) | `0.01` |
+| `config.recommendations.zombieEnergyThreshold` | Energy threshold for zombie detection (J) | `1000` |
+| `config.recommendations.autoscalingCvThreshold` | CV threshold for autoscaling suggestion | `0.7` |
+| `config.recommendations.autoscalingSpikeRatio` | Max/avg ratio for spike detection | `3.0` |
+| `config.recommendations.carbonAwareThreshold` | Intensity ratio for carbon-aware scheduling | `1.5` |
+| `config.recommendations.nodeUtilizationThreshold` | Node utilization threshold | `0.2` |
+| `config.recommendSystemNamespaces` | Include system namespaces in recommendations | `false` |
+
+### Secrets
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `secrets.electricityMapsToken` | Electricity Maps API token | `dummy_token` |
+| `secrets.boaviztaToken` | Boavizta API token | `""` |
+| `secrets.dbConnectionString` | PostgreSQL connection string | `""` |
+| `secrets.prometheus.username` | Prometheus basic auth username | `""` |
+| `secrets.prometheus.password` | Prometheus basic auth password | `""` |
+| `secrets.prometheus.bearerToken` | Prometheus bearer token | `""` |
+
+### PostgreSQL (Bundled)
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `postgres.enabled` | Deploy bundled PostgreSQL | `true` |
+| `postgres.image.repository` | PostgreSQL image | `postgres` |
+| `postgres.image.tag` | PostgreSQL version | `17-alpine` |
+| `postgres.auth.username` | Database username | `greenkube` |
+| `postgres.auth.password` | Database password | `greenkube_password` |
+| `postgres.auth.database` | Database name | `greenkube` |
+| `postgres.persistence.enabled` | Enable persistent storage | `true` |
+| `postgres.persistence.size` | Storage size | `1Gi` |
+
+### Resources
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `resources.requests.cpu` | CPU request | `100m` |
+| `resources.requests.memory` | Memory request | `128Mi` |
+| `resources.limits.cpu` | CPU limit | `500m` |
+| `resources.limits.memory` | Memory limit | `512Mi` |
+
+## Environment Variables
+
+When running outside Helm (Docker, source), use these environment variables:
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `DB_TYPE` | `postgres`, `sqlite`, `elasticsearch` | `postgres` |
+| `DB_CONNECTION_STRING` | PostgreSQL connection URL | — |
+| `DB_PATH` | SQLite file path | `/data/greenkube_data.db` |
+| `ELASTICSEARCH_HOSTS` | Elasticsearch endpoint(s) | — |
+| `PROMETHEUS_URL` | Prometheus server URL | Auto-discovery |
+| `OPENCOST_URL` | OpenCost server URL | Auto-discovery |
+| `ELECTRICITYMAPS_TOKEN` | Electricity Maps API token | — |
+| `BOAVIZTA_TOKEN` | Boavizta API token | — |
+| `CLOUD_PROVIDER` | `aws`, `gcp`, `azure`, `ovh`, `scaleway` | `aws` |
+| `DEFAULT_ZONE` | Fallback carbon zone | `FR` |
+| `DEFAULT_INTENSITY` | Fallback grid intensity (gCO₂e/kWh) | `500.0` |
+| `LOG_LEVEL` | Logging level | `INFO` |
+| `NORMALIZATION_GRANULARITY` | `hour`, `day`, `none` | `hour` |
+| `PROMETHEUS_QUERY_RANGE_STEP` | Range query step | `5m` |
+| `NODE_ANALYSIS_INTERVAL` | Node analysis interval | `5m` |
+| `NODE_DATA_MAX_AGE_DAYS` | Max node data age | `30` |
+| `API_HOST` | API listen address | `0.0.0.0` |
+| `API_PORT` | API listen port | `8000` |
+| `RECOMMENDATION_LOOKBACK_DAYS` | Recommendation lookback | `7` |
+| `RIGHTSIZING_CPU_THRESHOLD` | CPU rightsizing threshold | `0.3` |
+| `ZOMBIE_COST_THRESHOLD` | Zombie detection cost ($) | `0.01` |
+
+<Aside type="tip">
+  GreenKube works without an Electricity Maps token. When no token is provided, the `DEFAULT_INTENSITY` value (default: 500 gCO₂e/kWh) is used for all zones. For accurate, zone-specific carbon data, get a free token at [electricitymaps.com](https://www.electricitymaps.com/).
+</Aside>

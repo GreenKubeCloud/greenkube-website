@@ -1,0 +1,203 @@
+---
+title: GreenKube — FinGreenOps for Kubernetes
+description: Measure, understand, and reduce the carbon footprint and costs of your Kubernetes infrastructure. Open-source FinGreenOps monitoring.
+template: splash
+hero:
+  tagline: |
+    Measure, understand, and reduce the carbon footprint of your Kubernetes infrastructure.
+    The open-source FinGreenOps tool that helps DevOps, SRE, and FinOps teams navigate CSRD compliance while optimizing cloud costs through better energy efficiency.
+  image:
+    file: ../../assets/greenkube-logo.png
+  actions:
+    - text: Get Started
+      link: /getting-started/quickstart/
+      icon: right-arrow
+      variant: primary
+    - text: View on GitHub
+      link: https://github.com/GreenKubeCloud/GreenKube
+      icon: external
+      variant: minimal
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+<div class="hero-badges">
+  <a href="https://github.com/GreenKubeCloud/GreenKube/stargazers"><img src="https://img.shields.io/github/stars/GreenKubeCloud/GreenKube?style=social" alt="GitHub Stars" /></a>
+  <a href="https://hub.docker.com/r/greenkube/greenkube"><img src="https://img.shields.io/docker/pulls/greenkube/greenkube?color=22c55e&label=Docker%20Pulls" alt="Docker Pulls" /></a>
+  <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License" />
+  <img src="https://img.shields.io/badge/Version-0.2.0-green.svg" alt="Version" />
+  <img src="https://img.shields.io/badge/Kubernetes-Ready-326ce5.svg?logo=kubernetes&logoColor=white" alt="Kubernetes Ready" />
+</div>
+
+---
+
+## 🎯 Why GreenKube?
+
+The EU's **Corporate Sustainability Reporting Directive (CSRD)** requires companies to report the carbon footprint of their value chain — including cloud services (Scope 3). GreenKube addresses this urgent need by combining **FinOps** (cost optimization) with **GreenOps** (carbon reduction) into a single, powerful platform.
+
+<CardGrid>
+  <Card title="📊 Real-time Dashboard" icon="chart">
+    Modern SvelteKit dashboard with interactive charts, per-pod metrics, node inventory, and optimization recommendations — all served from a single container.
+  </Card>
+  <Card title="🌍 Carbon Tracking" icon="globe">
+    Converts energy consumption to CO₂e emissions using real-time grid carbon intensity data from Electricity Maps, supporting CSRD/ESRS E1 reporting requirements.
+  </Card>
+  <Card title="💰 Cost Optimization" icon="dollar">
+    Identifies zombie pods, oversized workloads, and autoscaling opportunities with estimated savings in both cost and carbon emissions.
+  </Card>
+  <Card title="🔧 Easy Deployment" icon="setting">
+    Production-ready Helm chart with PostgreSQL, auto-discovery of Prometheus and OpenCost, RBAC, and health probes. Deploy in minutes.
+  </Card>
+</CardGrid>
+
+---
+
+## ⚡ Key Features
+
+<CardGrid>
+  <Card title="Multi-Resource Monitoring">
+    Track CPU, memory, network I/O, disk I/O, storage, pod restarts, and GPU usage across your entire cluster.
+  </Card>
+  <Card title="Smart Recommendations">
+    AI-powered analysis detects zombie pods, rightsizing opportunities, autoscaling candidates, and carbon-aware scheduling.
+  </Card>
+  <Card title="Flexible Storage">
+    Supports PostgreSQL (production), SQLite (development), and Elasticsearch (scale) — choose the backend that fits your needs.
+  </Card>
+  <Card title="Multi-Cloud Support">
+    Built-in profiles for AWS, GCP, Azure, OVH, and Scaleway with automatic region-to-carbon-zone mapping.
+  </Card>
+  <Card title="Historical Analysis">
+    Report on any time period with flexible grouping (daily, monthly, yearly). Export to CSV or JSON for BI integration.
+  </Card>
+  <Card title="REST API">
+    Full-featured FastAPI backend with OpenAPI docs, CORS support, and comprehensive endpoints for all metrics.
+  </Card>
+</CardGrid>
+
+---
+
+## 🏗️ Architecture at a Glance
+
+GreenKube follows a clean, hexagonal architecture. Here's how data flows through the system:
+
+<div class="diagram-container">
+<pre>{`
+┌─────────────────────────────────────────────────────────────────────────┐
+│                        DATA COLLECTION (Async)                         │
+│                                                                         │
+│  ┌──────────────┐  ┌──────────────┐  ┌───────────┐  ┌──────────────┐  │
+│  │  Prometheus   │  │  Kubernetes  │  │  OpenCost  │  │  Electricity │  │
+│  │  (CPU, Mem,   │  │  (Nodes,     │  │  (Cost     │  │  Maps (CO₂   │  │
+│  │   Net, Disk)  │  │   Pods)      │  │   Data)    │  │   Intensity) │  │
+│  └──────┬───────┘  └──────┬───────┘  └─────┬─────┘  └──────┬───────┘  │
+│         └──────────────┬───┴────────────────┴───────────────┘          │
+│                        ▼                                                │
+│              ┌─────────────────────┐                                    │
+│              │    DATA PROCESSOR   │    ← Orchestrates pipeline         │
+│              │  (asyncio.gather)   │                                    │
+│              └─────────┬───────────┘                                    │
+│                        │                                                │
+│         ┌──────────────┼──────────────┐                                 │
+│         ▼              ▼              ▼                                  │
+│  ┌─────────────┐ ┌───────────┐ ┌──────────────┐                        │
+│  │  Estimator   │ │ Zone      │ │  Carbon      │                        │
+│  │  (Joules)    │ │ Mapper    │ │  Calculator  │                        │
+│  └──────┬──────┘ └─────┬─────┘ └──────┬───────┘                        │
+│         └──────────────┬┴──────────────┘                                │
+│                        ▼                                                │
+│              ┌─────────────────────┐                                    │
+│              │  Combined Metrics   │    ← Energy + Carbon + Cost        │
+│              └─────────┬───────────┘                                    │
+│                        │                                                │
+│         ┌──────────────┼──────────────┐                                 │
+│         ▼              ▼              ▼                                  │
+│  ┌─────────────┐ ┌───────────┐ ┌──────────────┐                        │
+│  │  PostgreSQL  │ │  REST API │ │  Recommender │                        │
+│  │  / SQLite /  │ │  (FastAPI)│ │  (Analysis)  │                        │
+│  │  Elastic     │ │           │ │              │                        │
+│  └─────────────┘ └─────┬─────┘ └──────────────┘                        │
+│                        ▼                                                │
+│              ┌─────────────────────┐                                    │
+│              │   Web Dashboard     │    ← SvelteKit SPA                 │
+│              │   + CLI Reports     │                                    │
+│              └─────────────────────┘                                    │
+└─────────────────────────────────────────────────────────────────────────┘
+`}</pre>
+</div>
+
+<LinkCard title="Learn more about the architecture →" href="/architecture/overview/" />
+
+---
+
+## 🚀 Quick Install
+
+Get GreenKube running in your Kubernetes cluster in under 5 minutes:
+
+```bash
+# Add the Helm repository
+helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube
+helm repo update
+
+# Install GreenKube
+helm install greenkube greenkube/greenkube \
+  -n greenkube --create-namespace
+
+# Access the dashboard
+kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube
+```
+
+Then open [http://localhost:8000](http://localhost:8000) in your browser.
+
+<LinkCard title="Full installation guide →" href="/getting-started/installation/" />
+
+---
+
+## 🤝 Community & Contributors
+
+GreenKube is an open-source, community-driven project. We welcome contributions of all kinds!
+
+<div class="contributors-grid">
+  <div class="contributor-card">
+    <img src="https://github.com/HugoLelievre.png" alt="Hugo Lelievre" />
+    <h4>Hugo Lelievre</h4>
+    <p class="role">Creator & Lead Developer</p>
+  </div>
+</div>
+
+<div class="hero-buttons" style="margin-top: 2rem;">
+  <a href="https://github.com/GreenKubeCloud/GreenKube" class="btn-primary">⭐ Star on GitHub</a>
+  <a href="/contributing/" class="btn-secondary">🤝 Contribute</a>
+  <a href="/contact/" class="btn-secondary">📧 Contact Us</a>
+</div>
+
+---
+
+## 📊 Project Stats
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="stat-value">v0.2.0</div>
+    <div class="stat-label">Latest Version</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">5</div>
+    <div class="stat-label">Cloud Providers</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">293+</div>
+    <div class="stat-label">Unit Tests</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">3</div>
+    <div class="stat-label">Storage Backends</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">Apache 2.0</div>
+    <div class="stat-label">License</div>
+  </div>
+  <div class="stat-card">
+    <div class="stat-value">∞</div>
+    <div class="stat-label">kgCO₂ Saved</div>
+  </div>
+</div>

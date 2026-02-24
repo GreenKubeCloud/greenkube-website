@@ -1,0 +1,105 @@
+---
+title: Introduction to GreenKube
+description: Learn what GreenKube is, why it exists, and how it helps teams reduce cloud costs and carbon emissions on Kubernetes.
+---
+
+import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+
+## What is GreenKube?
+
+**GreenKube** is an open-source **FinGreenOps** tool designed to help DevOps, SRE, and FinOps teams **measure, understand, and reduce** the carbon footprint and costs of their Kubernetes infrastructure.
+
+It combines **FinOps** (financial optimization) with **GreenOps** (environmental sustainability) into a unified platform that provides:
+
+- **Real-time monitoring** of energy consumption, CO₂ emissions, and costs per pod, namespace, and node
+- **Actionable recommendations** to reduce both cloud bills and environmental impact
+- **Regulatory compliance** support for CSRD/ESRS E1 carbon reporting requirements
+- **Historical analysis** with flexible time ranges and data export capabilities
+
+## The Problem
+
+Cloud computing is responsible for approximately **2-4% of global CO₂ emissions** — comparable to the airline industry. As organizations scale their Kubernetes infrastructure, they face two mounting challenges:
+
+### 1. Regulatory Pressure (CSRD)
+The EU's **Corporate Sustainability Reporting Directive (CSRD)** requires companies to report the carbon footprint of their entire value chain, including cloud services (Scope 3). Without proper tooling, estimating the carbon impact of Kubernetes workloads is nearly impossible.
+
+### 2. Cost Inefficiency
+Studies show that **30-40% of cloud spending is wasted** on idle, oversized, or poorly optimized resources. This waste translates directly into unnecessary carbon emissions.
+
+## The Solution
+
+GreenKube addresses both challenges simultaneously by:
+
+<CardGrid>
+  <Card title="1. Estimating Energy">
+    Calculates per-pod energy consumption (Joules) using Prometheus metrics and cloud instance power profiles based on the Cloud Carbon Footprint methodology.
+  </Card>
+  <Card title="2. Tracking Carbon">
+    Converts energy to CO₂e emissions using real-time grid carbon intensity data from Electricity Maps, with region-specific accuracy.
+  </Card>
+  <Card title="3. Optimizing Resources">
+    Identifies optimization opportunities — zombie pods, oversized workloads, autoscaling candidates — with estimated savings in both cost and CO₂.
+  </Card>
+  <Card title="4. Reporting">
+    Generates detailed reports by pod, namespace, and time period in formats compatible with CSRD/ESRS E1 requirements.
+  </Card>
+</CardGrid>
+
+## Who Is It For?
+
+| Role | Use Case |
+|------|----------|
+| **DevOps / SRE** | Monitor cluster efficiency, identify wasteful workloads, right-size resources |
+| **FinOps** | Optimize cloud costs with visibility into per-workload spending and recommendations |
+| **Sustainability / CSR** | Generate carbon reports for CSRD compliance, track emission reduction progress |
+| **Platform Engineers** | Deploy a self-hosted monitoring stack with Helm, integrate with existing Prometheus/OpenCost |
+| **CTOs / Engineering Managers** | Get high-level dashboards showing cost and emission trends across the organization |
+
+## Key Concepts
+
+### FinGreenOps
+GreenKube introduces the concept of **FinGreenOps** — the convergence of:
+- **FinOps**: Financial management and optimization of cloud costs
+- **GreenOps**: Environmental sustainability and carbon footprint reduction
+
+By combining these disciplines, teams can make decisions that are both **cost-effective** and **environmentally responsible**.
+
+### Energy Estimation
+GreenKube estimates energy consumption using:
+- **CPU utilization metrics** from Prometheus
+- **Cloud instance power profiles** (min/max watts per vCPU) based on the [Cloud Carbon Footprint](https://www.cloudcarbonfootprint.org/) methodology
+- **Dynamic power modeling** that accounts for idle and active power components
+
+### Carbon Calculation
+The carbon emission formula is:
+
+```
+CO₂e (grams) = Energy (kWh) × Grid Intensity (gCO₂e/kWh) × PUE
+```
+
+Where:
+- **Energy** is calculated from CPU utilization and instance power profiles
+- **Grid Intensity** comes from Electricity Maps API (real-time) or a configurable default
+- **PUE** (Power Usage Effectiveness) accounts for datacenter overhead (cooling, networking, etc.)
+
+## Technology Stack
+
+| Component | Technology |
+|-----------|-----------|
+| **Backend** | Python 3.11, FastAPI, asyncio |
+| **Frontend** | SvelteKit, ECharts, Tailwind CSS |
+| **Data Collection** | Prometheus, OpenCost, Kubernetes API |
+| **Carbon Data** | Electricity Maps API, Boavizta API |
+| **Storage** | PostgreSQL, SQLite, Elasticsearch |
+| **Deployment** | Helm Chart, Docker (multi-arch) |
+| **CLI** | Typer + Rich |
+
+## Next Steps
+
+Ready to get started? Follow the guides below:
+
+<CardGrid>
+  <LinkCard title="Quick Start →" href="/getting-started/quickstart/" description="Get GreenKube running in 5 minutes" />
+  <LinkCard title="Installation →" href="/getting-started/installation/" description="Detailed installation and deployment guide" />
+  <LinkCard title="Architecture →" href="/architecture/overview/" description="Understand how GreenKube works under the hood" />
+</CardGrid>

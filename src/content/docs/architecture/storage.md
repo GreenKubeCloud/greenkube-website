@@ -1,0 +1,207 @@
+---
+title: Storage Backends
+description: GreenKube supports PostgreSQL, SQLite, and Elasticsearch as storage backends. Learn how each works and when to use it.
+---
+
+import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+
+GreenKube's repository pattern allows you to choose the storage backend that best fits your deployment needs.
+
+## Backend Comparison
+
+| Feature | PostgreSQL | SQLite | Elasticsearch |
+|---------|-----------|--------|---------------|
+| **Use Case** | Production | Development / CI | Large-scale analytics |
+| **Persistence** | ✅ StatefulSet | ⚠️ Lost on pod restart* | ✅ External cluster |
+| **Performance** | High | Moderate | Very High |
+| **Setup** | Helm chart included | Zero config | External cluster needed |
+| **Scalability** | Good (single node) | Limited | Excellent (sharded) |
+| **Driver** | `asyncpg` (native async) | `aiosqlite` (async wrapper) | `elasticsearch` (async) |
+
+*SQLite can persist data with a PersistentVolumeClaim.
+
+## Configuration
+
+<Tabs>
+  <TabItem label="PostgreSQL">
+
+### PostgreSQL (Recommended)
+
+The default and recommended backend for production deployments.
+
+```yaml
+# values.yaml
+config:
+  db:
+    type: postgres
+    schema: public
+
+postgres:
+  enabled: true
+  auth:
+    username: greenkube
+    password: greenkube_password
+    database: greenkube
+  persistence:
+    enabled: true
+    size: 5Gi
+
+# Or use an external PostgreSQL:
+secrets:
+  dbConnectionString: "postgresql://user:pass@host:5432/greenkube"
+```
+
+**Features:**
+- Automatic schema creation and migration
+- Connection pooling via `asyncpg`
+- Transactional integrity
+- Bundled PostgreSQL 17 StatefulSet via Helm
+- Support for external PostgreSQL instances
+
+  </TabItem>
+  <TabItem label="SQLite">
+
+### SQLite (Development)
+
+Lightweight, file-based storage perfect for local development and testing.
+
+```yaml
+# values.yaml
+config:
+  db:
+    type: sqlite
+    path: /data/greenkube_data.db
+  persistence:
+    enabled: true  # Recommended to avoid data loss
+    size: 1Gi
+```
+
+**Features:**
+- Zero configuration
+- Single file database
+- Great for CI/CD pipelines
+- Compatible schema with PostgreSQL
+
+<Aside type="caution">
+  Without persistence, SQLite data is lost when the pod restarts. Always enable persistence for non-ephemeral deployments.
+</Aside>
+
+  </TabItem>
+  <TabItem label="Elasticsearch">
+
+### Elasticsearch (Scale)
+
+Optimized for large clusters with millions of metrics.
+
+```yaml
+# values.yaml
+config:
+  db:
+    type: elasticsearch
+
+elasticsearch:
+  hosts: http://elasticsearch-master:9200
+  indexName: carbon_intensity
+  verifyCerts: true
+
+secrets:
+  elasticsearch:
+    user: elastic
+    password: your_password
+```
+
+**Features:**
+- Time-series optimized indices
+- Distributed storage with sharding
+- Advanced aggregation queries
+- Native Kibana integration for visualization
+- Date-based index partitioning
+
+  </TabItem>
+</Tabs>
+
+## Database Schema
+
+### `combined_metrics` Table
+
+The primary table storing all processed metrics (33 columns):
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `pod_name` | VARCHAR | Pod identifier |
+| `namespace` | VARCHAR | Kubernetes namespace |
+| `timestamp` | TIMESTAMPTZ | Metric collection time |
+| `duration_seconds` | FLOAT | Collection interval duration |
+| `joules` | FLOAT | Energy consumption |
+| `co2e_grams` | FLOAT | Carbon emissions |
+| `grid_intensity` | FLOAT | Grid carbon intensity used |
+| `pue` | FLOAT | PUE factor applied |
+| `total_cost` | FLOAT | Allocated cost |
+| `cpu_request` | FLOAT | CPU request (millicores) |
+| `cpu_usage_millicores` | FLOAT | Actual CPU usage |
+| `memory_request` | BIGINT | Memory request (bytes) |
+| `memory_usage_bytes` | BIGINT | Actual memory usage |
+| `network_receive_bytes` | BIGINT | Network bytes in |
+| `network_transmit_bytes` | BIGINT | Network bytes out |
+| `disk_read_bytes` | BIGINT | Disk read bytes |
+| `disk_write_bytes` | BIGINT | Disk write bytes |
+| `storage_request_bytes` | BIGINT | Storage request |
+| `ephemeral_storage_request_bytes` | BIGINT | Ephemeral storage |
+| `gpu_usage_millicores` | FLOAT | GPU usage |
+| `restart_count` | INT | Container restarts |
+| `node` | VARCHAR | Node name |
+| `node_instance_type` | VARCHAR | Cloud instance type |
+| `node_zone` | VARCHAR | Availability zone |
+| `emaps_zone` | VARCHAR | Electricity Maps zone |
+| `owner_kind` | VARCHAR | Owner type (Deployment, etc.) |
+| `owner_name` | VARCHAR | Owner name |
+| `is_estimated` | BOOLEAN | Uses estimated values |
+| `estimation_reasons` | TEXT | Estimation details |
+| `embodied_co2e_grams` | FLOAT | Hardware embodied emissions |
+
+### `carbon_intensity` Table
+
+Caches carbon intensity lookups:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `zone` | VARCHAR | Electricity Maps zone code |
+| `timestamp` | TIMESTAMPTZ | Intensity timestamp |
+| `intensity` | FLOAT | gCO₂e/kWh |
+
+### `node_snapshots` Table
+
+Historical node state for accurate time-range reporting:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `snapshot_timestamp` | TIMESTAMPTZ | Snapshot time |
+| `name` | VARCHAR | Node name |
+| `instance_type` | VARCHAR | Instance type |
+| `zone` | VARCHAR | Availability zone |
+| `cpu_capacity` | INT | CPU cores |
+| `memory_capacity` | BIGINT | Memory bytes |
+
+### `embodied_cache` Table
+
+Caches Boavizta API responses:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `provider` | VARCHAR | Cloud provider |
+| `instance_type` | VARCHAR | Instance type |
+| `gwp_manufacture` | FLOAT | Manufacturing CO₂e (kg) |
+| `lifespan_hours` | FLOAT | Expected lifespan |
+| `last_updated` | TIMESTAMPTZ | Cache timestamp |
+
+## Schema Migrations
+
+All backends support **automatic schema evolution**:
+- New columns are added with `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`
+- Tables are created on first run
+- Migrations run on application startup
+- No manual migration commands needed
+
+<Aside type="tip">
+  GreenKube handles schema migrations transparently. When upgrading to a new version, simply update the Helm chart — the application will migrate the database schema on startup.
+</Aside>

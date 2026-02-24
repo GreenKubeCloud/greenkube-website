@@ -1,0 +1,118 @@
+---
+title: Quick Start
+description: Get GreenKube running in your Kubernetes cluster in under 5 minutes.
+---
+
+import { Steps, Aside, Code, Tabs, TabItem } from '@astrojs/starlight/components';
+
+This guide will have GreenKube up and running in your cluster in under 5 minutes.
+
+## Prerequisites
+
+Before you begin, make sure you have:
+
+- ✅ A running **Kubernetes cluster** (Minikube, EKS, GKE, AKS, etc.)
+- ✅ **Helm 3** installed ([install guide](https://helm.sh/docs/intro/install/))
+- ✅ **kubectl** configured to access your cluster
+- ✅ **Prometheus** deployed in your cluster (e.g., via kube-prometheus-stack)
+- ✅ **OpenCost** deployed for cost data (optional but recommended)
+
+<Aside type="tip">
+  Don't have Prometheus yet? The most common setup is the **kube-prometheus-stack** Helm chart, which includes Prometheus, Grafana, and commonly used exporters.
+</Aside>
+
+## Installation
+
+<Steps>
+
+1. **Add the GreenKube Helm repository**
+
+   ```bash
+   helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube
+   helm repo update
+   ```
+
+2. **Install GreenKube**
+
+   ```bash
+   helm install greenkube greenkube/greenkube \
+     -n greenkube \
+     --create-namespace
+   ```
+
+   This deploys GreenKube with:
+   - The data collector (runs continuously)
+   - The FastAPI server (REST API)
+   - The web dashboard (SvelteKit SPA)
+   - PostgreSQL database (StatefulSet)
+   - RBAC (ServiceAccount, ClusterRole, ClusterRoleBinding)
+
+3. **Wait for pods to be ready**
+
+   ```bash
+   kubectl get pods -n greenkube -w
+   ```
+
+   You should see something like:
+   ```
+   NAME                         READY   STATUS    RESTARTS   AGE
+   greenkube-7b5f8c9d6-x2k4p   1/1     Running   0          30s
+   greenkube-postgres-0         1/1     Running   0          30s
+   ```
+
+4. **Access the dashboard**
+
+   ```bash
+   kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube
+   ```
+
+   Open [http://localhost:8000](http://localhost:8000) in your browser.
+
+5. **Run your first report**
+
+   ```bash
+   # Get the pod name
+   GREENKUBE_POD=$(kubectl get pods -n greenkube -l app=greenkube -o jsonpath='{.items[0].metadata.name}')
+
+   # Exec into the pod
+   kubectl exec -it $GREENKUBE_POD -n greenkube -- bash
+
+   # Generate a daily report
+   greenkube report --daily
+
+   # Get optimization recommendations
+   greenkube recommend
+   ```
+
+</Steps>
+
+## What You'll See
+
+After installation, the dashboard provides:
+
+- **Dashboard** — KPI cards showing total CO₂ emissions, costs, energy consumption, and active pods. Time-series charts and namespace breakdown.
+- **Metrics** — Interactive table with per-pod metrics: energy, cost, CPU, memory, network, disk, storage, and restarts.
+- **Nodes** — Cluster node inventory with CPU/memory capacity, hardware profiles, cloud provider info.
+- **Recommendations** — Actionable suggestions to reduce costs and emissions (zombie pods, rightsizing, autoscaling).
+- **Settings** — Current configuration, API health, version info, database connection details.
+
+## Adding an Electricity Maps Token (Optional)
+
+For accurate, region-specific carbon intensity data, add an Electricity Maps API token:
+
+```bash
+helm upgrade greenkube greenkube/greenkube \
+  -n greenkube \
+  --set secrets.electricityMapsToken="YOUR_TOKEN_HERE"
+```
+
+<Aside>
+  Without a token, GreenKube uses a default carbon intensity of **500 gCO₂e/kWh** for all zones. Get a free token at [electricitymaps.com](https://www.electricitymaps.com/).
+</Aside>
+
+## Next Steps
+
+- 📖 [Full Installation Guide](/getting-started/installation/) — Advanced configuration options
+- ⚙️ [Configuration Reference](/getting-started/configuration/) — All environment variables and Helm values
+- 📊 [Dashboard Guide](/guide/dashboard/) — Learn to use the web interface
+- 🔧 [CLI Reference](/guide/cli/) — Master the command-line interface

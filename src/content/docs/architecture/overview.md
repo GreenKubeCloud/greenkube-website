@@ -1,0 +1,213 @@
+---
+title: Architecture Overview
+description: Understand GreenKube's clean hexagonal architecture, core components, and design principles.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+GreenKube is built on **Clean Architecture** and **Hexagonal Architecture** principles, ensuring modularity, testability, and extensibility.
+
+## Design Principles
+
+| Principle | Implementation |
+|-----------|----------------|
+| **Async-First** | All I/O uses Python `asyncio` for non-blocking execution |
+| **Database Agnostic** | Repository pattern abstracts storage (PostgreSQL, SQLite, Elasticsearch) |
+| **Cloud Agnostic** | Supports AWS, GCP, Azure, OVH, Scaleway via mapping files |
+| **Resilient** | Graceful degradation when data sources are unavailable |
+| **Transparent** | Clear flagging of estimated vs. measured values |
+| **Modular** | Each component is independently testable and replaceable |
+
+## High-Level Architecture
+
+```
+┌─────────────────────────────────────────────────────────────────────────┐
+│                         PRESENTATION LAYER                              │
+│                                                                         │
+│   ┌─────────────────┐  ┌──────────────┐  ┌─────────────────────┐      │
+│   │  Web Dashboard   │  │  REST API    │  │  CLI (Typer+Rich)   │      │
+│   │  (SvelteKit)     │  │  (FastAPI)   │  │                     │      │
+│   └────────┬────────┘  └──────┬───────┘  └──────────┬──────────┘      │
+│            └──────────────────┼──────────────────────┘                  │
+└───────────────────────────────┼─────────────────────────────────────────┘
+                                │
+┌───────────────────────────────┼─────────────────────────────────────────┐
+│                         BUSINESS LOGIC                                  │
+│                                                                         │
+│   ┌─────────────────┐  ┌──────────────┐  ┌─────────────────────┐      │
+│   │  DataProcessor   │  │  Carbon      │  │  Recommender        │      │
+│   │  (Orchestrator)  │  │  Calculator  │  │  (Analysis Engine)  │      │
+│   └────────┬────────┘  └──────┬───────┘  └─────────────────────┘      │
+│            │                   │                                         │
+│   ┌────────┴────────┐  ┌──────┴───────┐                                │
+│   │  BasicEstimator  │  │  Config      │                                │
+│   │  (Energy Model)  │  │  (12-Factor) │                                │
+│   └─────────────────┘  └──────────────┘                                │
+└───────────────────────────────┬─────────────────────────────────────────┘
+                                │
+┌───────────────────────────────┼─────────────────────────────────────────┐
+│                         ADAPTERS (I/O)                                  │
+│                                                                         │
+│   ┌───────────── INPUT ──────────────┐  ┌────── OUTPUT ──────────┐     │
+│   │                                   │  │                        │     │
+│   │ PrometheusCollector (CPU,Mem,Net) │  │ PostgresRepository     │     │
+│   │ NodeCollector (K8s API)           │  │ SQLiteRepository       │     │
+│   │ PodCollector (Resource Requests)  │  │ ElasticsearchRepo      │     │
+│   │ OpenCostCollector (Cost Data)     │  │ NodeRepository         │     │
+│   │ ElectricityMapsCollector (CO₂)    │  │ EmbodiedRepository     │     │
+│   │ BoaviztaCollector (Embodied)      │  │                        │     │
+│   │                                   │  │                        │     │
+│   └───────────────────────────────────┘  └────────────────────────┘     │
+└─────────────────────────────────────────────────────────────────────────┘
+```
+
+## Project Structure
+
+```
+src/greenkube/
+├── __init__.py              # Version
+├── api/                     # FastAPI server & endpoints
+│   ├── app.py               # Application factory
+│   ├── routes/              # Route handlers
+│   └── ...
+├── cli/                     # Typer CLI commands
+│   ├── main.py              # CLI entry point
+│   └── ...
+├── collectors/              # Input adapters
+│   ├── prometheus_collector.py
+│   ├── node_collector.py
+│   ├── pod_collector.py
+│   ├── opencost_collector.py
+│   ├── electricity_maps_collector.py
+│   └── boavizta_collector.py
+├── core/                    # Business logic (no external deps)
+│   ├── config.py            # Configuration management
+│   ├── factory.py           # Repository & service factory
+│   ├── processor.py         # Data pipeline orchestrator
+│   ├── calculator.py        # Carbon emission calculator
+│   ├── estimator.py         # Energy estimation
+│   └── recommender.py       # Optimization analysis
+├── energy/                  # Energy modeling
+│   ├── instance_profiles.py # Cloud instance power data
+│   └── ...
+├── models/                  # Pydantic data models
+│   ├── metrics.py
+│   ├── nodes.py
+│   └── recommendations.py
+├── storage/                 # Output adapters (repositories)
+│   ├── base_repository.py   # Abstract interfaces
+│   ├── postgres/
+│   ├── sqlite/
+│   └── elasticsearch/
+├── reporters/               # Report formatting
+├── exporters/               # Data export (CSV, JSON)
+└── utils/                   # Utilities
+    ├── region_mapping.py    # Cloud region → carbon zone
+    └── ...
+```
+
+## Key Abstractions
+
+### Repository Pattern
+
+All storage operations go through abstract base classes:
+
+```python
+# storage/base_repository.py (simplified)
+class CarbonIntensityRepository(ABC):
+    @abstractmethod
+    async def get_intensity(self, zone: str, timestamp: datetime) -> float: ...
+    
+    @abstractmethod
+    async def save_intensity(self, zone: str, timestamp: datetime, intensity: float): ...
+
+class CombinedMetricRepository(ABC):
+    @abstractmethod
+    async def write_combined_metrics(self, metrics: List[CombinedMetric]): ...
+    
+    @abstractmethod
+    async def read_combined_metrics(self, start: datetime, end: datetime) -> List[CombinedMetric]: ...
+```
+
+Implementations:
+- `PostgresCarbonIntensityRepository` — Production (asyncpg)
+- `SQLiteCarbonIntensityRepository` — Development (aiosqlite)
+- `ElasticsearchCarbonIntensityRepository` — Scale (elasticsearch-py)
+
+### Factory Pattern
+
+The factory instantiates the correct implementation based on configuration:
+
+```python
+# core/factory.py (simplified)
+def create_intensity_repository(config: Config) -> CarbonIntensityRepository:
+    if config.db_type == "postgres":
+        return PostgresCarbonIntensityRepository(config.db_connection_string)
+    elif config.db_type == "sqlite":
+        return SQLiteCarbonIntensityRepository(config.db_path)
+    elif config.db_type == "elasticsearch":
+        return ElasticsearchCarbonIntensityRepository(config.es_hosts)
+```
+
+### Collector Pattern
+
+All collectors follow a consistent async interface:
+
+```python
+class PrometheusCollector:
+    async def collect(self) -> PrometheusMetric:
+        """Fetch all metrics concurrently."""
+        results = await asyncio.gather(
+            self._query_cpu(),
+            self._query_memory(),
+            self._query_network_rx(),
+            self._query_network_tx(),
+            self._query_disk_read(),
+            self._query_disk_write(),
+            self._query_restarts(),
+            self._query_node_labels(),
+        )
+        return PrometheusMetric(...)
+```
+
+## Concurrency Model
+
+GreenKube leverages Python's `asyncio` throughout:
+
+```
+DataProcessor.run()
+    │
+    ├── asyncio.gather(          ← Parallel collection
+    │     prometheus.collect(),
+    │     node_collector.collect(),
+    │     pod_collector.collect(),
+    │     opencost.collect()
+    │   )
+    │
+    ├── estimator.calculate()    ← Sequential processing
+    ├── calculator.emissions()
+    └── repository.write()       ← Async batch insert
+```
+
+This design allows GreenKube to efficiently handle large clusters with hundreds of nodes and thousands of pods without blocking.
+
+## Testing
+
+293+ unit tests cover all components:
+
+- **pytest** with `pytest-asyncio` for async tests
+- **respx** for HTTP request mocking
+- **unittest.mock.AsyncMock** for async component mocking
+- **AAA pattern** (Arrange, Act, Assert) throughout
+
+```bash
+# Run all tests
+pytest
+
+# Run with coverage
+pytest --cov=greenkube --cov-report=html
+```
+
+<Aside type="tip">
+  The core business logic (`src/greenkube/core`) has zero dependencies on external infrastructure — it can be tested entirely with mocks and in-memory data.
+</Aside>

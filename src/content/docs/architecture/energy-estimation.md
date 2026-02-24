@@ -1,0 +1,207 @@
+---
+title: Energy Estimation Methodology
+description: How GreenKube estimates energy consumption using cloud instance power profiles and the Cloud Carbon Footprint methodology.
+---
+
+import { Aside } from '@astrojs/starlight/components';
+
+GreenKube estimates per-pod energy consumption using a methodology based on the [Cloud Carbon Footprint (CCF)](https://www.cloudcarbonfootprint.org/) project, adapted for real-time Kubernetes workload monitoring.
+
+## Overview
+
+The energy estimation pipeline converts CPU utilization metrics into energy consumption (Joules) using known power characteristics of cloud instance types.
+
+```
+CPU Usage (cores) → Power Model → Energy (Joules) → CO₂e (grams)
+```
+
+## Power Model
+
+### Instance Power Profiles
+
+Each cloud instance type has a power profile defining its energy characteristics:
+
+| Parameter | Description | Unit |
+|-----------|-------------|------|
+| `min_watts` | Power consumption at idle (per vCPU) | Watts |
+| `max_watts` | Power consumption at 100% utilization (per vCPU) | Watts |
+| `vcpus` | Number of virtual CPUs | count |
+
+GreenKube includes built-in profiles for common instance types across:
+
+- **AWS** — m5, c5, r5, t3, etc.
+- **GCP** — n1, n2, e2, c2, etc.
+- **Azure** — Standard_D, Standard_E, Standard_F, etc.
+- **OVH** — Based on averaged micro-architecture data
+- **Scaleway** — Based on averaged micro-architecture data
+
+### Power Calculation Formula
+
+For each node, the power consumption is calculated as:
+
+```
+P_node = P_idle + (P_max - P_idle) × U
+
+Where:
+  P_idle = min_watts × vCPUs        (idle power)
+  P_max  = max_watts × vCPUs        (max power)
+  U      = CPU utilization ratio     (0.0 to 1.0)
+```
+
+This is a **linear interpolation** between idle and max power, which is a widely-used approximation validated by SPECpower benchmarks.
+
+### Energy Calculation
+
+Energy is the integral of power over time:
+
+```
+E_node = P_node × duration_seconds    (Joules)
+```
+
+### Per-Pod Distribution
+
+Node-level energy is distributed to pods proportionally by CPU usage:
+
+```
+E_pod = (cpu_pod / cpu_total_node) × E_node
+```
+
+Where:
+- `cpu_pod` — CPU usage of the specific pod
+- `cpu_total_node` — Total CPU usage across all pods on the node
+
+## Carbon Emission Calculation
+
+Energy is converted to CO₂ equivalent emissions:
+
+```
+CO₂e (grams) = E (kWh) × I (gCO₂e/kWh) × PUE
+
+Where:
+  E (kWh) = E (Joules) / 3,600,000
+  I        = Grid carbon intensity (from Electricity Maps or default)
+  PUE      = Power Usage Effectiveness (datacenter overhead)
+```
+
+### Grid Carbon Intensity
+
+The carbon intensity of electricity varies by:
+- **Geographic location** (carbon zone)
+- **Time of day** (renewable energy availability)
+- **Season** (heating/cooling demand)
+
+GreenKube uses the **Electricity Maps API** for real-time intensity data. When unavailable, a configurable default is used (500 gCO₂e/kWh).
+
+### PUE (Power Usage Effectiveness)
+
+PUE accounts for datacenter overhead (cooling, lighting, networking):
+
+```
+PUE = Total facility power / IT equipment power
+```
+
+| Provider | Typical PUE |
+|----------|-------------|
+| AWS | 1.135 |
+| GCP | 1.10 |
+| Azure | 1.125 |
+| OVH | 1.3 (default) |
+| Scaleway | 1.3 (default) |
+
+## OVH and Scaleway Methodology
+
+Since the Cloud Carbon Footprint project doesn't provide power constants for OVH and Scaleway, GreenKube derives provider-level estimates using the CCF methodology for "unknown micro-architectures":
+
+> *"When we don't know the underlying processor micro-architecture, we use the average of all micro-architectures used by that cloud provider."*
+
+### OVHcloud
+
+**Identified architectures:** Intel Haswell, Broadwell, Skylake, Cascade Lake; AMD EPYC Milan, Genoa
+
+| Micro-architecture | Min Watts | Max Watts |
+|--------------------|-----------|-----------|
+| Haswell | 1.90 | 5.99 |
+| Broadwell | 0.71 | 3.54 |
+| Skylake | 0.64 | 4.05 |
+| Cascade Lake | 0.64 | 3.80 |
+| AMD EPYC Milan | 0.45 | 1.87 |
+| AMD EPYC Genoa* | 0.45 | 1.87 |
+
+**Average: Min Watts = 0.80, Max Watts = 3.52**
+
+### Scaleway
+
+**Identified architectures:** AMD EPYC Naples, Rome, Milan; Intel Skylake, Cascade Lake
+
+| Micro-architecture | Min Watts | Max Watts |
+|--------------------|-----------|-----------|
+| AMD EPYC 1st Gen | 0.82 | 2.55 |
+| AMD EPYC 2nd Gen | 0.47 | 1.64 |
+| AMD EPYC 3rd Gen | 0.45 | 1.87 |
+| Intel Skylake | 0.64 | 4.05 |
+| Intel Cascade Lake | 0.64 | 3.80 |
+
+**Average: Min Watts = 0.60, Max Watts = 2.78**
+
+<Aside>
+  *Genoa values estimated using Milan as a proxy due to lack of specific SPECpower data.*
+</Aside>
+
+## Fallback Behavior
+
+When GreenKube cannot determine the exact instance type, it uses a configurable default profile:
+
+```yaml
+# Default values in Helm
+config:
+  defaults:
+    pue: 1.3
+    instance:
+      vcores: 1
+      minWatts: 1.0
+      maxWatts: 10.0
+```
+
+When default values are used, the metric is flagged as `is_estimated: true` with the reason recorded in `estimation_reasons`.
+
+## Embodied Emissions
+
+GreenKube also supports **embodied emissions** — the carbon footprint of manufacturing the hardware — via the [Boavizta API](https://boavizta.org/):
+
+```
+Embodied CO₂e per pod = (Server GWP_manufacture / Lifespan_hours) × Duration × (pod_share / node_total)
+```
+
+This data is cached in the `EmbodiedRepository` to minimize API calls.
+
+## Estimation Transparency
+
+Every metric in GreenKube includes transparency flags:
+
+| Field | Description |
+|-------|-------------|
+| `is_estimated` | `true` if any default/fallback was used |
+| `estimation_reasons` | List of reasons why estimation was needed |
+
+Example reasons:
+- `"Unknown instance type, using default profile"`
+- `"Carbon intensity API unavailable, using default 500 gCO₂e/kWh"`
+- `"OpenCost data unavailable, cost set to 0"`
+
+## Data Sources
+
+| Source | Data | Frequency |
+|--------|------|-----------|
+| Prometheus | CPU, memory, network, disk metrics | Real-time (5m default) |
+| Kubernetes API | Node metadata, pod specs | Real-time |
+| Electricity Maps | Grid carbon intensity | Cached (hourly default) |
+| Boavizta API | Hardware embodied emissions | Cached (long-term) |
+| OpenCost | Cost allocation | Real-time |
+| CCF Coefficients | Instance power profiles | Built-in (static) |
+
+## References
+
+- [Cloud Carbon Footprint Methodology](https://www.cloudcarbonfootprint.org/docs/methodology)
+- [SPECpower Benchmarks](https://www.spec.org/power_ssj2008/)
+- [Electricity Maps API](https://docs.electricitymaps.com/)
+- [Boavizta API](https://doc.api.boavizta.org/)

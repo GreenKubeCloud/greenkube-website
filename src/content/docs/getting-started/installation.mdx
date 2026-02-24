@@ -1,0 +1,251 @@
+---
+title: Installation
+description: Complete guide to installing GreenKube via Helm, Docker, or from source.
+---
+
+import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
+
+## Installation Methods
+
+<Tabs>
+  <TabItem label="Helm (Recommended)">
+
+### Helm Chart Installation
+
+The recommended way to deploy GreenKube in a production Kubernetes cluster.
+
+<Steps>
+
+1. **Add the Helm repository**
+
+   ```bash
+   helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube
+   helm repo update
+   ```
+
+2. **Create a values file**
+
+   Create `my-values.yaml` to customize your deployment:
+
+   ```yaml
+   # my-values.yaml
+   secrets:
+     # Get your API token from https://www.electricitymaps.com/
+     electricityMapsToken: "YOUR_TOKEN_HERE"
+
+   config:
+     cloudProvider: aws  # aws, gcp, azure, ovh, scaleway
+     defaultZone: FR     # Fallback carbon zone (ISO 3166-1)
+     
+     # Uncomment to manually set Prometheus URL
+     # prometheus:
+     #   url: "http://prometheus-k8s.monitoring.svc.cluster.local:9090"
+     
+     # Uncomment to manually set OpenCost URL
+     # opencost:
+     #   url: "http://opencost.opencost.svc.cluster.local:9003"
+
+     db:
+       type: postgres  # postgres (recommended), sqlite, elasticsearch
+
+   postgres:
+     enabled: true
+     persistence:
+       enabled: true
+       size: 5Gi
+   ```
+
+3. **Install the chart**
+
+   ```bash
+   helm install greenkube greenkube/greenkube \
+     -f my-values.yaml \
+     -n greenkube \
+     --create-namespace
+   ```
+
+4. **Verify the installation**
+
+   ```bash
+   kubectl get all -n greenkube
+   ```
+
+</Steps>
+
+### Upgrading
+
+```bash
+helm repo update
+helm upgrade greenkube greenkube/greenkube \
+  -f my-values.yaml \
+  -n greenkube
+```
+
+### Uninstalling
+
+```bash
+helm uninstall greenkube -n greenkube
+kubectl delete namespace greenkube
+```
+
+  </TabItem>
+  <TabItem label="Docker">
+
+### Docker Installation
+
+Run GreenKube as a standalone Docker container, useful for local development or testing.
+
+```bash
+docker pull greenkube/greenkube:0.2.0
+```
+
+**Run with SQLite (simplest setup):**
+
+```bash
+docker run -d \
+  --name greenkube \
+  -p 8000:8000 \
+  -e DB_TYPE=sqlite \
+  -e DB_PATH=/data/greenkube.db \
+  -e PROMETHEUS_URL=http://your-prometheus:9090 \
+  -v greenkube-data:/data \
+  greenkube/greenkube:0.2.0 \
+  start --with-api
+```
+
+**Run with external PostgreSQL:**
+
+```bash
+docker run -d \
+  --name greenkube \
+  -p 8000:8000 \
+  -e DB_TYPE=postgres \
+  -e DB_CONNECTION_STRING="postgresql://user:pass@host:5432/greenkube" \
+  -e PROMETHEUS_URL=http://your-prometheus:9090 \
+  greenkube/greenkube:0.2.0 \
+  start --with-api
+```
+
+<Aside type="note">
+  The Docker image is multi-architecture and supports both `linux/amd64` and `linux/arm64`.
+</Aside>
+
+  </TabItem>
+  <TabItem label="From Source">
+
+### Installation from Source
+
+For development or contributing to GreenKube.
+
+<Steps>
+
+1. **Clone the repository**
+
+   ```bash
+   git clone https://github.com/GreenKubeCloud/GreenKube.git
+   cd GreenKube
+   ```
+
+2. **Create a virtual environment**
+
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate
+   ```
+
+3. **Install dependencies**
+
+   ```bash
+   pip install -e '.[test,dev]'
+   ```
+
+4. **Run tests**
+
+   ```bash
+   pytest
+   ```
+
+5. **Start the API server**
+
+   ```bash
+   greenkube-api
+   ```
+
+</Steps>
+
+  </TabItem>
+</Tabs>
+
+## Prerequisites
+
+### Required Services
+
+| Service | Purpose | How to Install |
+|---------|---------|----------------|
+| **Prometheus** | Metrics collection (CPU, memory, network, disk) | [kube-prometheus-stack](https://github.com/prometheus-community/helm-charts/tree/main/charts/kube-prometheus-stack) |
+| **OpenCost** | Cost allocation data | [OpenCost Helm Chart](https://www.opencost.io/docs/installation/helm) |
+
+### Service Auto-Discovery
+
+GreenKube automatically discovers Prometheus and OpenCost services in your cluster by probing common service names and namespaces. If auto-discovery fails (custom naming or namespace), set the URLs manually:
+
+```yaml
+# In your values.yaml
+config:
+  prometheus:
+    url: "http://prometheus-server.monitoring.svc.cluster.local:9090"
+  opencost:
+    url: "http://opencost.opencost.svc.cluster.local:9003"
+```
+
+## Helm Chart Components
+
+The Helm chart deploys the following resources:
+
+| Resource | Description |
+|----------|-------------|
+| `Deployment` | GreenKube application (collector + API + dashboard) |
+| `Service` | Exposes the API on port 8000 |
+| `ConfigMap` | Non-sensitive configuration |
+| `Secret` | API tokens and database credentials |
+| `ServiceAccount` | Identity for pod RBAC |
+| `ClusterRole` | Read access to nodes, pods, namespaces |
+| `ClusterRoleBinding` | Binds ClusterRole to ServiceAccount |
+| `StatefulSet` | PostgreSQL database (if enabled) |
+| `PersistentVolumeClaim` | Database storage (if persistence enabled) |
+| `Job` (post-install hook) | Database schema initialization |
+
+## Resource Requirements
+
+### Minimum
+
+```yaml
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 512Mi
+```
+
+### Recommended (Production)
+
+```yaml
+resources:
+  requests:
+    cpu: 250m
+    memory: 256Mi
+  limits:
+    cpu: 1000m
+    memory: 1Gi
+```
+
+## Networking
+
+The API server listens on port **8000** by default. Access methods:
+
+- **Port-forward** (development): `kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube`
+- **LoadBalancer**: Set `service.type: LoadBalancer` in values.yaml
+- **Ingress**: Configure an Ingress resource pointing to the service
+- **NodePort**: Set `service.type: NodePort` for direct node access

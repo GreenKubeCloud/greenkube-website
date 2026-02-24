@@ -1,0 +1,184 @@
+---
+title: Contributing
+description: How to contribute to GreenKube — code, documentation, bug reports, and feature requests.
+---
+
+import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
+
+GreenKube is an open-source, community-driven project. We welcome contributions from everyone!
+
+## Ways to Contribute
+
+<CardGrid>
+  <Card title="🐛 Report Bugs">
+    Found a bug? Open an [Issue](https://github.com/GreenKubeCloud/GreenKube/issues) with a detailed description, steps to reproduce, and expected behavior.
+  </Card>
+  <Card title="💡 Suggest Features">
+    Have an idea? Start a [Discussion](https://github.com/GreenKubeCloud/GreenKube/discussions) to propose and discuss new features with the community.
+  </Card>
+  <Card title="🔧 Submit Code">
+    Ready to code? Fork the repo, create a branch, make your changes, and submit a [Pull Request](https://github.com/GreenKubeCloud/GreenKube/pulls).
+  </Card>
+  <Card title="📖 Improve Docs">
+    Documentation improvements are always welcome! Fix typos, add examples, or write new guides.
+  </Card>
+</CardGrid>
+
+## Development Setup
+
+### Prerequisites
+
+- Python 3.9+
+- Node.js 20+ (for frontend development)
+- Git
+
+### Getting Started
+
+```bash
+# Clone the repository
+git clone https://github.com/GreenKubeCloud/GreenKube.git
+cd GreenKube
+
+# Create and activate a virtual environment
+python -m venv .venv
+source .venv/bin/activate  # Linux/macOS
+# .venv\Scripts\activate   # Windows
+
+# Install with development and test dependencies
+pip install -e '.[test,dev]'
+
+# Install pre-commit hooks
+pre-commit install
+
+# Run tests to verify everything works
+pytest
+```
+
+### Frontend Development
+
+```bash
+cd frontend
+npm install
+npm run dev    # Start dev server with hot reload
+npm run build  # Build for production
+```
+
+## Code Guidelines
+
+### Architecture Rules
+
+<Aside type="caution">
+  **Critical:** The `src/greenkube/core/` directory must NEVER depend on specific storage implementations. Always use repository abstractions.
+</Aside>
+
+- **Database Agnosticism:** Use repository interfaces, never import storage-specific code in `core/`
+- **Factory Pattern:** Instantiate repositories via `core/factory.py`
+- **Dependency Injection:** Pass repositories to use cases as parameters
+
+### Async Best Practices
+
+- **All I/O is async:** Use `async def` for network, database, and file operations
+- **Always await:** Never use sync wrappers for async operations
+- **Concurrent execution:** Use `asyncio.gather` for parallel operations
+- **Connection pooling:** Reuse HTTP clients and database pools
+
+### Error Handling
+
+- **Never crash the pipeline** — Log errors with context and continue
+- **Use default values** on failure — Flag as `is_estimated: true`
+- **Standard logging:** Use `logging.getLogger(__name__)`
+
+### Code Quality
+
+```bash
+# Format code
+ruff format .
+
+# Lint code
+ruff check .
+
+# Auto-fix lint issues
+ruff check --fix .
+
+# Run tests
+pytest
+
+# Run tests with coverage
+pytest --cov=greenkube --cov-report=html
+```
+
+### Logging Levels
+
+| Level | Use Case |
+|-------|----------|
+| `DEBUG` | Detailed flow, cache hits, parsing details |
+| `INFO` | Major pipeline events, collection start/end |
+| `WARNING` | Recoverable issues, fallback to defaults |
+| `ERROR` | Failures requiring attention |
+
+## Commit Convention
+
+Follow [Conventional Commits](https://www.conventionalcommits.org/):
+
+```
+feat: add GPU power profiling
+fix: handle missing node labels gracefully
+docs: add storage backend comparison
+test: add unit tests for rightsizing recommendations
+refactor: extract zone mapping to utility module
+perf: optimize batch database inserts
+```
+
+## Pull Request Process
+
+1. **Fork** the repository
+2. **Create a branch** from `main`: `git checkout -b feat/my-feature`
+3. **Write tests** for your changes (TDD approach)
+4. **Run the test suite** and ensure all tests pass
+5. **Format and lint** your code with Ruff
+6. **Commit** with a conventional commit message
+7. **Push** to your fork and open a Pull Request
+8. **Describe** your changes and link relevant issues
+
+### PR Checklist
+
+- [ ] Tests pass (`pytest`)
+- [ ] Code is formatted (`ruff format --check .`)
+- [ ] Code passes lint (`ruff check .`)
+- [ ] New features have tests
+- [ ] Documentation is updated (if applicable)
+- [ ] Commit messages follow conventional commits
+
+## Adding New Features
+
+### New Collector
+
+1. Create `src/greenkube/collectors/my_collector.py`
+2. Implement async `collect()` method
+3. Register in `core/factory.py`
+4. Update `DataProcessor` to call the collector
+5. Add unit tests in `tests/collectors/`
+
+### New Storage Backend
+
+1. Implement abstract classes from `storage/base_repository.py`
+2. Register in `core/factory.py` backend mapping
+3. Add schema migration logic
+4. Add unit tests in `tests/storage/`
+
+### New Cloud Provider
+
+1. Add region mappings to `utils/region_mapping.py`
+2. Add instance power profiles to `energy/instance_profiles.py`
+3. Add PUE values to `core/config.py`
+4. Update tests
+
+## Community
+
+- **GitHub Issues:** [Report bugs and request features](https://github.com/GreenKubeCloud/GreenKube/issues)
+- **GitHub Discussions:** [Ask questions and share ideas](https://github.com/GreenKubeCloud/GreenKube/discussions)
+- **Email:** [contact@greenkube.cloud](mailto:contact@greenkube.cloud)
+
+## License
+
+GreenKube is licensed under the **Apache License 2.0**. By contributing, you agree that your contributions will be licensed under the same license.

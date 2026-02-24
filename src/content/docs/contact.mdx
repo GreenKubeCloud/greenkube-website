@@ -1,0 +1,120 @@
+---
+title: Contact Us
+description: Get in touch with the GreenKube team — support, questions, feature requests, and partnerships.
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+We'd love to hear from you! Whether you have questions, feedback, feature requests, or partnership inquiries, reach out through any of the channels below.
+
+## Get in Touch
+
+<CardGrid>
+  <Card title="📧 Email">
+    For general inquiries, support, and partnerships:
+    
+    **[contact@greenkube.cloud](mailto:contact@greenkube.cloud)**
+  </Card>
+  <Card title="🐛 Bug Reports">
+    Found a bug? Open an issue on GitHub:
+    
+    **[GitHub Issues](https://github.com/GreenKubeCloud/GreenKube/issues)**
+  </Card>
+  <Card title="💬 Discussions">
+    Questions, ideas, or general discussion:
+    
+    **[GitHub Discussions](https://github.com/GreenKubeCloud/GreenKube/discussions)**
+  </Card>
+  <Card title="⭐ GitHub">
+    Star the project and follow updates:
+    
+    **[GreenKubeCloud/GreenKube](https://github.com/GreenKubeCloud/GreenKube)**
+  </Card>
+</CardGrid>
+
+---
+
+## Contact Form
+
+Send us a message directly. We typically respond within 48 hours.
+
+<div class="contact-form">
+  <form action="https://formspree.io/f/contact@greenkube.cloud" method="POST">
+    <div class="form-group">
+      <label for="name">Name *</label>
+      <input type="text" id="name" name="name" required placeholder="Your full name" />
+    </div>
+    <div class="form-group">
+      <label for="email">Email *</label>
+      <input type="email" id="email" name="email" required placeholder="your.email@company.com" />
+    </div>
+    <div class="form-group">
+      <label for="subject">Subject *</label>
+      <select id="subject" name="subject" required>
+        <option value="">Select a topic...</option>
+        <option value="support">Technical Support</option>
+        <option value="feature">Feature Request</option>
+        <option value="bug">Bug Report</option>
+        <option value="partnership">Partnership Inquiry</option>
+        <option value="consulting">Consulting / Professional Services</option>
+        <option value="press">Press / Media</option>
+        <option value="other">Other</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="company">Company / Organization</label>
+      <input type="text" id="company" name="company" placeholder="Your company (optional)" />
+    </div>
+    <div class="form-group">
+      <label for="message">Message *</label>
+      <textarea id="message" name="message" required placeholder="Tell us how we can help..."></textarea>
+    </div>
+    <button type="submit">Send Message</button>
+  </form>
+</div>
+
+---
+
+## Frequently Asked Questions
+
+### Is GreenKube free?
+
+Yes! GreenKube is **100% open source** under the Apache 2.0 license. It's free to use, modify, and distribute.
+
+### Do I need an Electricity Maps token?
+
+No. GreenKube works without an Electricity Maps token by using a default carbon intensity value (500 gCO₂e/kWh). For more accurate, region-specific data, we recommend getting a free token at [electricitymaps.com](https://www.electricitymaps.com/).
+
+### Which Kubernetes distributions are supported?
+
+GreenKube works with any standard Kubernetes distribution, including:
+- Amazon EKS
+- Google GKE
+- Azure AKS
+- Minikube
+- k3s
+- OpenShift
+- Self-managed clusters
+
+### Can I use GreenKube without OpenCost?
+
+Yes. OpenCost integration is optional. Without it, cost data will not be available, but energy and carbon metrics will still work.
+
+### How much resources does GreenKube consume?
+
+With default settings, GreenKube requests 100m CPU and 128Mi memory, with limits of 500m CPU and 512Mi memory. The actual usage is typically well below the limits.
+
+### Can I contribute?
+
+Absolutely! Check out our [Contributing Guide](/contributing/) to get started. We welcome code, documentation, bug reports, and feature ideas.
+
+---
+
+## Links
+
+| Resource | URL |
+|----------|-----|
+| GitHub Repository | [github.com/GreenKubeCloud/GreenKube](https://github.com/GreenKubeCloud/GreenKube) |
+| Docker Hub | [hub.docker.com/r/greenkube/greenkube](https://hub.docker.com/r/greenkube/greenkube) |
+| Helm Chart | [GreenKubeCloud.github.io/GreenKube](https://GreenKubeCloud.github.io/GreenKube) |
+| Email | [contact@greenkube.cloud](mailto:contact@greenkube.cloud) |
