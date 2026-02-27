@@ -73,6 +73,8 @@
   transition: all 0.2s ease;
   position: relative;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .feature-card::before {
@@ -97,6 +99,24 @@
   opacity: 1;
 }
 
+/* Clickable card links */
+a.feature-card-link {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  flex-direction: column;
+  border-radius: 0.75rem;
+  cursor: pointer;
+}
+
+a.feature-card-link:hover {
+  color: inherit;
+}
+
+a.feature-card-link .feature-card {
+  flex: 1;
+}
+
 .feature-icon {
   font-size: 2rem;
   margin-bottom: 0.75rem;
@@ -115,6 +135,17 @@
   font-size: 0.9rem;
   line-height: 1.6;
   color: var(--sl-color-gray-3);
+  flex: 1;
+}
+
+.feature-card .card-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  margin-top: 0.75rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--sl-color-accent);
 }
 
 .feature-card.compact {

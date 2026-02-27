@@ -1,7 +1,6 @@
 ---
 import config from 'virtual:starlight/user-config';
 import Search from 'virtual:starlight/components/Search';
-import SiteTitle from 'virtual:starlight/components/SiteTitle';
 import ThemeSelect from './ThemeSelect.astro';
 
 const shouldRenderSearch =
@@ -33,160 +32,277 @@ function isActive(href: string): boolean {
 }
 ---
 
-<div class="header">
-	<div class="title-wrapper sl-flex">
-		<SiteTitle />
-	</div>
-	<div class="nav-center sl-flex print:hidden">
-		{shouldRenderSearch && <div class="search-wrapper"><Search /></div>}
-		<nav class="main-nav" aria-label="Main navigation">
-			{navLinks.map(link => (
-				<a
-					href={link.href}
-					class:list={['nav-link', { active: isActive(link.href) }]}
-				>
-					{link.label}
-				</a>
-			))}
-		</nav>
-	</div>
-	<div class="sl-hidden md:sl-flex print:hidden right-group">
-		<div class="sl-flex social-icons">
-			<a href="https://github.com/GreenKubeCloud/GreenKube" class="social-link" aria-label="GitHub" target="_blank" rel="noopener">
-				<svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true">
-					<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
-				</svg>
+<div class="header sl-flex">
+	<a href="/" class="logo-link" aria-label="GreenKube Home">
+		<img src="/favicon.svg" alt="" class="logo-img" width="28" height="28" />
+		<span class="logo-text">GreenKube</span>
+	</a>
+
+	{shouldRenderSearch && <div class="search-wrapper print:hidden"><Search /></div>}
+
+	<nav class="main-nav print:hidden" aria-label="Main navigation">
+		{navLinks.map(link => (
+			<a
+				href={link.href}
+				class:list={['nav-link', { active: isActive(link.href) }]}
+			>
+				{link.label}
 			</a>
-			<a href="https://x.com/GreenKubeCloud" class="social-link" aria-label="Twitter / X" target="_blank" rel="noopener">
-				<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
-					<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
-				</svg>
-			</a>
-		</div>
+		))}
+	</nav>
+
+	<div class="right-group print:hidden">
+		<a href="https://github.com/GreenKubeCloud/GreenKube" class="social-link" aria-label="GitHub" target="_blank" rel="noopener">
+			<svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true">
+				<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+			</svg>
+		</a>
+		<a href="https://x.com/GreenKubeCloud" class="social-link" aria-label="Twitter / X" target="_blank" rel="noopener">
+			<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+				<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+			</svg>
+		</a>
 		<ThemeSelect />
+	</div>
+
+	<button class="mobile-menu-btn print:hidden" aria-label="Toggle menu" aria-expanded="false">
+		<svg class="icon-menu" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+			<line x1="3" y1="6" x2="21" y2="6" />
+			<line x1="3" y1="12" x2="21" y2="12" />
+			<line x1="3" y1="18" x2="21" y2="18" />
+		</svg>
+		<svg class="icon-close" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+			<line x1="18" y1="6" x2="6" y2="18" />
+			<line x1="6" y1="6" x2="18" y2="18" />
+		</svg>
+	</button>
+</div>
+
+<div class="mobile-nav print:hidden">
+	<nav aria-label="Mobile navigation">
+		{navLinks.map(link => (
+			<a
+				href={link.href}
+				class:list={['mobile-nav-link', { active: isActive(link.href) }]}
+			>
+				{link.label}
+			</a>
+		))}
+	</nav>
+	<div class="mobile-nav-social">
+		<a href="https://github.com/GreenKubeCloud/GreenKube" class="social-link" aria-label="GitHub" target="_blank" rel="noopener">
+			<svg viewBox="0 0 16 16" width="20" height="20" fill="currentColor" aria-hidden="true">
+				<path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.013 8.013 0 0016 8c0-4.42-3.58-8-8-8z"/>
+			</svg>
+		</a>
+		<a href="https://x.com/GreenKubeCloud" class="social-link" aria-label="Twitter / X" target="_blank" rel="noopener">
+			<svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" aria-hidden="true">
+				<path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+			</svg>
+		</a>
 	</div>
 </div>
 
+<script>
+	const btn = document.querySelector('.mobile-menu-btn');
+	const mobileNav = document.querySelector('.mobile-nav');
+	if (btn && mobileNav) {
+		btn.addEventListener('click', () => {
+			const isOpen = mobileNav.classList.toggle('open');
+			btn.classList.toggle('open', isOpen);
+			btn.setAttribute('aria-expanded', String(isOpen));
+		});
+	}
+</script>
+
 <style>
-	@layer starlight.core {
-		.header {
-			display: flex;
-			gap: var(--sl-nav-gap);
-			justify-content: space-between;
-			align-items: center;
-			height: 100%;
-		}
+	.header {
+		display: flex;
+		align-items: center;
+		gap: 1rem;
+		height: 100%;
+		padding: 0 1rem;
+	}
 
-		.title-wrapper {
-			overflow: clip;
-			padding: 0.25rem;
-			margin: -0.25rem;
-			min-width: 0;
-			flex-shrink: 0;
-		}
+	/* ===== Logo ===== */
+	.logo-link {
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		text-decoration: none;
+		flex-shrink: 0;
+	}
 
-		.nav-center {
-			display: flex;
-			align-items: center;
-			gap: 0.5rem;
-			flex: 1;
-			justify-content: center;
-			min-width: 0;
-		}
+	.logo-img {
+		width: 28px;
+		height: 28px;
+		flex-shrink: 0;
+	}
 
-		.search-wrapper {
-			flex-shrink: 0;
-		}
+	.logo-text {
+		font-weight: 700;
+		font-size: 1.1rem;
+		color: var(--sl-color-white);
+		white-space: nowrap;
+	}
 
+	/* ===== Search ===== */
+	.search-wrapper {
+		flex-shrink: 0;
+	}
+
+	/* ===== Desktop Nav ===== */
+	.main-nav {
+		display: none;
+		align-items: center;
+		gap: 0.125rem;
+		margin-left: auto;
+	}
+
+	.nav-link {
+		display: inline-flex;
+		align-items: center;
+		padding: 0.375rem 0.625rem;
+		font-size: var(--sl-text-sm);
+		font-weight: 500;
+		color: var(--sl-color-gray-2);
+		text-decoration: none;
+		border-radius: 0.375rem;
+		transition: color 0.2s, background-color 0.2s;
+		white-space: nowrap;
+	}
+
+	.nav-link:hover {
+		color: var(--sl-color-white);
+		background-color: var(--sl-color-gray-5);
+	}
+
+	.nav-link.active {
+		color: var(--sl-color-white);
+		background-color: var(--sl-color-accent-low);
+		font-weight: 600;
+	}
+
+	/* ===== Right Group (social + theme) ===== */
+	.right-group {
+		display: none;
+		align-items: center;
+		gap: 0.5rem;
+		flex-shrink: 0;
+		margin-left: auto;
+	}
+
+	.social-link {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		color: var(--sl-color-gray-2);
+		padding: 0.375rem;
+		border-radius: 0.375rem;
+		transition: color 0.2s, background-color 0.2s;
+	}
+
+	.social-link:hover {
+		color: var(--sl-color-white);
+		background-color: var(--sl-color-gray-5);
+	}
+
+	/* ===== Mobile Menu Button ===== */
+	.mobile-menu-btn {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		margin-left: auto;
+		background: none;
+		border: none;
+		color: var(--sl-color-gray-2);
+		cursor: pointer;
+		padding: 0.375rem;
+		border-radius: 0.375rem;
+		transition: color 0.2s, background-color 0.2s;
+	}
+
+	.mobile-menu-btn:hover {
+		color: var(--sl-color-white);
+		background-color: var(--sl-color-gray-5);
+	}
+
+	.mobile-menu-btn .icon-close {
+		display: none;
+	}
+
+	.mobile-menu-btn.open .icon-menu {
+		display: none;
+	}
+
+	.mobile-menu-btn.open .icon-close {
+		display: block;
+	}
+
+	/* ===== Mobile Nav Panel ===== */
+	.mobile-nav {
+		display: none;
+		flex-direction: column;
+		gap: 0.25rem;
+		padding: 1rem;
+		background: var(--sl-color-bg-nav);
+		border-bottom: 1px solid var(--sl-color-gray-5);
+	}
+
+	.mobile-nav.open {
+		display: flex;
+	}
+
+	.mobile-nav-link {
+		display: block;
+		padding: 0.625rem 0.75rem;
+		font-size: var(--sl-text-body);
+		font-weight: 500;
+		color: var(--sl-color-gray-2);
+		text-decoration: none;
+		border-radius: 0.375rem;
+		transition: color 0.2s, background-color 0.2s;
+	}
+
+	.mobile-nav-link:hover {
+		color: var(--sl-color-white);
+		background-color: var(--sl-color-gray-5);
+	}
+
+	.mobile-nav-link.active {
+		color: var(--sl-color-white);
+		background-color: var(--sl-color-accent-low);
+		font-weight: 600;
+	}
+
+	.mobile-nav-social {
+		display: flex;
+		gap: 0.5rem;
+		padding-top: 0.75rem;
+		border-top: 1px solid var(--sl-color-gray-5);
+		margin-top: 0.5rem;
+	}
+
+	/* ===== Desktop breakpoint ===== */
+	@media (min-width: 50rem) {
 		.main-nav {
-			display: none;
-			align-items: center;
-			gap: 0.25rem;
-		}
-
-		.nav-link {
-			display: inline-flex;
-			align-items: center;
-			padding: 0.375rem 0.75rem;
-			font-size: var(--sl-text-sm);
-			font-weight: 500;
-			color: var(--sl-color-gray-2);
-			text-decoration: none;
-			border-radius: 0.375rem;
-			transition: color 0.2s, background-color 0.2s;
-			white-space: nowrap;
-		}
-
-		.nav-link:hover {
-			color: var(--sl-color-white);
-			background-color: var(--sl-color-gray-5);
-		}
-
-		.nav-link.active {
-			color: var(--sl-color-white);
-			background-color: var(--sl-color-accent-low);
-			font-weight: 600;
+			display: flex;
 		}
 
 		.right-group {
-			gap: 0.75rem;
-			align-items: center;
-			flex-shrink: 0;
-		}
-
-		.social-icons {
 			display: flex;
-			align-items: center;
-			gap: 0.5rem;
 		}
 
-		.social-link {
-			display: inline-flex;
-			align-items: center;
-			justify-content: center;
-			color: var(--sl-color-gray-2);
-			padding: 0.375rem;
-			border-radius: 0.375rem;
-			transition: color 0.2s, background-color 0.2s;
+		.mobile-menu-btn {
+			display: none;
 		}
 
-		.social-link:hover {
-			color: var(--sl-color-white);
-			background-color: var(--sl-color-gray-5);
+		.mobile-nav {
+			display: none !important;
 		}
 
-		@media (min-width: 72rem) {
-			.main-nav {
-				display: flex;
-			}
-		}
-
-		@media (min-width: 50rem) {
-			:global(:root[data-has-sidebar]) {
-				--__sidebar-pad: calc(2 * var(--sl-nav-pad-x));
-			}
-			:global(:root:not([data-has-toc])) {
-				--__toc-width: 0rem;
-			}
-			.header {
-				--__sidebar-width: max(0rem, var(--sl-content-inline-start, 0rem) - var(--sl-nav-pad-x));
-				--__main-column-fr: calc(
-					(
-							100% + var(--__sidebar-pad, 0rem) - var(--__toc-width, var(--sl-sidebar-width)) -
-								(2 * var(--__toc-width, var(--sl-nav-pad-x))) - var(--sl-content-inline-start, 0rem) -
-								var(--sl-content-width)
-						) / 2
-				);
-				display: grid;
-				grid-template-columns:
-					minmax(
-						calc(var(--__sidebar-width) + max(0rem, var(--__main-column-fr) - var(--sl-nav-gap))),
-						auto
-					)
-					1fr
-					auto;
-				align-content: center;
-			}
+		.header {
+			gap: 1.5rem;
 		}
 	}
 </style>

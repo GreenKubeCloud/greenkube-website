@@ -11,10 +11,7 @@ export default defineConfig({
 		starlight({
 			title: 'GreenKube',
 			description: 'Measure, understand, and reduce the carbon footprint of your Kubernetes infrastructure. Open-source FinGreenOps monitoring for cost and CO₂ optimization.',
-			logo: {
-				src: './src/assets/greenkube-logo.png',
-				replacesTitle: false,
-			},
+			favicon: '/favicon.svg',
 			components: {
 				Header: './src/components/Header.astro',
 				Footer: './src/components/Footer.astro',
@@ -75,6 +72,21 @@ export default defineConfig({
 				{
 					label: 'Home',
 					link: '/',
+				},
+				{
+					label: 'Features',
+					items: [
+						{ label: 'Real-time Dashboard', slug: 'features/real-time-dashboard' },
+						{ label: 'Carbon Tracking', slug: 'features/carbon-tracking' },
+						{ label: 'Cost Optimization', slug: 'features/cost-optimization' },
+						{ label: 'Easy Deployment', slug: 'features/easy-deployment' },
+						{ label: 'Multi-Resource Monitoring', slug: 'features/multi-resource-monitoring' },
+						{ label: 'Smart Recommendations', slug: 'features/smart-recommendations' },
+						{ label: 'Flexible Storage', slug: 'features/flexible-storage' },
+						{ label: 'Multi-Cloud Support', slug: 'features/multi-cloud-support' },
+						{ label: 'Historical Analysis', slug: 'features/historical-analysis' },
+						{ label: 'REST API', slug: 'features/rest-api' },
+					],
 				},
 				{
 					label: 'Getting Started',
