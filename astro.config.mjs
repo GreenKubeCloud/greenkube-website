@@ -15,10 +15,12 @@ export default defineConfig({
 				src: './src/assets/greenkube-logo.png',
 				replacesTitle: false,
 			},
-			social: [
-				{ icon: 'github', label: 'GitHub', href: 'https://github.com/GreenKubeCloud/GreenKube' },
-				{ icon: 'x.com', label: 'Twitter', href: 'https://x.com/GreenKubeCloud' },
-			],
+			components: {
+				Header: './src/components/Header.astro',
+				Footer: './src/components/Footer.astro',
+				ThemeSelect: './src/components/ThemeSelect.astro',
+			},
+			social: [],
 			head: [
 				{
 					tag: 'meta',
@@ -104,7 +106,7 @@ export default defineConfig({
 				},
 				{
 					label: 'Releases',
-					link: '/releases',
+					slug: 'releases',
 				},
 				{
 					label: 'Contributing',

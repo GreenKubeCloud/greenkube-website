@@ -6,8 +6,6 @@ hero:
   tagline: |
     Measure, understand, and reduce the carbon footprint of your Kubernetes infrastructure.
     The open-source FinGreenOps tool that helps DevOps, SRE, and FinOps teams navigate CSRD compliance while optimizing cloud costs through better energy efficiency.
-  image:
-    file: ../../assets/greenkube-logo.png
   actions:
     - text: Get Started
       link: /getting-started/quickstart/
@@ -19,14 +17,14 @@ hero:
       variant: minimal
 ---
 
-import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
+import { LinkCard } from '@astrojs/starlight/components';
 
 <div class="hero-badges">
-  <a href="https://github.com/GreenKubeCloud/GreenKube/stargazers"><img src="https://img.shields.io/github/stars/GreenKubeCloud/GreenKube?style=social" alt="GitHub Stars" /></a>
-  <a href="https://hub.docker.com/r/greenkube/greenkube"><img src="https://img.shields.io/docker/pulls/greenkube/greenkube?color=22c55e&label=Docker%20Pulls" alt="Docker Pulls" /></a>
-  <img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License" />
-  <img src="https://img.shields.io/badge/Version-0.2.0-green.svg" alt="Version" />
-  <img src="https://img.shields.io/badge/Kubernetes-Ready-326ce5.svg?logo=kubernetes&logoColor=white" alt="Kubernetes Ready" />
+  <a href="https://github.com/GreenKubeCloud/GreenKube/stargazers"><img src="https://img.shields.io/github/stars/GreenKubeCloud/GreenKube?style=flat-square&color=22c55e&label=Stars" alt="GitHub Stars" /></a>
+  <a href="https://hub.docker.com/r/greenkube/greenkube"><img src="https://img.shields.io/docker/pulls/greenkube/greenkube?style=flat-square&color=22c55e&label=Docker%20Pulls" alt="Docker Pulls" /></a>
+  <img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License" />
+  <img src="https://img.shields.io/badge/Version-0.2.0-22c55e?style=flat-square" alt="Version" />
+  <img src="https://img.shields.io/badge/Kubernetes-Ready-326ce5?style=flat-square&logo=kubernetes&logoColor=white" alt="Kubernetes Ready" />
 </div>
 
 ---
@@ -35,45 +33,65 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 
 The EU's **Corporate Sustainability Reporting Directive (CSRD)** requires companies to report the carbon footprint of their value chain — including cloud services (Scope 3). GreenKube addresses this urgent need by combining **FinOps** (cost optimization) with **GreenOps** (carbon reduction) into a single, powerful platform.
 
-<CardGrid>
-  <Card title="📊 Real-time Dashboard" icon="chart">
-    Modern SvelteKit dashboard with interactive charts, per-pod metrics, node inventory, and optimization recommendations — all served from a single container.
-  </Card>
-  <Card title="🌍 Carbon Tracking" icon="globe">
-    Converts energy consumption to CO₂e emissions using real-time grid carbon intensity data from Electricity Maps, supporting CSRD/ESRS E1 reporting requirements.
-  </Card>
-  <Card title="💰 Cost Optimization" icon="dollar">
-    Identifies zombie pods, oversized workloads, and autoscaling opportunities with estimated savings in both cost and carbon emissions.
-  </Card>
-  <Card title="🔧 Easy Deployment" icon="setting">
-    Production-ready Helm chart with PostgreSQL, auto-discovery of Prometheus and OpenCost, RBAC, and health probes. Deploy in minutes.
-  </Card>
-</CardGrid>
+<div class="feature-cards">
+  <div class="feature-card">
+    <div class="feature-icon">📊</div>
+    <h3>Real-time Dashboard</h3>
+    <p>Modern SvelteKit dashboard with interactive charts, per-pod metrics, node inventory, and optimization recommendations — all served from a single container.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🌍</div>
+    <h3>Carbon Tracking</h3>
+    <p>Converts energy consumption to CO₂e emissions using real-time grid carbon intensity data from Electricity Maps, supporting CSRD/ESRS E1 reporting requirements.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">💰</div>
+    <h3>Cost Optimization</h3>
+    <p>Identifies zombie pods, oversized workloads, and autoscaling opportunities with estimated savings in both cost and carbon emissions.</p>
+  </div>
+  <div class="feature-card">
+    <div class="feature-icon">🔧</div>
+    <h3>Easy Deployment</h3>
+    <p>Production-ready Helm chart with PostgreSQL, auto-discovery of Prometheus and OpenCost, RBAC, and health probes. Deploy in minutes.</p>
+  </div>
+</div>
 
 ---
 
 ## ⚡ Key Features
 
-<CardGrid>
-  <Card title="Multi-Resource Monitoring">
-    Track CPU, memory, network I/O, disk I/O, storage, pod restarts, and GPU usage across your entire cluster.
-  </Card>
-  <Card title="Smart Recommendations">
-    AI-powered analysis detects zombie pods, rightsizing opportunities, autoscaling candidates, and carbon-aware scheduling.
-  </Card>
-  <Card title="Flexible Storage">
-    Supports PostgreSQL (production), SQLite (development), and Elasticsearch (scale) — choose the backend that fits your needs.
-  </Card>
-  <Card title="Multi-Cloud Support">
-    Built-in profiles for AWS, GCP, Azure, OVH, and Scaleway with automatic region-to-carbon-zone mapping.
-  </Card>
-  <Card title="Historical Analysis">
-    Report on any time period with flexible grouping (daily, monthly, yearly). Export to CSV or JSON for BI integration.
-  </Card>
-  <Card title="REST API">
-    Full-featured FastAPI backend with OpenAPI docs, CORS support, and comprehensive endpoints for all metrics.
-  </Card>
-</CardGrid>
+<div class="feature-cards cols-3">
+  <div class="feature-card compact">
+    <div class="feature-icon">🔍</div>
+    <h3>Multi-Resource Monitoring</h3>
+    <p>Track CPU, memory, network I/O, disk I/O, storage, pod restarts, and GPU usage across your entire cluster.</p>
+  </div>
+  <div class="feature-card compact">
+    <div class="feature-icon">🧠</div>
+    <h3>Smart Recommendations</h3>
+    <p>AI-powered analysis detects zombie pods, rightsizing opportunities, autoscaling candidates, and carbon-aware scheduling.</p>
+  </div>
+  <div class="feature-card compact">
+    <div class="feature-icon">🗄️</div>
+    <h3>Flexible Storage</h3>
+    <p>Supports PostgreSQL (production), SQLite (development), and Elasticsearch (scale) — choose the backend that fits your needs.</p>
+  </div>
+  <div class="feature-card compact">
+    <div class="feature-icon">☁️</div>
+    <h3>Multi-Cloud Support</h3>
+    <p>Built-in profiles for AWS, GCP, Azure, OVH, and Scaleway with automatic region-to-carbon-zone mapping.</p>
+  </div>
+  <div class="feature-card compact">
+    <div class="feature-icon">📈</div>
+    <h3>Historical Analysis</h3>
+    <p>Report on any time period with flexible grouping (daily, monthly, yearly). Export to CSV or JSON for BI integration.</p>
+  </div>
+  <div class="feature-card compact">
+    <div class="feature-icon">🚀</div>
+    <h3>REST API</h3>
+    <p>Full-featured FastAPI backend with OpenAPI docs, CORS support, and comprehensive endpoints for all metrics.</p>
+  </div>
+</div>
 
 ---
 
