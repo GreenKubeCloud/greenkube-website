@@ -4,32 +4,13 @@ description: Deep dive into GreenKube's async data collection, processing, and s
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import DataPipelineDiagram from '../../../components/diagrams/DataPipelineDiagram.astro';
 
 GreenKube's data pipeline is the heart of the system — an asynchronous, multi-stage pipeline that collects raw metrics, transforms them into energy and carbon data, and stores combined results.
 
 ## Pipeline Overview
 
-```
-Phase 1: COLLECTION          Phase 2: PROCESSING         Phase 3: OUTPUT
-(Async/Parallel)              (Sequential)                (Async)
-
-┌──────────────┐
-│  Prometheus   │──┐
-│  (8 queries)  │  │
-└──────────────┘  │
-┌──────────────┐  │    ┌──────────────┐    ┌──────────────┐    ┌──────────────┐
-│  Kubernetes   │──┼───▶│  Processor   │───▶│  Calculator  │───▶│  Repository  │
-│  (Nodes/Pods) │  │    │  (Aggregate) │    │  (CO₂e)      │    │  (Persist)   │
-└──────────────┘  │    └──────────────┘    └──────────────┘    └──────────────┘
-┌──────────────┐  │           │
-│  OpenCost    │──┤           ▼
-│  (Costs)     │  │    ┌──────────────┐
-└──────────────┘  │    │  Estimator   │
-┌──────────────┐  │    │  (Joules)    │
-│  Elec. Maps  │──┘    └──────────────┘
-│  (Intensity) │
-└──────────────┘
-```
+<DataPipelineDiagram />
 
 ## Phase 1: Data Collection
 

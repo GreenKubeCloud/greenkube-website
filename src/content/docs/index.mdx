@@ -4,8 +4,8 @@ description: Measure, understand, and reduce the carbon footprint and costs of y
 template: splash
 hero:
   tagline: |
-    Measure, understand, and reduce the carbon footprint of your Kubernetes infrastructure.
-    The open-source FinGreenOps tool that helps DevOps, SRE, and FinOps teams navigate CSRD compliance while optimizing cloud costs through better energy efficiency.
+    Give your team full visibility into the carbon footprint and cloud costs of your Kubernetes infrastructure.
+    GreenKube is the open-source FinGreenOps tool that helps teams of all sizes — from startups to enterprises — measure energy consumption, reduce CO₂ emissions, and cut cloud spending.
   actions:
     - text: Get Started
       link: /getting-started/quickstart/
@@ -19,19 +19,13 @@ hero:
 
 import { LinkCard } from '@astrojs/starlight/components';
 
-<div class="hero-badges">
-  <a href="https://github.com/GreenKubeCloud/GreenKube/stargazers"><img src="https://img.shields.io/github/stars/GreenKubeCloud/GreenKube?style=flat-square&color=22c55e&label=Stars" alt="GitHub Stars" /></a>
-  <a href="https://hub.docker.com/r/greenkube/greenkube"><img src="https://img.shields.io/docker/pulls/greenkube/greenkube?style=flat-square&color=22c55e&label=Docker%20Pulls" alt="Docker Pulls" /></a>
-  <img src="https://img.shields.io/badge/License-Apache_2.0-blue?style=flat-square" alt="License" />
-  <img src="https://img.shields.io/badge/Version-0.2.0-22c55e?style=flat-square" alt="Version" />
-  <img src="https://img.shields.io/badge/Kubernetes-Ready-326ce5?style=flat-square&logo=kubernetes&logoColor=white" alt="Kubernetes Ready" />
-</div>
-
 ---
 
 ## 🎯 Why GreenKube?
 
-The EU's **Corporate Sustainability Reporting Directive (CSRD)** requires companies to report the carbon footprint of their value chain — including cloud services (Scope 3). GreenKube addresses this urgent need by combining **FinOps** (cost optimization) with **GreenOps** (carbon reduction) into a single, powerful platform.
+Whether you're a startup running a single cluster or a growing company scaling across regions, **you deserve visibility into what your infrastructure really costs** — not just in dollars, but in carbon.
+
+GreenKube combines **FinOps** (cost optimization) with **GreenOps** (carbon reduction) into a single, open-source platform. It helps teams understand their energy consumption, identify waste, and take action — all without complex setup or expensive SaaS tools. For companies subject to the EU's **CSRD** reporting requirements, GreenKube also provides the data you need for ESRS E1 compliance.
 
 <div class="feature-cards">
   <a href="/features/real-time-dashboard/" class="feature-card-link">
@@ -129,50 +123,9 @@ The EU's **Corporate Sustainability Reporting Directive (CSRD)** requires compan
 
 GreenKube follows a clean, hexagonal architecture. Here's how data flows through the system:
 
-<div class="diagram-container">
-<pre>{`
-┌─────────────────────────────────────────────────────────────────────────┐
-│                        DATA COLLECTION (Async)                         │
-│                                                                         │
-│  ┌──────────────┐  ┌──────────────┐  ┌───────────┐  ┌──────────────┐  │
-│  │  Prometheus   │  │  Kubernetes  │  │  OpenCost  │  │  Electricity │  │
-│  │  (CPU, Mem,   │  │  (Nodes,     │  │  (Cost     │  │  Maps (CO₂   │  │
-│  │   Net, Disk)  │  │   Pods)      │  │   Data)    │  │   Intensity) │  │
-│  └──────┬───────┘  └──────┬───────┘  └─────┬─────┘  └──────┬───────┘  │
-│         └──────────────┬───┴────────────────┴───────────────┘          │
-│                        ▼                                                │
-│              ┌─────────────────────┐                                    │
-│              │    DATA PROCESSOR   │    ← Orchestrates pipeline         │
-│              │  (asyncio.gather)   │                                    │
-│              └─────────┬───────────┘                                    │
-│                        │                                                │
-│         ┌──────────────┼──────────────┐                                 │
-│         ▼              ▼              ▼                                  │
-│  ┌─────────────┐ ┌───────────┐ ┌──────────────┐                        │
-│  │  Estimator   │ │ Zone      │ │  Carbon      │                        │
-│  │  (Joules)    │ │ Mapper    │ │  Calculator  │                        │
-│  └──────┬──────┘ └─────┬─────┘ └──────┬───────┘                        │
-│         └──────────────┬┴──────────────┘                                │
-│                        ▼                                                │
-│              ┌─────────────────────┐                                    │
-│              │  Combined Metrics   │    ← Energy + Carbon + Cost        │
-│              └─────────┬───────────┘                                    │
-│                        │                                                │
-│         ┌──────────────┼──────────────┐                                 │
-│         ▼              ▼              ▼                                  │
-│  ┌─────────────┐ ┌───────────┐ ┌──────────────┐                        │
-│  │  PostgreSQL  │ │  REST API │ │  Recommender │                        │
-│  │  / SQLite /  │ │  (FastAPI)│ │  (Analysis)  │                        │
-│  │  Elastic     │ │           │ │              │                        │
-│  └─────────────┘ └─────┬─────┘ └──────────────┘                        │
-│                        ▼                                                │
-│              ┌─────────────────────┐                                    │
-│              │   Web Dashboard     │    ← SvelteKit SPA                 │
-│              │   + CLI Reports     │                                    │
-│              └─────────────────────┘                                    │
-└─────────────────────────────────────────────────────────────────────────┘
-`}</pre>
-</div>
+import ArchitectureDiagram from '../../components/diagrams/ArchitectureDiagram.astro';
+
+<ArchitectureDiagram />
 
 <LinkCard title="Learn more about the architecture →" href="/architecture/overview/" />
 
@@ -248,4 +201,9 @@ GreenKube is an open-source, community-driven project. We welcome contributions 
     <div class="stat-value">∞</div>
     <div class="stat-label">kgCO₂ Saved</div>
   </div>
+</div>
+
+<div class="stats-badges">
+  <a href="https://github.com/GreenKubeCloud/GreenKube/stargazers"><img src="https://img.shields.io/github/stars/GreenKubeCloud/GreenKube?style=for-the-badge&color=22c55e&label=GitHub%20Stars" alt="GitHub Stars" /></a>
+  <a href="https://hub.docker.com/r/greenkube/greenkube"><img src="https://img.shields.io/docker/pulls/greenkube/greenkube?style=for-the-badge&color=22c55e&label=Docker%20Pulls" alt="Docker Pulls" /></a>
 </div>

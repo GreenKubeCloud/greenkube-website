@@ -1,0 +1,215 @@
+---
+---
+<div class="storage-diagram">
+  <!-- Top: Business Logic -->
+  <div class="sd-layer sd-core">
+    <div class="sd-layer-label">Business Logic (Core)</div>
+    <div class="sd-layer-content">
+      <div class="sd-box sd-primary">
+        <span class="sd-icon">⚙️</span>
+        <span class="sd-title">DataProcessor</span>
+        <span class="sd-sub">Calls <code>repository.save_metric()</code></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sd-arrow-down">
+    <div class="sd-arrow-label">interface</div>
+    <svg width="24" height="28" viewBox="0 0 24 28">
+      <line x1="12" y1="0" x2="12" y2="20" stroke="var(--sl-color-gray-4)" stroke-width="2" stroke-dasharray="4,3"/>
+      <polygon points="6,20 18,20 12,28" fill="var(--sl-color-accent)"/>
+    </svg>
+  </div>
+
+  <!-- Middle: Abstract Interface -->
+  <div class="sd-layer sd-interface">
+    <div class="sd-layer-label">Abstract Repository</div>
+    <div class="sd-layer-content">
+      <div class="sd-box sd-abstract">
+        <span class="sd-icon">📐</span>
+        <span class="sd-title">MetricRepository</span>
+        <span class="sd-sub">write_combined_metrics() · read_combined_metrics()</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="sd-arrow-down">
+    <div class="sd-arrow-label">implements</div>
+    <div class="sd-arrow-fan">
+      <svg width="200" height="28" viewBox="0 0 200 28">
+        <line x1="100" y1="0" x2="100" y2="10" stroke="var(--sl-color-gray-4)" stroke-width="2" stroke-dasharray="4,3"/>
+        <line x1="30" y1="10" x2="170" y2="10" stroke="var(--sl-color-gray-4)" stroke-width="2"/>
+        <line x1="30" y1="10" x2="30" y2="20" stroke="var(--sl-color-gray-4)" stroke-width="2"/>
+        <line x1="100" y1="10" x2="100" y2="20" stroke="var(--sl-color-gray-4)" stroke-width="2"/>
+        <line x1="170" y1="10" x2="170" y2="20" stroke="var(--sl-color-gray-4)" stroke-width="2"/>
+        <polygon points="24,20 36,20 30,28" fill="var(--sl-color-accent)"/>
+        <polygon points="94,20 106,20 100,28" fill="var(--sl-color-accent)"/>
+        <polygon points="164,20 176,20 170,28" fill="var(--sl-color-accent)"/>
+      </svg>
+    </div>
+  </div>
+
+  <!-- Bottom: Implementations -->
+  <div class="sd-layer sd-implementations">
+    <div class="sd-layer-label">Storage Adapters</div>
+    <div class="sd-impl-row">
+      <div class="sd-box sd-impl sd-pg">
+        <span class="sd-icon">🐘</span>
+        <span class="sd-title">PostgreSQL</span>
+        <span class="sd-sub">Production · asyncpg</span>
+        <span class="sd-tag sd-tag-rec">Recommended</span>
+      </div>
+      <div class="sd-box sd-impl sd-sqlite">
+        <span class="sd-icon">📁</span>
+        <span class="sd-title">SQLite</span>
+        <span class="sd-sub">Development · aiosqlite</span>
+        <span class="sd-tag sd-tag-dev">Dev / CI</span>
+      </div>
+      <div class="sd-box sd-impl sd-es">
+        <span class="sd-icon">🔍</span>
+        <span class="sd-title">Elasticsearch</span>
+        <span class="sd-sub">Scale · elasticsearch-py</span>
+        <span class="sd-tag sd-tag-scale">Scale</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Factory note -->
+  <div class="sd-factory">
+    <span class="sd-factory-icon">🏭</span>
+    <span class="sd-factory-text">Instantiated by <strong>core/factory.py</strong> based on <code>DB_TYPE</code> config</span>
+  </div>
+</div>
+
+<style>
+  .storage-diagram {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+    margin: 2rem 0;
+    font-family: system-ui, -apple-system, sans-serif;
+  }
+
+  .sd-layer {
+    width: 100%;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 0.75rem;
+    overflow: hidden;
+    background: var(--sl-color-gray-6);
+  }
+
+  .sd-layer-label {
+    padding: 0.5rem 1rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--sl-color-gray-3);
+    border-bottom: 1px solid var(--sl-color-gray-5);
+    background: rgba(255,255,255,0.02);
+  }
+
+  .sd-layer-content {
+    padding: 1rem;
+    display: flex;
+    justify-content: center;
+  }
+
+  .sd-box {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 0.75rem 1.25rem;
+    border-radius: 0.5rem;
+    border: 1px solid var(--sl-color-gray-5);
+    transition: border-color 0.2s;
+  }
+
+  .sd-box:hover { border-color: var(--sl-color-accent); }
+
+  .sd-primary { background: rgba(59, 130, 246, 0.06); border-color: rgba(59, 130, 246, 0.25); min-width: 220px; }
+  .sd-abstract { background: rgba(168, 85, 247, 0.06); border-color: rgba(168, 85, 247, 0.25); min-width: 260px; border-style: dashed; }
+
+  .sd-icon { font-size: 1.25rem; margin-bottom: 0.25rem; }
+  .sd-title { font-size: 0.8rem; font-weight: 700; color: var(--sl-color-white); }
+  .sd-sub { font-size: 0.65rem; color: var(--sl-color-gray-3); margin-top: 0.15rem; }
+  .sd-sub code { font-size: 0.6rem; background: var(--sl-color-gray-5); padding: 0.1rem 0.3rem; border-radius: 0.2rem; }
+
+  .sd-arrow-down {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.125rem 0;
+  }
+
+  .sd-arrow-label {
+    font-size: 0.6rem;
+    color: var(--sl-color-gray-3);
+    font-style: italic;
+    margin-bottom: 0.125rem;
+  }
+
+  .sd-arrow-fan {
+    display: flex;
+    justify-content: center;
+  }
+
+  .sd-implementations .sd-layer-label {
+    background: rgba(34, 197, 94, 0.05);
+  }
+
+  .sd-impl-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.75rem;
+    padding: 1rem;
+  }
+
+  .sd-impl {
+    position: relative;
+    padding-bottom: 2rem;
+  }
+
+  .sd-pg { background: rgba(59, 130, 246, 0.04); }
+  .sd-sqlite { background: rgba(245, 158, 11, 0.04); }
+  .sd-es { background: rgba(6, 182, 212, 0.04); }
+
+  .sd-tag {
+    position: absolute;
+    bottom: 0.5rem;
+    font-size: 0.55rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 0.15rem 0.4rem;
+    border-radius: 9999px;
+    letter-spacing: 0.03em;
+  }
+
+  .sd-tag-rec { background: rgba(34, 197, 94, 0.15); color: #22c55e; }
+  .sd-tag-dev { background: rgba(245, 158, 11, 0.15); color: #f59e0b; }
+  .sd-tag-scale { background: rgba(6, 182, 212, 0.15); color: #06b6d4; }
+
+  .sd-factory {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 0.75rem;
+    padding: 0.5rem 1rem;
+    border-radius: 0.5rem;
+    background: var(--sl-color-gray-6);
+    border: 1px dashed var(--sl-color-gray-5);
+  }
+
+  .sd-factory-icon { font-size: 1rem; }
+  .sd-factory-text { font-size: 0.7rem; color: var(--sl-color-gray-3); }
+  .sd-factory-text strong { color: var(--sl-color-white); }
+  .sd-factory-text code { font-size: 0.65rem; background: var(--sl-color-gray-5); padding: 0.1rem 0.3rem; border-radius: 0.2rem; }
+
+  @media (max-width: 640px) {
+    .sd-impl-row {
+      grid-template-columns: 1fr;
+    }
+  }
+</style>

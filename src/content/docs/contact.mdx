@@ -3,34 +3,44 @@ title: Contact Us
 description: Get in touch with the GreenKube team — support, questions, feature requests, and partnerships.
 ---
 
-import { Card, CardGrid } from '@astrojs/starlight/components';
-
 We'd love to hear from you! Whether you have questions, feedback, feature requests, or partnership inquiries, reach out through any of the channels below.
 
 ## Get in Touch
 
-<CardGrid>
-  <Card title="📧 Email">
-    For general inquiries, support, and partnerships:
-    
-    **[contact@greenkube.cloud](mailto:contact@greenkube.cloud)**
-  </Card>
-  <Card title="🐛 Bug Reports">
-    Found a bug? Open an issue on GitHub:
-    
-    **[GitHub Issues](https://github.com/GreenKubeCloud/GreenKube/issues)**
-  </Card>
-  <Card title="💬 Discussions">
-    Questions, ideas, or general discussion:
-    
-    **[GitHub Discussions](https://github.com/GreenKubeCloud/GreenKube/discussions)**
-  </Card>
-  <Card title="⭐ GitHub">
-    Star the project and follow updates:
-    
-    **[GreenKubeCloud/GreenKube](https://github.com/GreenKubeCloud/GreenKube)**
-  </Card>
-</CardGrid>
+<div class="feature-cards">
+  <a href="mailto:contact@greenkube.cloud" class="feature-card-link">
+    <div class="feature-card">
+      <div class="feature-icon">📧</div>
+      <h3>Email</h3>
+      <p>For general inquiries, support, and partnerships. We typically respond within 48 hours.</p>
+      <span class="card-arrow">contact@greenkube.cloud →</span>
+    </div>
+  </a>
+  <a href="https://github.com/GreenKubeCloud/GreenKube/issues" class="feature-card-link" target="_blank" rel="noopener">
+    <div class="feature-card">
+      <div class="feature-icon">🐛</div>
+      <h3>Bug Reports</h3>
+      <p>Found a bug? Open an issue on GitHub with details about your environment and steps to reproduce.</p>
+      <span class="card-arrow">Open an issue →</span>
+    </div>
+  </a>
+  <a href="https://github.com/GreenKubeCloud/GreenKube/discussions" class="feature-card-link" target="_blank" rel="noopener">
+    <div class="feature-card">
+      <div class="feature-icon">💬</div>
+      <h3>Discussions</h3>
+      <p>Questions, ideas, feature requests, or general discussion about GreenKube and FinGreenOps.</p>
+      <span class="card-arrow">Join the conversation →</span>
+    </div>
+  </a>
+  <a href="https://github.com/GreenKubeCloud/GreenKube" class="feature-card-link" target="_blank" rel="noopener">
+    <div class="feature-card">
+      <div class="feature-icon">⭐</div>
+      <h3>GitHub</h3>
+      <p>Star the project, follow updates, and contribute to the open-source codebase.</p>
+      <span class="card-arrow">View repository →</span>
+    </div>
+  </a>
+</div>
 
 ---
 

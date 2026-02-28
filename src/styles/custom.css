@@ -240,6 +240,28 @@ a.feature-card-link .feature-card {
   margin-top: 0.375rem;
 }
 
+/* Stats badges row below stats grid */
+.stats-badges {
+  display: flex;
+  gap: 1rem;
+  justify-content: center;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 1.5rem 0 0;
+}
+
+.stats-badges a,
+.stats-badges img {
+  display: inline-flex;
+  align-items: center;
+  height: 28px;
+  vertical-align: middle;
+}
+
+.stats-badges a img {
+  height: 28px;
+}
+
 /* ===== Architecture Diagram ===== */
 .diagram-container {
   background: var(--sl-color-gray-6);
@@ -454,4 +476,30 @@ html {
   margin-top: 2rem;
   padding-top: 1rem;
   border-top: 1px solid var(--sl-color-gray-5);
+}
+
+/* ===== Search bar: indent placeholder past magnifying glass ===== */
+site-search button[data-open-modal] span.sl-flex {
+  padding-inline-start: 0.25rem;
+}
+
+/* ===== Hero "Get Started" primary action button readability ===== */
+:root {
+  --sl-color-text-accent: #fff;
+}
+
+/* Make primary action button a readable dark green with white text */
+.sl-link-button.primary,
+.hero .sl-link-button:first-child,
+a[data-variant="primary"].sl-link-button {
+  background-color: #15803d !important;
+  border-color: #15803d !important;
+  color: #fff !important;
+}
+
+.sl-link-button.primary:hover,
+.hero .sl-link-button:first-child:hover,
+a[data-variant="primary"].sl-link-button:hover {
+  background-color: #166534 !important;
+  border-color: #166534 !important;
 }

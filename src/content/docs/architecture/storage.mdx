@@ -4,8 +4,11 @@ description: GreenKube supports PostgreSQL, SQLite, and Elasticsearch as storage
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
+import StorageDiagram from '../../../components/diagrams/StorageDiagram.astro';
 
 GreenKube's repository pattern allows you to choose the storage backend that best fits your deployment needs.
+
+<StorageDiagram />
 
 ## Backend Comparison
 
@@ -23,7 +26,7 @@ GreenKube's repository pattern allows you to choose the storage backend that bes
 ## Configuration
 
 <Tabs>
-  <TabItem label="PostgreSQL">
+<TabItem label="PostgreSQL">
 
 ### PostgreSQL (Recommended)
 
@@ -58,8 +61,8 @@ secrets:
 - Bundled PostgreSQL 17 StatefulSet via Helm
 - Support for external PostgreSQL instances
 
-  </TabItem>
-  <TabItem label="SQLite">
+</TabItem>
+<TabItem label="SQLite">
 
 ### SQLite (Development)
 
@@ -86,8 +89,8 @@ config:
   Without persistence, SQLite data is lost when the pod restarts. Always enable persistence for non-ephemeral deployments.
 </Aside>
 
-  </TabItem>
-  <TabItem label="Elasticsearch">
+</TabItem>
+<TabItem label="Elasticsearch">
 
 ### Elasticsearch (Scale)
 
@@ -117,7 +120,7 @@ secrets:
 - Native Kibana integration for visualization
 - Date-based index partitioning
 
-  </TabItem>
+</TabItem>
 </Tabs>
 
 ## Database Schema

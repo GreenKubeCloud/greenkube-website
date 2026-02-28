@@ -6,6 +6,9 @@
     </linearGradient>
   </defs>
   <rect width="128" height="128" rx="24" fill="url(#grad)"/>
-  <text x="64" y="52" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="white" text-anchor="middle">G</text>
-  <text x="64" y="96" font-family="Arial, sans-serif" font-size="42" font-weight="bold" fill="white" text-anchor="middle">K</text>
+  <!-- Leaf / plant icon representing Green -->
+  <path d="M64 28c0 0 28 8 28 40c0 16-12 28-28 28" fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <path d="M64 96V56" fill="none" stroke="white" stroke-width="6" stroke-linecap="round"/>
+  <path d="M64 68c-12-4-24 0-28 12" fill="none" stroke="white" stroke-width="5" stroke-linecap="round"/>
+  <path d="M64 52c8-6 20-6 24 2" fill="none" stroke="white" stroke-width="4" stroke-linecap="round"/>
 </svg>

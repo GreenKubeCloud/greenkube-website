@@ -4,6 +4,7 @@ description: Understand GreenKube's clean hexagonal architecture, core component
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import HighLevelArchDiagram from '../../../components/diagrams/HighLevelArchDiagram.astro';
 
 GreenKube is built on **Clean Architecture** and **Hexagonal Architecture** principles, ensuring modularity, testability, and extensibility.
 
@@ -20,46 +21,7 @@ GreenKube is built on **Clean Architecture** and **Hexagonal Architecture** prin
 
 ## High-Level Architecture
 
-```
-┌─────────────────────────────────────────────────────────────────────────┐
-│                         PRESENTATION LAYER                              │
-│                                                                         │
-│   ┌─────────────────┐  ┌──────────────┐  ┌─────────────────────┐      │
-│   │  Web Dashboard   │  │  REST API    │  │  CLI (Typer+Rich)   │      │
-│   │  (SvelteKit)     │  │  (FastAPI)   │  │                     │      │
-│   └────────┬────────┘  └──────┬───────┘  └──────────┬──────────┘      │
-│            └──────────────────┼──────────────────────┘                  │
-└───────────────────────────────┼─────────────────────────────────────────┘
-                                │
-┌───────────────────────────────┼─────────────────────────────────────────┐
-│                         BUSINESS LOGIC                                  │
-│                                                                         │
-│   ┌─────────────────┐  ┌──────────────┐  ┌─────────────────────┐      │
-│   │  DataProcessor   │  │  Carbon      │  │  Recommender        │      │
-│   │  (Orchestrator)  │  │  Calculator  │  │  (Analysis Engine)  │      │
-│   └────────┬────────┘  └──────┬───────┘  └─────────────────────┘      │
-│            │                   │                                         │
-│   ┌────────┴────────┐  ┌──────┴───────┐                                │
-│   │  BasicEstimator  │  │  Config      │                                │
-│   │  (Energy Model)  │  │  (12-Factor) │                                │
-│   └─────────────────┘  └──────────────┘                                │
-└───────────────────────────────┬─────────────────────────────────────────┘
-                                │
-┌───────────────────────────────┼─────────────────────────────────────────┐
-│                         ADAPTERS (I/O)                                  │
-│                                                                         │
-│   ┌───────────── INPUT ──────────────┐  ┌────── OUTPUT ──────────┐     │
-│   │                                   │  │                        │     │
-│   │ PrometheusCollector (CPU,Mem,Net) │  │ PostgresRepository     │     │
-│   │ NodeCollector (K8s API)           │  │ SQLiteRepository       │     │
-│   │ PodCollector (Resource Requests)  │  │ ElasticsearchRepo      │     │
-│   │ OpenCostCollector (Cost Data)     │  │ NodeRepository         │     │
-│   │ ElectricityMapsCollector (CO₂)    │  │ EmbodiedRepository     │     │
-│   │ BoaviztaCollector (Embodied)      │  │                        │     │
-│   │                                   │  │                        │     │
-│   └───────────────────────────────────┘  └────────────────────────┘     │
-└─────────────────────────────────────────────────────────────────────────┘
-```
+<HighLevelArchDiagram />
 
 ## Project Structure
 

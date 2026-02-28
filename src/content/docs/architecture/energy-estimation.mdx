@@ -4,6 +4,7 @@ description: How GreenKube estimates energy consumption using cloud instance pow
 ---
 
 import { Aside } from '@astrojs/starlight/components';
+import EnergyEstimationDiagram from '../../../components/diagrams/EnergyEstimationDiagram.astro';
 
 GreenKube estimates per-pod energy consumption using a methodology based on the [Cloud Carbon Footprint (CCF)](https://www.cloudcarbonfootprint.org/) project, adapted for real-time Kubernetes workload monitoring.
 
@@ -11,9 +12,7 @@ GreenKube estimates per-pod energy consumption using a methodology based on the 
 
 The energy estimation pipeline converts CPU utilization metrics into energy consumption (Joules) using known power characteristics of cloud instance types.
 
-```
-CPU Usage (cores) → Power Model → Energy (Joules) → CO₂e (grams)
-```
+<EnergyEstimationDiagram />
 
 ## Power Model
 
