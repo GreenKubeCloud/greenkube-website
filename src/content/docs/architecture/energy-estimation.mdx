@@ -89,7 +89,10 @@ The carbon intensity of electricity varies by:
 - **Time of day** (renewable energy availability)
 - **Season** (heating/cooling demand)
 
-GreenKube uses the **Electricity Maps API** for real-time intensity data. When unavailable, a configurable default is used (500 gCO₂e/kWh).
+GreenKube uses the **Electricity Maps API** for real-time intensity data. When the API is unavailable, GreenKube follows a two-step fallback:
+
+1. **Per-zone default** — A built-in table of average grid intensities per zone (e.g., France ≈ 85 gCO₂e/kWh, Germany ≈ 385 gCO₂e/kWh)
+2. **Global default** — If no per-zone default exists, the configurable global fallback is used (default: 500 gCO₂e/kWh)
 
 ### PUE (Power Usage Effectiveness)
 
@@ -99,13 +102,13 @@ PUE accounts for datacenter overhead (cooling, lighting, networking):
 PUE = Total facility power / IT equipment power
 ```
 
-| Provider | Typical PUE |
-|----------|-------------|
-| AWS | 1.135 |
-| GCP | 1.10 |
-| Azure | 1.125 |
-| OVH | 1.3 (default) |
-| Scaleway | 1.3 (default) |
+| Provider | PUE | Source |
+|----------|-----|--------|
+| AWS | 1.15 | [AWS Sustainability](https://sustainability.aboutamazon.com/products-services/aws-cloud) |
+| GCP | 1.09 | [Google Data Centers](https://datacenters.google/efficiency/) |
+| Azure | 1.18 | [Microsoft Sustainability Report 2025](https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/msc/documents/presentations/CSR/2025-Microsoft-Environmental-Sustainability-Report.pdf) |
+| OVH | 1.26 | [OVHcloud Sustainability](https://corporate.ovhcloud.com/en/sustainability/environment/) |
+| Scaleway | 1.37 | [Scaleway Environmental Leadership](https://www.scaleway.com/fr/leadership-environnemental/) |
 
 ## OVH and Scaleway Methodology
 
@@ -184,7 +187,8 @@ Every metric in GreenKube includes transparency flags:
 
 Example reasons:
 - `"Unknown instance type, using default profile"`
-- `"Carbon intensity API unavailable, using default 500 gCO₂e/kWh"`
+- `"Carbon intensity API unavailable, using per-zone default"`
+- `"Carbon intensity API unavailable, using global default 500 gCO₂e/kWh"`
 - `"OpenCost data unavailable, cost set to 0"`
 
 ## Data Sources

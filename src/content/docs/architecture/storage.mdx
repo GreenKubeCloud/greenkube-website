@@ -197,6 +197,22 @@ Caches Boavizta API responses:
 | `lifespan_hours` | FLOAT | Expected lifespan |
 | `last_updated` | TIMESTAMPTZ | Cache timestamp |
 
+### `recommendations` Table
+
+Stores recommendation snapshots for historical tracking:
+
+| Column | Type | Description |
+|--------|------|-------------|
+| `timestamp` | TIMESTAMPTZ | When the recommendation was generated |
+| `pod_name` | VARCHAR | Target pod name |
+| `namespace` | VARCHAR | Target namespace |
+| `type` | VARCHAR | Recommendation type (e.g., `ZOMBIE_POD`, `RIGHTSIZING_CPU`) |
+| `description` | TEXT | Human-readable recommendation |
+| `reason` | TEXT | Why the recommendation was made |
+| `priority` | VARCHAR | Priority level (high, medium, low) |
+| `potential_savings_co2e_grams` | FLOAT | Estimated CO₂e savings |
+| `potential_savings_cost` | FLOAT | Estimated cost savings |
+
 ## Schema Migrations
 
 All backends support **automatic schema evolution**:

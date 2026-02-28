@@ -103,6 +103,9 @@
             <span class="hla-dot hla-dot-orange"></span>PodCollector
           </div>
           <div class="hla-adapter">
+            <span class="hla-dot hla-dot-orange"></span>HPACollector
+          </div>
+          <div class="hla-adapter">
             <span class="hla-dot hla-dot-orange"></span>OpenCostCollector
           </div>
           <div class="hla-adapter">
@@ -130,6 +133,9 @@
           </div>
           <div class="hla-adapter">
             <span class="hla-dot hla-dot-cyan"></span>NodeRepository
+          </div>
+          <div class="hla-adapter">
+            <span class="hla-dot hla-dot-cyan"></span>RecommendationRepo
           </div>
           <div class="hla-adapter">
             <span class="hla-dot hla-dot-cyan"></span>EmbodiedRepository
@@ -202,11 +208,10 @@
   }
 
   .hla-nodes {
-    display: flex;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     gap: 0.75rem;
     padding: 1rem;
-    flex-wrap: wrap;
   }
 
   .hla-nodes-secondary {
@@ -221,7 +226,6 @@
     padding: 0.6rem 1rem;
     border-radius: 0.5rem;
     border: 1px solid var(--sl-color-gray-5);
-    min-width: 120px;
     transition: border-color 0.2s, transform 0.15s;
   }
   .hla-node:hover { transform: translateY(-2px); }
@@ -301,10 +305,8 @@
       grid-template-columns: 1fr;
     }
     .hla-nodes {
+      grid-template-columns: repeat(2, 1fr);
       gap: 0.5rem;
-    }
-    .hla-node {
-      min-width: 100px;
     }
   }
 </style>

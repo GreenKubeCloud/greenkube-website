@@ -15,20 +15,32 @@ The recommendation engine examines metrics collected over a configurable lookbac
   <Card title="🧟 Zombie Detection">
     Identifies pods consuming resources but producing little or no value — idle workloads that should be terminated.
   </Card>
-  <Card title="📏 Rightsizing">
+  <Card title="📏 Rightsizing (CPU & Memory)">
     Finds pods with CPU or memory requests significantly higher than actual usage, suggesting smaller resource allocations.
   </Card>
   <Card title="📈 Autoscaling">
     Detects workloads with high usage variability that would benefit from Horizontal or Vertical Pod Autoscalers.
   </Card>
-  <Card title="🌍 Carbon-Aware">
+  <Card title="🌍 Carbon-Aware Scheduling">
     Identifies batch workloads that could be time-shifted to periods of lower grid carbon intensity.
+  </Card>
+  <Card title="🗂️ Idle Namespace">
+    Spots namespaces with minimal activity that may contain forgotten resources consuming energy and cost.
+  </Card>
+  <Card title="🌙 Off-Peak Scaling">
+    Suggests scaling down workloads during off-peak hours when high resource allocation isn't needed.
+  </Card>
+  <Card title="🖥️ Overprovisioned Node">
+    Identifies nodes with far more capacity than their scheduled pods require.
+  </Card>
+  <Card title="💤 Underutilized Node">
+    Flags nodes running at very low utilization, wasting energy and money.
   </Card>
 </CardGrid>
 
 ## Recommendation Types
 
-### 🧟 Zombie Pods
+### 🧟 Zombie Pods (`ZOMBIE_POD`)
 
 **What:** Pods that are running and consuming resources but show minimal CPU/energy usage.
 
@@ -51,9 +63,9 @@ Namespace: staging
     kubectl delete deployment legacy-api-deployment -n staging
 ```
 
-### 📏 Rightsizing
+### 📏 Rightsizing (`RIGHTSIZING_CPU` / `RIGHTSIZING_MEMORY`)
 
-**What:** Pods with resource requests (CPU or memory) significantly higher than actual utilization.
+**What:** Pods with resource requests (CPU or memory) significantly higher than actual utilization. Two sub-types: `RIGHTSIZING_CPU` for over-provisioned CPU and `RIGHTSIZING_MEMORY` for over-provisioned memory.
 
 **Detection Criteria:**
 - Average CPU usage < `rightsizingCpuThreshold` × CPU request (default: 30%)
@@ -72,7 +84,7 @@ Namespace: production
   Estimated savings: $1.20/day, 5.4g CO₂e/day
 ```
 
-### 📈 Autoscaling Candidates
+### 📈 Autoscaling Candidates (`AUTOSCALING_CANDIDATE`)
 
 **What:** Workloads with high variability in resource usage that would benefit from autoscaling.
 
@@ -93,7 +105,7 @@ Namespace: default
     targetCPUUtilization: 70%
 ```
 
-### 🌍 Carbon-Aware Scheduling
+### 🌍 Carbon-Aware Scheduling (`CARBON_AWARE_SCHEDULING`)
 
 **What:** Batch or deferrable workloads that could be scheduled during periods of lower grid carbon intensity.
 
@@ -113,13 +125,37 @@ Namespace: data-pipeline
   Estimated savings: 8.5g CO₂e/run
 ```
 
-### 🗂️ Idle Namespace Cleanup
+### 🗂️ Idle Namespace Cleanup (`IDLE_NAMESPACE`)
 
 **What:** Namespaces with minimal activity that may contain forgotten resources.
 
 **Detection Criteria:**
 - Total energy below `idleNamespaceEnergyThreshold` (default: 1000 J)
 - Low pod count with minimal resource usage
+
+### 🌙 Off-Peak Scaling (`OFF_PEAK_SCALING`)
+
+**What:** Workloads that maintain high resource allocation during off-peak hours and could benefit from scheduled scaling down.
+
+**Detection Criteria:**
+- Consistently low utilization during off-peak periods
+- Workloads without existing time-based scaling policies
+
+### 🖥️ Overprovisioned Node (`OVERPROVISIONED_NODE`)
+
+**What:** Nodes with significantly more capacity than what the scheduled pods require.
+
+**Detection Criteria:**
+- Node resource utilization consistently below threshold
+- Opportunity to consolidate workloads onto fewer, right-sized nodes
+
+### 💤 Underutilized Node (`UNDERUTILIZED_NODE`)
+
+**What:** Nodes running with very low utilization that are wasting energy and money.
+
+**Detection Criteria:**
+- Node utilization below `nodeUtilizationThreshold` (default: 20%)
+- Running for extended periods at low usage
 
 ## Using Recommendations
 

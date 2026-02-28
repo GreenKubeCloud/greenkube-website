@@ -41,13 +41,15 @@ Uses the `kubernetes_asyncio` library to query the Kubernetes API:
 
 ```
 Node metadata:
-├── cpu_capacity (cores)
-├── memory_capacity (bytes)
+├── cpu_capacity_cores (cores)
+├── memory_capacity_bytes (bytes)
 ├── instance_type (from labels)
-├── availability_zone
+├── zone (availability zone)
+├── region (cloud region)
 ├── architecture (amd64/arm64)
-├── operating_system
-└── cloud_provider (from labels)
+├── node_pool (node pool/agent pool name)
+├── cloud_provider (from labels)
+└── embodied_emissions_kg (from Boavizta, if available)
 ```
 
 ### Pod Collector
@@ -69,10 +71,20 @@ Fetches cost allocation data via the OpenCost API:
 
 ```
 Per pod:
-├── total_cost ($)
 ├── cpu_cost ($)
-├── memory_cost ($)
-└── storage_cost ($)
+├── ram_cost ($)
+└── total_cost ($)
+```
+
+### HPA Collector
+
+Detects existing Horizontal Pod Autoscalers in the cluster. This data is used by the recommendation engine to avoid suggesting autoscaling for workloads that already have an HPA configured.
+
+```
+Per HPA:
+├── namespace
+├── target_kind (Deployment, StatefulSet, etc.)
+└── target_name
 ```
 
 ## Phase 2: Processing
@@ -138,8 +150,9 @@ For each unique (zone, normalized_timestamp):
   1. Check in-memory cache
   2. Check database repository
   3. Call Electricity Maps API
-  4. Fallback to default intensity
-  5. Cache result for rest of run
+  4. Fallback to per-zone default intensity (built-in table)
+  5. Fallback to global default intensity (500 gCO₂e/kWh)
+  6. Cache result for rest of run
 ```
 
 ### Step 5: Carbon Calculation
@@ -151,8 +164,10 @@ CO₂e (grams) = Energy (kWh) × Grid Intensity (gCO₂e/kWh) × PUE
 
 Where:
   Energy (kWh) = Joules / 3,600,000
-  Grid Intensity = from Electricity Maps (or default: 500 gCO₂e/kWh)
-  PUE = Power Usage Effectiveness (default: 1.3)
+  Grid Intensity = from Electricity Maps API
+                   → fallback: per-zone default (built-in table)
+                   → fallback: global default (500 gCO₂e/kWh)
+  PUE = Power Usage Effectiveness (provider-specific)
 ```
 
 ### Step 6: CombinedMetric Assembly

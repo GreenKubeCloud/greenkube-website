@@ -11,7 +11,7 @@ export default defineConfig({
 		starlight({
 			title: 'GreenKube',
 			description: 'Measure, understand, and reduce the carbon footprint of your Kubernetes infrastructure. Open-source FinGreenOps monitoring for cost and CO₂ optimization.',
-			favicon: '/favicon.svg',
+			favicon: '/favicon.ico',
 			components: {
 				Header: './src/components/Header.astro',
 				Footer: './src/components/Footer.astro',

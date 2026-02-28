@@ -30,71 +30,102 @@ src/greenkube/
 ├── __init__.py              # Version
 ├── api/                     # FastAPI server & endpoints
 │   ├── app.py               # Application factory
-│   ├── routes/              # Route handlers
+│   ├── routers/             # Route handlers
 │   └── ...
 ├── cli/                     # Typer CLI commands
 │   ├── main.py              # CLI entry point
 │   └── ...
 ├── collectors/              # Input adapters
+│   ├── base_collector.py    # Abstract base class
 │   ├── prometheus_collector.py
 │   ├── node_collector.py
 │   ├── pod_collector.py
 │   ├── opencost_collector.py
 │   ├── electricity_maps_collector.py
-│   └── boavizta_collector.py
+│   ├── hpa_collector.py     # HPA detection
+│   ├── boavizta_collector.py
+│   └── discovery/           # Service auto-discovery
 ├── core/                    # Business logic (no external deps)
 │   ├── config.py            # Configuration management
 │   ├── factory.py           # Repository & service factory
 │   ├── processor.py         # Data pipeline orchestrator
 │   ├── calculator.py        # Carbon emission calculator
-│   ├── estimator.py         # Energy estimation
-│   └── recommender.py       # Optimization analysis
+│   ├── recommender.py       # Optimization analysis
+│   ├── aggregator.py        # Metric aggregation
+│   ├── scheduler.py         # Collection scheduling
+│   ├── db.py                # Database initialization
+│   ├── k8s_client.py        # Kubernetes client helper
+│   └── exceptions.py        # Custom exceptions
 ├── energy/                  # Energy modeling
-│   ├── instance_profiles.py # Cloud instance power data
-│   └── ...
+│   └── estimator.py         # BasicEstimator (power → energy)
+├── data/                    # Static data & profiles
+│   ├── datacenter_pue_profiles.py
+│   ├── instance_profiles.py
+│   ├── provider_power_estimates.csv
+│   └── electricity_maps_regions_grid_intensity_default.py
 ├── models/                  # Pydantic data models
-│   ├── metrics.py
-│   ├── nodes.py
-│   └── recommendations.py
+│   ├── metrics.py           # CombinedMetric, CostMetric, etc.
+│   ├── node.py              # NodeInfo, NodeZoneContext
+│   ├── k8s.py               # Kubernetes-specific models
+│   ├── boavizta.py          # Boavizta API response models
+│   ├── cli.py               # CLI-specific models
+│   └── region_mapping.py    # Cloud region → carbon zone
 ├── storage/                 # Output adapters (repositories)
-│   ├── base_repository.py   # Abstract interfaces
-│   ├── postgres/
-│   ├── sqlite/
-│   └── elasticsearch/
+│   ├── base_repository.py   # Abstract interfaces (ABC)
+│   ├── postgres_repository.py
+│   ├── postgres_node_repository.py
+│   ├── postgres_recommendation_repository.py
+│   ├── sqlite_repository.py
+│   ├── sqlite_node_repository.py
+│   ├── sqlite_recommendation_repository.py
+│   ├── elasticsearch_repository.py
+│   ├── elasticsearch_node_repository.py
+│   └── embodied_repository.py
 ├── reporters/               # Report formatting
 ├── exporters/               # Data export (CSV, JSON)
 └── utils/                   # Utilities
-    ├── region_mapping.py    # Cloud region → carbon zone
-    └── ...
 ```
 
 ## Key Abstractions
 
 ### Repository Pattern
 
-All storage operations go through abstract base classes:
+All storage operations go through abstract base classes defined in `storage/base_repository.py`:
 
 ```python
 # storage/base_repository.py (simplified)
 class CarbonIntensityRepository(ABC):
     @abstractmethod
-    async def get_intensity(self, zone: str, timestamp: datetime) -> float: ...
+    async def get_for_zone_at_time(self, zone: str, timestamp: str) -> float | None: ...
     
     @abstractmethod
-    async def save_intensity(self, zone: str, timestamp: datetime, intensity: float): ...
+    async def save_history(self, history_data: list, zone: str) -> int: ...
 
-class CombinedMetricRepository(ABC):
     @abstractmethod
     async def write_combined_metrics(self, metrics: List[CombinedMetric]): ...
     
     @abstractmethod
-    async def read_combined_metrics(self, start: datetime, end: datetime) -> List[CombinedMetric]: ...
+    async def read_combined_metrics(self, start_time: datetime, end_time: datetime) -> List[CombinedMetric]: ...
+
+class NodeRepository(ABC):
+    @abstractmethod
+    async def save_nodes(self, nodes: List[NodeInfo]) -> int: ...
+
+    @abstractmethod
+    async def get_snapshots(self, start: datetime, end: datetime) -> List[tuple[str, NodeInfo]]: ...
+
+class RecommendationRepository(ABC):
+    @abstractmethod
+    async def save_recommendations(self, records: List[RecommendationRecord]) -> int: ...
+
+    @abstractmethod
+    async def get_recommendations(self, start: datetime, end: datetime, ...) -> List[RecommendationRecord]: ...
 ```
 
-Implementations:
-- `PostgresCarbonIntensityRepository` — Production (asyncpg)
-- `SQLiteCarbonIntensityRepository` — Development (aiosqlite)
-- `ElasticsearchCarbonIntensityRepository` — Scale (elasticsearch-py)
+Implementations per backend:
+- **PostgreSQL** — `PostgresRepository`, `PostgresNodeRepository`, `PostgresRecommendationRepository`
+- **SQLite** — `SQLiteRepository`, `SQLiteNodeRepository`, `SQLiteRecommendationRepository`
+- **Elasticsearch** — `ElasticsearchRepository`, `ElasticsearchNodeRepository`
 
 ### Factory Pattern
 
@@ -102,13 +133,17 @@ The factory instantiates the correct implementation based on configuration:
 
 ```python
 # core/factory.py (simplified)
-def create_intensity_repository(config: Config) -> CarbonIntensityRepository:
-    if config.db_type == "postgres":
-        return PostgresCarbonIntensityRepository(config.db_connection_string)
-    elif config.db_type == "sqlite":
-        return SQLiteCarbonIntensityRepository(config.db_path)
-    elif config.db_type == "elasticsearch":
-        return ElasticsearchCarbonIntensityRepository(config.es_hosts)
+def get_repository(config: Config) -> CarbonIntensityRepository:
+    if config.DB_TYPE == "postgres":
+        return PostgresRepository(config.DB_CONNECTION_STRING)
+    elif config.DB_TYPE == "sqlite":
+        return SQLiteRepository(config.DB_PATH)
+    elif config.DB_TYPE == "elasticsearch":
+        return ElasticsearchRepository(config.ELASTICSEARCH_HOSTS)
+
+def get_node_repository(config: Config) -> NodeRepository: ...
+def get_recommendation_repository(config: Config) -> RecommendationRepository: ...
+def get_embodied_repository(config: Config) -> EmbodiedRepository: ...
 ```
 
 ### Collector Pattern
@@ -139,23 +174,25 @@ GreenKube leverages Python's `asyncio` throughout:
 ```
 DataProcessor.run()
     │
-    ├── asyncio.gather(          ← Parallel collection
+    ├── asyncio.gather(            ← Parallel collection
     │     prometheus.collect(),
-    │     node_collector.collect(),
+    │     opencost.collect(),
     │     pod_collector.collect(),
-    │     opencost.collect()
+    │     node_collector.collect()
     │   )
     │
-    ├── estimator.calculate()    ← Sequential processing
+    ├── estimator.calculate()      ← Sequential processing
+    ├── zone_mapping()             ← Region → Electricity Maps zone
+    ├── electricity_maps.collect() ← Per-zone intensity (cached)
     ├── calculator.emissions()
-    └── repository.write()       ← Async batch insert
+    └── repository.write()         ← Async batch insert
 ```
 
 This design allows GreenKube to efficiently handle large clusters with hundreds of nodes and thousands of pods without blocking.
 
 ## Testing
 
-293+ unit tests cover all components:
+314+ unit tests cover all components:
 
 - **pytest** with `pytest-asyncio` for async tests
 - **respx** for HTTP request mocking

@@ -1,6 +1,6 @@
 ---
 title: Installation
-description: Complete guide to installing GreenKube via Helm, Docker, or from source.
+description: Complete guide to installing GreenKube via Helm or from source.
 ---
 
 import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
@@ -8,7 +8,7 @@ import { Tabs, TabItem, Steps, Aside } from '@astrojs/starlight/components';
 ## Installation Methods
 
 <Tabs>
-  <TabItem label="Helm (Recommended)">
+<TabItem label="Helm (Recommended)">
 
 ### Helm Chart Installation
 
@@ -87,48 +87,6 @@ helm upgrade greenkube greenkube/greenkube \
 helm uninstall greenkube -n greenkube
 kubectl delete namespace greenkube
 ```
-
-  </TabItem>
-  <TabItem label="Docker">
-
-### Docker Installation
-
-Run GreenKube as a standalone Docker container, useful for local development or testing.
-
-```bash
-docker pull greenkube/greenkube:0.2.0
-```
-
-**Run with SQLite (simplest setup):**
-
-```bash
-docker run -d \
-  --name greenkube \
-  -p 8000:8000 \
-  -e DB_TYPE=sqlite \
-  -e DB_PATH=/data/greenkube.db \
-  -e PROMETHEUS_URL=http://your-prometheus:9090 \
-  -v greenkube-data:/data \
-  greenkube/greenkube:0.2.0 \
-  start --with-api
-```
-
-**Run with external PostgreSQL:**
-
-```bash
-docker run -d \
-  --name greenkube \
-  -p 8000:8000 \
-  -e DB_TYPE=postgres \
-  -e DB_CONNECTION_STRING="postgresql://user:pass@host:5432/greenkube" \
-  -e PROMETHEUS_URL=http://your-prometheus:9090 \
-  greenkube/greenkube:0.2.0 \
-  start --with-api
-```
-
-<Aside type="note">
-  The Docker image is multi-architecture and supports both `linux/amd64` and `linux/arm64`.
-</Aside>
 
   </TabItem>
   <TabItem label="From Source">
