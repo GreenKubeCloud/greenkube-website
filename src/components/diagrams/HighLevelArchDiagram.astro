@@ -7,7 +7,7 @@
       <span class="hla-badge hla-badge-green">1</span>
       <span class="hla-layer-title">Presentation Layer</span>
     </div>
-    <div class="hla-nodes">
+    <div class="hla-nodes hla-cols-3">
       <div class="hla-node hla-node-green">
         <span class="hla-icon">🌐</span>
         <span class="hla-name">Web Dashboard</span>
@@ -41,7 +41,7 @@
       <span class="hla-layer-title">Business Logic</span>
       <span class="hla-layer-tag">Infrastructure-independent</span>
     </div>
-    <div class="hla-nodes">
+    <div class="hla-nodes hla-cols-3">
       <div class="hla-node hla-node-blue">
         <span class="hla-icon">🔄</span>
         <span class="hla-name">DataProcessor</span>
@@ -58,7 +58,7 @@
         <span class="hla-tech">Analysis engine</span>
       </div>
     </div>
-    <div class="hla-nodes hla-nodes-secondary">
+    <div class="hla-nodes hla-nodes-secondary hla-cols-2">
       <div class="hla-node hla-node-blue-light">
         <span class="hla-icon">⚡</span>
         <span class="hla-name">BasicEstimator</span>
@@ -209,10 +209,12 @@
 
   .hla-nodes {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     gap: 0.75rem;
     padding: 1rem;
   }
+
+  .hla-cols-2 { grid-template-columns: repeat(2, 1fr); max-width: 66%; margin-left: auto; margin-right: auto; }
+  .hla-cols-3 { grid-template-columns: repeat(3, 1fr); }
 
   .hla-nodes-secondary {
     padding-top: 0;
@@ -304,8 +306,14 @@
     .hla-adapters-split {
       grid-template-columns: 1fr;
     }
-    .hla-nodes {
+    .hla-cols-3 {
       grid-template-columns: repeat(2, 1fr);
+    }
+    .hla-cols-2 {
+      grid-template-columns: repeat(2, 1fr);
+      max-width: 100%;
+    }
+    .hla-nodes {
       gap: 0.5rem;
     }
   }

@@ -3,7 +3,7 @@
 <div class="arch-diagram">
   <div class="arch-section arch-collection">
     <div class="arch-section-label">Data Collection <span class="arch-badge">Async</span></div>
-    <div class="arch-row">
+    <div class="arch-row arch-cols-4">
       <div class="arch-node arch-source">
         <div class="arch-node-icon">🔥</div>
         <div class="arch-node-title">Prometheus</div>
@@ -34,7 +34,7 @@
 
   <div class="arch-section arch-processing">
     <div class="arch-section-label">Processing Engine</div>
-    <div class="arch-row">
+    <div class="arch-row arch-cols-1">
       <div class="arch-node arch-processor">
         <div class="arch-node-icon">⚙️</div>
         <div class="arch-node-title">Data Processor</div>
@@ -45,7 +45,7 @@
       <div class="arch-connector-line"></div>
       <div class="arch-connector-arrow">▼</div>
     </div>
-    <div class="arch-row">
+    <div class="arch-row arch-cols-3">
       <div class="arch-node arch-module">
         <div class="arch-node-icon">🔋</div>
         <div class="arch-node-title">Energy Estimator</div>
@@ -66,7 +66,7 @@
       <div class="arch-connector-line"></div>
       <div class="arch-connector-arrow">▼</div>
     </div>
-    <div class="arch-row">
+    <div class="arch-row arch-cols-1">
       <div class="arch-node arch-combined">
         <div class="arch-node-icon">📦</div>
         <div class="arch-node-title">Combined Metrics</div>
@@ -82,7 +82,7 @@
 
   <div class="arch-section arch-output">
     <div class="arch-section-label">Output Layer</div>
-    <div class="arch-row">
+    <div class="arch-row arch-cols-3">
       <div class="arch-node arch-storage">
         <div class="arch-node-icon">🗄️</div>
         <div class="arch-node-title">Storage</div>
@@ -108,7 +108,7 @@
 
   <div class="arch-section arch-presentation">
     <div class="arch-section-label">Presentation</div>
-    <div class="arch-row">
+    <div class="arch-row arch-cols-3">
       <div class="arch-node arch-ui">
         <div class="arch-node-icon">📊</div>
         <div class="arch-node-title">Web Dashboard</div>
@@ -174,11 +174,13 @@
 
   .arch-row {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(0, 1fr));
     gap: 0.75rem;
-    justify-content: center;
     margin-top: 0.75rem;
   }
+
+  .arch-cols-1 { grid-template-columns: 1fr; max-width: 280px; margin-left: auto; margin-right: auto; }
+  .arch-cols-3 { grid-template-columns: repeat(3, 1fr); }
+  .arch-cols-4 { grid-template-columns: repeat(4, 1fr); }
 
   .arch-node {
     display: flex;
@@ -246,7 +248,8 @@
   }
 
   @media (max-width: 640px) {
-    .arch-row {
+    .arch-cols-3,
+    .arch-cols-4 {
       grid-template-columns: repeat(2, 1fr);
     }
     .arch-node {

@@ -99,14 +99,14 @@
   }
 
   .energy-flow {
-    display: flex;
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr;
     align-items: stretch;
     gap: 0;
     min-width: 760px;
   }
 
   .energy-stage {
-    flex: 1;
     min-width: 0;
     border: 1px solid var(--sl-color-gray-5);
     border-radius: 0.75rem;
