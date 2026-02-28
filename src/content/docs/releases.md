@@ -9,9 +9,62 @@ import { Aside } from '@astrojs/starlight/components';
 
 <div class="release-card">
 
-### 🚀 v0.2.0 — Full-Stack FinGreenOps Platform
+### 🚀 v0.2.2 — Bug Fixes & Data Quality
 
 <span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
+
+**Release Date:** 2026
+
+A quality-focused release addressing 25 bugs identified during a comprehensive data quality audit, improving calculation accuracy, storage consistency, and overall reliability.
+
+#### 🐛 Bug Fixes
+
+**Calculation & Accuracy:**
+- Fixed PUE triple-inconsistency: per-provider PUE now passed as parameter to calculator
+- Fixed OpenCost cost 288× overestimate by dividing daily cost by steps per day
+- Zone-specific default grid intensity (e.g. FR=26 gCO₂/kWh) instead of global 500
+- Added `calculation_version` field to CombinedMetric for reproducibility
+- Added public `prefetch_intensity()` method on calculator
+
+**Storage & Consistency:**
+- Fixed `carbon_intensity` column type from INTEGER to REAL in SQLite
+- Fixed `node` column missing in SQLite schema
+- Added `DO UPDATE` upsert logic instead of silent `DO NOTHING`
+- Removed 48-hour lookback window from SQLite for backend consistency
+- Fixed volume mount missing in API container for SQLite mode
+- Split `EmbodiedRepository` into per-backend classes with shared ABC
+
+**Collectors & Integrations:**
+- Fixed `ElectricityMapsCollector` to pass `target_datetime` to API
+- Fixed `BoaviztaCollector` to reuse httpx client instead of creating one per request
+- Removed pytest hack from `BasicEstimator` — always uses configured step
+
+**Architecture & Reliability:**
+- Added jitter (±10%) and exponential backoff to scheduler
+- Moved all Config class-level attributes to instance attributes for test isolation
+- Added `clear_caches()` to factory for proper test teardown
+- Aggregator no longer mutates input metrics (uses `model_copy()`)
+- CPU-adjusted metrics now flagged with estimation reason
+
+**Testing:**
+- 323+ unit tests (up from 293)
+- All tests isolated and deterministic
+
+#### 📦 Downloads
+
+| Asset | Link |
+|-------|------|
+| Docker Image | `docker pull greenkube/greenkube:0.2.2` |
+| Helm Chart | `helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube` |
+| Source Code | [GitHub Release](https://github.com/GreenKubeCloud/GreenKube/releases) |
+
+</div>
+
+---
+
+<div class="release-card">
+
+### 🚀 v0.2.0 — Full-Stack FinGreenOps Platform
 
 **Release Date:** 2025
 
@@ -72,7 +125,7 @@ This major release transforms GreenKube from a CLI tool into a full-stack monito
 
 ### 🌱 v0.1.0 — Initial Release
 
-**Release Date:** 2024
+**Release Date:** 2025
 
 The first public release of GreenKube, establishing the core carbon tracking capabilities.
 
@@ -142,5 +195,5 @@ GreenKube follows [Semantic Versioning](https://semver.org/):
 
 | Channel | Description | Docker Tag |
 |---------|-------------|-----------|
-| **Stable** | Tested releases | `greenkube/greenkube:0.2.0` |
+| **Stable** | Tested releases | `greenkube/greenkube:0.2.2` |
 | **Latest** | Most recent stable | `greenkube/greenkube:latest` |

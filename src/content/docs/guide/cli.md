@@ -185,7 +185,7 @@ greenkube version
 
 Output:
 ```
-GreenKube v0.2.0
+GreenKube v0.2.2
 ```
 
 <Aside type="tip">

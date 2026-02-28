@@ -29,7 +29,7 @@ Health check endpoint. Returns the application status and version.
 ```json
 {
   "status": "healthy",
-  "version": "0.2.0",
+  "version": "0.2.2",
   "uptime_seconds": 3600
 }
 ```
@@ -41,7 +41,7 @@ Returns the application version.
 **Response:**
 ```json
 {
-  "version": "0.2.0"
+  "version": "0.2.2"
 }
 ```
 
