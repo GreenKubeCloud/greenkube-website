@@ -1,6 +1,6 @@
 ---
 title: Introduction to GreenKube
-description: Learn what GreenKube is, why it exists, and how it helps teams reduce cloud costs and carbon emissions on Kubernetes.
+description: Learn what GreenKube is, why it exists, and how it helps tech SMEs get carbon visibility and reduce cloud costs on Kubernetes.
 ---
 
 import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
@@ -12,16 +12,16 @@ import { Card, CardGrid, LinkCard } from '@astrojs/starlight/components';
 It combines **FinOps** (financial optimization) with **GreenOps** (environmental sustainability) into a unified platform that provides:
 
 - **Real-time monitoring** of energy consumption, CO₂ emissions, and costs per pod, namespace, and node
-- **Actionable recommendations** to reduce both cloud bills and environmental impact
-- **Regulatory compliance** support for CSRD/ESRS E1 carbon reporting requirements
-- **Historical analysis** with flexible time ranges and data export capabilities
+- **Actionable recommendations** to reduce both cloud bills and carbon footprint
+- **Carbon visibility** with data export capabilities for reporting and BI integration
+- **Historical analysis** with flexible time ranges
 
 ## The Problem
 
 Cloud computing is responsible for approximately **2-4% of global CO₂ emissions** — comparable to the airline industry. As organizations scale their Kubernetes infrastructure, they face two mounting challenges:
 
-### 1. Regulatory Pressure (CSRD)
-The EU's **Corporate Sustainability Reporting Directive (CSRD)** requires companies to report the carbon footprint of their entire value chain, including cloud services (Scope 3). Without proper tooling, estimating the carbon impact of Kubernetes workloads is nearly impossible.
+### 1. Lack of Carbon Visibility
+Most engineering teams have no idea how much CO₂ their Kubernetes workloads emit. Without measurement, there can be no meaningful reduction. Tech SMEs in particular lack access to dedicated carbon monitoring tools that are both affordable and easy to operate.
 
 ### 2. Cost Inefficiency
 Studies show that **30-40% of cloud spending is wasted** on idle, oversized, or poorly optimized resources. This waste translates directly into unnecessary carbon emissions.
@@ -41,7 +41,7 @@ GreenKube addresses both challenges simultaneously by:
     Identifies optimization opportunities — zombie pods, oversized workloads, autoscaling candidates — with estimated savings in both cost and CO₂.
   </Card>
   <Card title="4. Reporting">
-    Generates detailed reports by pod, namespace, and time period in formats compatible with CSRD/ESRS E1 requirements.
+    Generates detailed reports by pod, namespace, and time period, exportable to CSV or JSON for easy integration with your existing tools.
   </Card>
 </CardGrid>
 
@@ -51,9 +51,9 @@ GreenKube addresses both challenges simultaneously by:
 |------|----------|
 | **DevOps / SRE** | Monitor cluster efficiency, identify wasteful workloads, right-size resources |
 | **FinOps** | Optimize cloud costs with visibility into per-workload spending and recommendations |
-| **Sustainability / CSR** | Generate carbon reports for CSRD compliance, track emission reduction progress |
+| **Engineering Managers / CTOs** | Get high-level dashboards showing cost and carbon trends across the organization |
 | **Platform Engineers** | Deploy a self-hosted monitoring stack with Helm, integrate with existing Prometheus/OpenCost |
-| **CTOs / Engineering Managers** | Get high-level dashboards showing cost and emission trends across the organization |
+| **Sustainability-conscious teams** | Track and reduce your infrastructure's carbon footprint with concrete data |
 
 ## Key Concepts
 
