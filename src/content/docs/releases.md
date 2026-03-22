@@ -9,11 +9,77 @@ import { Aside } from '@astrojs/starlight/components';
 
 <div class="release-card">
 
-### 🚀 v0.2.2 — Bug Fixes & Data Quality
+### 🚀 v0.2.3 — Grafana, Demo Mode & Observability
 
 <span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
 
-**Release Date:** 2026
+**Release Date:** March 2026
+
+A feature-packed release bringing full Prometheus/Grafana integration, a demo mode for easy evaluation, database migrations, API security, and significant architecture improvements.
+
+#### ✨ New Features
+
+**Observability & Monitoring:**
+- **Grafana dashboard:** Pre-built `dashboards/greenkube-grafana.json` with KPIs, time-series, per-namespace breakdown, node utilization, grid intensity, and recommendations panels
+- **Prometheus integration:** ServiceMonitor, NetworkPolicy, and Prometheus RBAC templates in the Helm chart for seamless kube-prometheus-stack scraping
+- **Prometheus `/prometheus/metrics` endpoint:** Comprehensive metric exposition (CO₂e, cost, energy, CPU, memory, network, disk, restarts, nodes, grid intensity, recommendations) with correct label relabeling
+
+**Demo & Evaluation:**
+- **Demo mode:** `greenkube demo` command generates 7 days of realistic sample data (22 pods, 5 namespaces) in a standalone SQLite instance — explore the dashboard without a live cluster
+
+**Infrastructure & Reliability:**
+- **Database migration system:** Automated schema migration runner with versioned scripts for PostgreSQL and SQLite
+- **API security:** Optional bearer-token authentication (`GREENKUBE_API_KEY`), configurable CORS origins, rate limiting via slowapi
+- **Pagination:** `GET /api/v1/metrics` now supports `offset` and `limit` query parameters
+- **Docker healthcheck:** Built-in `HEALTHCHECK` instruction for standalone usage
+- **Helm chart tests:** `helm test` connectivity validation via `test-connection.yaml`
+- **Graceful shutdown:** `preStop` lifecycle hook on the API container
+
+**Architecture:**
+- **`CarbonIntensityRepository` split:** Dedicated repository implementations per backend (Postgres, SQLite, Elasticsearch) following the same pattern as other repositories
+- **DataProcessor refactor:** Monolithic processor split into focused collaborators — `CollectionOrchestrator`, `MetricAssembler`, `NodeZoneMapper`, `PrometheusResourceMapper`, `CostNormalizer`, `HistoricalRangeProcessor`, `EmbodiedEmissionsService`
+- **Dependency injection:** Replaced global `Config` singleton and global `db_manager` singleton with explicit lifecycle management
+
+**Documentation & Testing:**
+- On-premises zone configuration guide
+- Prometheus & Grafana setup guide
+- Contributing guide (`CONTRIBUTING.md`) and architecture diagram
+- API curl examples in README
+- **474+ unit tests** (up from 323) with full integration test coverage
+- Shared `parse_duration()` utility, `Config.reload()` for test isolation
+
+#### 🔄 Changed
+- Minimum Python version raised from 3.9 to 3.10 (3.9 reached EOL October 2025)
+- Helm chart generates a random PostgreSQL password when none is provided
+- Replaced f-string logging with lazy `%`-formatting throughout the codebase
+- `Recommendation` model uses typed `scope` field instead of sentinel `pod_name="*"`
+
+#### 🐛 Fixed
+- CLI `recommend` command now uses the unified recommendation engine (all 9 types) instead of legacy 2-type API
+- CLI `recommend` reads from database by default (consistent with API); added `--live` flag for real-time mode
+- Cost normalization in `run_range()` now divides range total by number of time steps
+- Helm `recommendSystemNamespaces` moved inside `recommendations` scope in `values.yaml`
+- PostgreSQL credentials no longer shipped as plain text in Helm defaults
+- DB connection string sourced from Secret instead of inline env var in deployment
+- Removed `.tgz` artifacts from git tracking
+
+#### 📦 Downloads
+
+| Asset | Link |
+|-------|------|
+| Docker Image | `docker pull greenkube/greenkube:0.2.3` |
+| Helm Chart | `helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube` |
+| Source Code | [GitHub Release](https://github.com/GreenKubeCloud/GreenKube/releases) |
+
+</div>
+
+---
+
+<div class="release-card">
+
+### 🚀 v0.2.2 — Bug Fixes & Data Quality
+
+**Release Date:** February 2026
 
 A quality-focused release addressing 25 bugs identified during a comprehensive data quality audit, improving calculation accuracy, storage consistency, and overall reliability.
 
@@ -195,5 +261,5 @@ GreenKube follows [Semantic Versioning](https://semver.org/):
 
 | Channel | Description | Docker Tag |
 |---------|-------------|-----------|
-| **Stable** | Tested releases | `greenkube/greenkube:0.2.2` |
+| **Stable** | Tested releases | `greenkube/greenkube:0.2.3` |
 | **Latest** | Most recent stable | `greenkube/greenkube:latest` |

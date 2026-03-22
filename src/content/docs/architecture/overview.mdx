@@ -49,11 +49,19 @@ src/greenkube/
 │   ├── config.py            # Configuration management
 │   ├── factory.py           # Repository & service factory
 │   ├── processor.py         # Data pipeline orchestrator
+│   ├── collection_orchestrator.py # Async collector runner
+│   ├── metric_assembler.py  # Combines data into CombinedMetrics
+│   ├── node_zone_mapper.py  # Cloud zone → carbon zone mapping
+│   ├── prometheus_resource_mapper.py # Per-pod resource maps
+│   ├── cost_normalizer.py   # Cost normalization per step
+│   ├── historical_range_processor.py # Day-chunked range queries
+│   ├── embodied_emissions_service.py # Boavizta integration
 │   ├── calculator.py        # Carbon emission calculator
 │   ├── recommender.py       # Optimization analysis
 │   ├── aggregator.py        # Metric aggregation
 │   ├── scheduler.py         # Collection scheduling
 │   ├── db.py                # Database initialization
+│   ├── migration.py         # Database schema migrations
 │   ├── k8s_client.py        # Kubernetes client helper
 │   └── exceptions.py        # Custom exceptions
 ├── energy/                  # Energy modeling
@@ -75,11 +83,14 @@ src/greenkube/
 │   ├── postgres_repository.py
 │   ├── postgres_node_repository.py
 │   ├── postgres_recommendation_repository.py
+│   ├── postgres_carbon_intensity_repository.py
 │   ├── sqlite_repository.py
 │   ├── sqlite_node_repository.py
 │   ├── sqlite_recommendation_repository.py
+│   ├── sqlite_carbon_intensity_repository.py
 │   ├── elasticsearch_repository.py
 │   ├── elasticsearch_node_repository.py
+│   ├── elasticsearch_carbon_intensity_repository.py
 │   └── embodied_repository.py
 ├── reporters/               # Report formatting
 ├── exporters/               # Data export (CSV, JSON)
@@ -169,30 +180,34 @@ class PrometheusCollector:
 
 ## Concurrency Model
 
-GreenKube leverages Python's `asyncio` throughout:
+GreenKube leverages Python's `asyncio` throughout. The `DataProcessor` delegates to focused collaborators:
 
 ```
 DataProcessor.run()
     │
-    ├── asyncio.gather(            ← Parallel collection
-    │     prometheus.collect(),
-    │     opencost.collect(),
-    │     pod_collector.collect(),
-    │     node_collector.collect()
-    │   )
+    ├── CollectionOrchestrator    ← Parallel collection
+    │     asyncio.gather(
+    │       prometheus.collect(),
+    │       opencost.collect(),
+    │       pod_collector.collect(),
+    │       node_collector.collect()
+    │     )
     │
-    ├── estimator.calculate()      ← Sequential processing
-    ├── zone_mapping()             ← Region → Electricity Maps zone
-    ├── electricity_maps.collect() ← Per-zone intensity (cached)
-    ├── calculator.emissions()
-    └── repository.write()         ← Async batch insert
+    ├── PrometheusResourceMapper  ← Build per-pod resource maps
+    ├── BasicEstimator            ← CPU → energy estimation
+    ├── NodeZoneMapper            ← Region → carbon zone
+    ├── CostNormalizer            ← Normalize costs per step
+    ├── CarbonCalculator          ← Energy → CO₂e
+    ├── EmbodiedEmissionsService  ← Boavizta embodied CO₂
+    ├── MetricAssembler           ← Combine into CombinedMetric
+    └── repository.write()        ← Async batch insert
 ```
 
 This design allows GreenKube to efficiently handle large clusters with hundreds of nodes and thousands of pods without blocking.
 
 ## Testing
 
-314+ unit tests cover all components:
+474+ unit tests cover all components:
 
 - **pytest** with `pytest-asyncio` for async tests
 - **respx** for HTTP request mocking

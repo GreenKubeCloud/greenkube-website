@@ -20,6 +20,7 @@ greenkube --help
 | `greenkube start` | Start the continuous monitoring service |
 | `greenkube report` | Generate on-demand reports |
 | `greenkube recommend` | Get optimization recommendations |
+| `greenkube demo` | Launch a demo with realistic sample data |
 | `greenkube api` | Start the API server |
 | `greenkube version` | Show version information |
 
@@ -138,6 +139,7 @@ greenkube recommend [OPTIONS]
 | `--namespace` / `-n` | Filter by namespace | All namespaces |
 | `--lookback` | Days of historical data to analyze | `7` |
 | `--format` | Output format: `table`, `json` | `table` |
+| `--live` | Use real-time collection instead of database | `false` |
 
 **Example:**
 
@@ -162,6 +164,42 @@ Each recommendation includes:
 - **Savings**: Estimated cost and CO₂ reduction
 - **Action**: Suggested kubectl command
 
+## `greenkube demo`
+
+Launch a standalone demo instance with realistic sample data — no live cluster metrics required. Perfect for evaluating GreenKube or creating demos for your team.
+
+```bash
+greenkube demo [OPTIONS]
+```
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--days` | Number of days of sample data to generate | `7` |
+| `--port` | Port for the demo API/dashboard server | `9000` |
+| `--no-browser` | Don't auto-open the browser | `false` |
+
+**What it does:**
+- Creates a temporary SQLite database with realistic Kubernetes metrics
+- Generates data for **22 pods** across **5 namespaces** (production, staging, monitoring, data-pipeline, ci-cd)
+- Includes carbon emissions, costs, resource usage, and optimization recommendations
+- Starts the API server and dashboard on the specified port
+
+**Examples:**
+
+```bash
+# Quick demo (7 days of data, opens browser)
+greenkube demo
+
+# Demo with 14 days of data, no browser
+greenkube demo --days 14 --no-browser
+
+# Deploy as a standalone Kubernetes pod
+kubectl run greenkube-demo \
+  --image=greenkube/greenkube:0.2.3 \
+  --restart=Never \
+  --command -- greenkube demo --no-browser --port 9000
+```
+
 ## `greenkube api`
 
 Start the FastAPI server (and web dashboard) independently.
@@ -185,7 +223,7 @@ greenkube version
 
 Output:
 ```
-GreenKube v0.2.2
+GreenKube v0.2.3
 ```
 
 <Aside type="tip">

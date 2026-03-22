@@ -110,6 +110,34 @@ helm upgrade greenkube greenkube/greenkube \
   Without a token, GreenKube uses a default carbon intensity of **500 gCO₂e/kWh** for all zones. Get a free token at [electricitymaps.com](https://www.electricitymaps.com/).
 </Aside>
 
+## Demo Mode
+
+Want to explore GreenKube **without** a live cluster? Deploy the demo mode as a standalone pod:
+
+```bash
+# 1. Deploy GreenKube demo
+kubectl run greenkube-demo \
+  --image=greenkube/greenkube:0.2.3 \
+  --restart=Never \
+  --command -- greenkube demo --no-browser --port 9000
+
+# 2. Wait for it to start
+kubectl wait --for=condition=Ready pod/greenkube-demo --timeout=30s
+
+# 3. Access the dashboard
+kubectl port-forward pod/greenkube-demo 9000:9000
+```
+
+Open [http://localhost:9000](http://localhost:9000) to explore:
+- **7 days** of realistic Kubernetes metrics
+- **22 pods** across **5 namespaces** (production, staging, monitoring, data-pipeline, ci-cd)
+- Carbon emissions, costs, resource usage, and optimization recommendations
+- The full dashboard, API, and CLI experience
+
+<Aside type="tip">
+  The demo runs independently from your production installation. Clean up with `kubectl delete pod greenkube-demo` when done.
+</Aside>
+
 ## Next Steps
 
 - 📖 [Full Installation Guide](/getting-started/installation/) — Advanced configuration options

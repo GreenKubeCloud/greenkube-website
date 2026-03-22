@@ -15,7 +15,16 @@ http://localhost:8000/api/v1
 
 ## Authentication
 
-The API currently does not require authentication. It is intended to be accessed within the cluster network or via port-forward.
+The API supports **optional bearer-token authentication** via the `GREENKUBE_API_KEY` environment variable. When set, all API requests must include the token in the `Authorization` header:
+
+```bash
+curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8000/api/v1/metrics
+```
+
+When no API key is configured, the API is open (designed for cluster-internal use). For external exposure, you can combine the API key with:
+- Kubernetes Ingress with authentication
+- OAuth2 proxy
+- Network policies
 
 ## Endpoints
 
@@ -29,7 +38,7 @@ Health check endpoint. Returns the application status and version.
 ```json
 {
   "status": "healthy",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "uptime_seconds": 3600
 }
 ```
@@ -41,7 +50,7 @@ Returns the application version.
 **Response:**
 ```json
 {
-  "version": "0.2.2"
+  "version": "0.2.3"
 }
 ```
 
@@ -75,6 +84,8 @@ Retrieve per-pod metrics with optional filtering.
 | `namespace` | string | Filter by namespace | All |
 | `last` | string | Time range (e.g., `24h`, `7d`, `30d`) | `24h` |
 | `pod` | string | Filter by pod name pattern | All |
+| `limit` | integer | Maximum number of results | 100 |
+| `offset` | integer | Offset for pagination | 0 |
 
 **Example Request:**
 ```bash

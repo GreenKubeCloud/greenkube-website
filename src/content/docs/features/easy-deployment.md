@@ -35,6 +35,8 @@ That's it. GreenKube will:
 | **Services** | API service + PostgreSQL service |
 | **PVC** | Persistent volume for PostgreSQL data |
 | **Post-Install Hook** | Database schema initialization |
+| **ServiceMonitor** | Automatic Prometheus scraping (kube-prometheus-stack) |
+| **NetworkPolicy** | Allows Prometheus to reach GreenKube API |
 
 ### Auto-Discovery
 
@@ -48,7 +50,9 @@ GreenKube automatically detects:
 
 - **Liveness probe** — `/health` endpoint
 - **Readiness probe** — `/health` endpoint with DB connectivity check
-- **Prometheus metrics** — `/metrics` endpoint for self-monitoring
+- **Docker healthcheck** — Built-in `HEALTHCHECK` instruction for standalone usage
+- **Prometheus metrics** — `/prometheus/metrics` endpoint with comprehensive metric exposition
+- **Grafana dashboard** — Pre-built JSON dashboard for one-click import
 - **Structured logging** — JSON-formatted logs for easy aggregation
 
 ## Configuration
@@ -76,7 +80,7 @@ Every parameter can also be set via environment variables (12-Factor App complia
 ## Docker Image
 
 The Docker image is:
-- **Lightweight** — Based on `python:3.11-slim`
+- **Lightweight** — Based on `python:3.14-slim`
 - **Secure** — Runs as non-root user
 - **Multi-arch** — Available for `linux/amd64` and `linux/arm64`
 
