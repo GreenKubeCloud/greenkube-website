@@ -89,9 +89,9 @@ Per HPA:
 
 ## Phase 2: Processing
 
-The `DataProcessor` orchestrates the transformation pipeline.
+The `DataProcessor` orchestrates the transformation pipeline by delegating to focused collaborators. Each collaborator handles a single responsibility.
 
-### Step 1: Resource Aggregation
+### Step 1: Resource Aggregation (`PrometheusResourceMapper`)
 
 Builds per-pod maps from raw collector outputs:
 
@@ -108,7 +108,7 @@ pod_mem_map             → {pod_key: memory_request}
 pod_ephemeral_map       → {pod_key: storage_request}
 ```
 
-### Step 2: Energy Estimation
+### Step 2: Energy Estimation (`BasicEstimator`)
 
 The `BasicEstimator` converts CPU metrics into energy (Joules):
 
@@ -129,7 +129,7 @@ For each node:
 
 If the instance type is unknown, GreenKube falls back to a configurable default profile.
 
-### Step 3: Zone Mapping
+### Step 3: Zone Mapping (`NodeZoneMapper`)
 
 Maps cloud regions to Electricity Maps carbon zones:
 
@@ -155,7 +155,11 @@ For each unique (zone, normalized_timestamp):
   6. Cache result for rest of run
 ```
 
-### Step 5: Carbon Calculation
+### Step 4b: Cost Normalization (`CostNormalizer`)
+
+Divides OpenCost daily/range cost totals into per-step values to ensure cost data is proportional to each collection interval rather than the full reporting period.
+
+### Step 5: Carbon Calculation (`CarbonCalculator`)
 
 The `CarbonCalculator` converts energy to emissions:
 
@@ -170,7 +174,7 @@ Where:
   PUE = Power Usage Effectiveness (provider-specific)
 ```
 
-### Step 6: CombinedMetric Assembly
+### Step 6: CombinedMetric Assembly (`MetricAssembler`)
 
 Merges all data sources into a single `CombinedMetric` object per pod:
 
@@ -196,7 +200,7 @@ Elastic:     Bulk index operation
 
 ## Historical Analysis (Range Queries)
 
-For reporting on past time periods, the pipeline uses a **chunked processing** approach:
+For reporting on past time periods, the `HistoricalRangeProcessor` uses a **chunked processing** approach:
 
 ```
 run_range(start, end):

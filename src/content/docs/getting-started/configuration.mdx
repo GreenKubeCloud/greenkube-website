@@ -14,7 +14,7 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `image.repository` | Docker image repository | `greenkube/greenkube` |
-| `image.tag` | Image tag | `0.2.0` |
+| `image.tag` | Image tag | `0.2.3` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 
 ### Database
@@ -69,6 +69,19 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | `config.api.enabled` | Enable the API server | `true` |
 | `config.api.host` | API listen address | `0.0.0.0` |
 | `config.api.port` | API listen port | `8000` |
+| `config.api.apiKey` | Bearer token for API authentication (empty = no auth) | `""` |
+| `config.api.corsOrigins` | Allowed CORS origins (comma-separated) | `*` |
+| `config.api.rateLimit` | Rate limit (requests per minute, 0 = disabled) | `0` |
+
+### Monitoring
+
+| Parameter | Description | Default |
+|-----------|-------------|---------|
+| `monitoring.serviceMonitor.enabled` | Create a ServiceMonitor for Prometheus Operator | `true` |
+| `monitoring.serviceMonitor.namespace` | Namespace for the ServiceMonitor (must match Prometheus selector) | `monitoring` |
+| `monitoring.serviceMonitor.interval` | Scrape interval | `30s` |
+| `monitoring.networkPolicy.enabled` | Create a NetworkPolicy allowing Prometheus to reach GreenKube | `true` |
+| `monitoring.networkPolicy.prometheusNamespace` | Namespace where Prometheus runs | `monitoring` |
 
 ### Recommendations
 
@@ -143,6 +156,8 @@ When running outside Helm (Docker, source), use these environment variables:
 | `NODE_DATA_MAX_AGE_DAYS` | Max node data age | `30` |
 | `API_HOST` | API listen address | `0.0.0.0` |
 | `API_PORT` | API listen port | `8000` |
+| `GREENKUBE_API_KEY` | Bearer token for API authentication (empty = no auth) | — |
+| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | `*` |
 | `RECOMMENDATION_LOOKBACK_DAYS` | Recommendation lookback | `7` |
 | `RIGHTSIZING_CPU_THRESHOLD` | CPU rightsizing threshold | `0.3` |
 | `ZOMBIE_COST_THRESHOLD` | Zombie detection cost ($) | `0.01` |

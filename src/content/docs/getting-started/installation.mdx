@@ -172,6 +172,8 @@ The Helm chart deploys the following resources:
 | `StatefulSet` | PostgreSQL database (if enabled) |
 | `PersistentVolumeClaim` | Database storage (if persistence enabled) |
 | `Job` (post-install hook) | Database schema initialization |
+| `ServiceMonitor` | Prometheus Operator scrape config (if monitoring enabled) |
+| `NetworkPolicy` | Allows Prometheus to reach GreenKube API (if monitoring enabled) |
 
 ## Resource Requirements
 

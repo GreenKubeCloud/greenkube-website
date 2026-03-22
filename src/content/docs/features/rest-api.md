@@ -11,6 +11,9 @@ The API is served at `http://<service>:8000/api/v1/` and includes:
 
 - **Auto-generated OpenAPI docs** at `/docs` (Swagger UI) and `/redoc`
 - **CORS support** for cross-origin dashboard access
+- **Optional authentication** via bearer token (`GREENKUBE_API_KEY`)
+- **Rate limiting** via slowapi to protect against abuse
+- **Pagination** support on metrics endpoints (`offset` and `limit`)
 - **JSON responses** with consistent error handling
 - **Pydantic v2 validation** on all request/response models
 
@@ -49,7 +52,7 @@ The API is served at `http://<service>:8000/api/v1/` and includes:
 ### Prometheus Metrics
 | Method | Path | Description |
 |---|---|---|
-| GET | `/metrics` | Prometheus-format metrics for self-monitoring |
+| GET | `/prometheus/metrics` | Prometheus-format metrics for scraping (CO₂e, cost, energy, CPU, memory, network, nodes, grid intensity, recommendations) |
 
 ## Query Parameters
 
@@ -83,10 +86,28 @@ curl http://localhost:8000/api/v1/recommendations?severity=critical
 
 ## Authentication
 
-By default, the API is unauthenticated (designed for cluster-internal use). For external exposure, secure it behind:
+GreenKube supports **optional bearer-token authentication** via the `GREENKUBE_API_KEY` environment variable (or `config.api.apiKey` in Helm values):
+
+```bash
+# With authentication enabled
+curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8000/api/v1/metrics
+```
+
+When no API key is configured, the API is open. For external exposure, you can combine the API key with:
 - Kubernetes Ingress with authentication
 - OAuth2 proxy
 - Network policies
+
+## Rate Limiting
+
+Rate limiting is available via [slowapi](https://github.com/laurents/slowapi) to protect the API from abuse:
+
+```yaml
+# In values.yaml
+config:
+  api:
+    rateLimit: 60  # requests per minute (0 = disabled)
+```
 
 ## CORS Configuration
 

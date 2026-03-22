@@ -103,6 +103,7 @@ export default defineConfig({
 						{ label: 'Dashboard', slug: 'guide/dashboard' },
 						{ label: 'CLI Reference', slug: 'guide/cli' },
 						{ label: 'API Reference', slug: 'guide/api' },
+						{ label: 'Grafana & Prometheus', slug: 'guide/grafana' },
 						{ label: 'Reports & Exports', slug: 'guide/reports' },
 						{ label: 'Recommendations', slug: 'guide/recommendations' },
 					],
