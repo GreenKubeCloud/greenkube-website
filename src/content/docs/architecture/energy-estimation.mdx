@@ -8,6 +8,10 @@ import EnergyEstimationDiagram from '../../../components/diagrams/EnergyEstimati
 
 GreenKube estimates per-pod energy consumption using a methodology based on the [Cloud Carbon Footprint (CCF)](https://www.cloudcarbonfootprint.org/) project, adapted for real-time Kubernetes workload monitoring.
 
+<Aside type="caution">
+  **Current scope:** Energy and CO₂e estimation is currently based on **CPU usage only**. Memory, network I/O, disk I/O, and GPU are collected as metrics but are **not yet factored into the energy model**. GPU workloads are not supported. These dimensions are planned for a future release.
+</Aside>
+
 ## Overview
 
 The energy estimation pipeline converts CPU utilization metrics into energy consumption (Joules) using known power characteristics of cloud instance types.
