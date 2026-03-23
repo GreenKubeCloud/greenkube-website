@@ -21,46 +21,57 @@ Before you begin, make sure you have:
   Don't have Prometheus yet? The most common setup is the **kube-prometheus-stack** Helm chart, which includes Prometheus, Grafana, and commonly used exporters.
 </Aside>
 
+## Try the Demo First (No Prometheus or OpenCost Required)
+
+Want to explore GreenKube before setting up metrics collection? Run it as a standalone demo pod in under 30 seconds:
+
+```bash
+kubectl run greenkube-demo \
+  --image=greenkube/greenkube:0.2.3 \
+  --restart=Never \
+  --command -- greenkube demo --no-browser --port 9000
+
+kubectl wait --for=condition=Ready pod/greenkube-demo --timeout=60s
+kubectl port-forward pod/greenkube-demo 9000:9000
+```
+
+Open [http://localhost:9000](http://localhost:9000) — you'll get **7 days** of realistic metrics for 22 pods across 5 namespaces, with carbon emissions, costs, and recommendations pre-loaded.
+
+```bash
+# Clean up when done
+kubectl delete pod greenkube-demo
+```
+
 ## Installation
 
 <Steps>
 
-1. **Add the GreenKube Helm repository**
+1. **Add the Helm repository and install**
 
    ```bash
    helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube
    helm repo update
-   ```
-
-2. **Install GreenKube**
-
-   ```bash
    helm install greenkube greenkube/greenkube \
      -n greenkube \
      --create-namespace
    ```
 
-   This deploys GreenKube with:
-   - The data collector (runs continuously)
-   - The FastAPI server (REST API)
-   - The web dashboard (SvelteKit SPA)
-   - PostgreSQL database (StatefulSet)
-   - RBAC (ServiceAccount, ClusterRole, ClusterRoleBinding)
+   This deploys the data collector, REST API, web dashboard, and a PostgreSQL database — all in one command.
 
-3. **Wait for pods to be ready**
+2. **Wait for pods to be ready**
 
    ```bash
    kubectl get pods -n greenkube -w
    ```
 
-   You should see something like:
+   You should see:
    ```
    NAME                         READY   STATUS    RESTARTS   AGE
-   greenkube-7b5f8c9d6-x2k4p   1/1     Running   0          30s
+   greenkube-7b5f8c9d6-x2k4p   2/2     Running   0          30s
    greenkube-postgres-0         1/1     Running   0          30s
    ```
 
-4. **Access the dashboard**
+3. **Access the dashboard**
 
    ```bash
    kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube
@@ -68,75 +79,38 @@ Before you begin, make sure you have:
 
    Open [http://localhost:8000](http://localhost:8000) in your browser.
 
+4. **(Optional) Add an Electricity Maps token**
+
+   For accurate, region-specific carbon data instead of the default 500 gCO₂e/kWh:
+
+   ```bash
+   helm upgrade greenkube greenkube/greenkube \
+     -n greenkube \
+     --set secrets.electricityMapsToken="YOUR_TOKEN_HERE"
+   ```
+
+   Get a free token at [electricitymaps.com](https://www.electricitymaps.com/).
+
 5. **Run your first report**
 
    ```bash
-   # Get the pod name
-   GREENKUBE_POD=$(kubectl get pods -n greenkube -l app=greenkube -o jsonpath='{.items[0].metadata.name}')
+   GREENKUBE_POD=$(kubectl get pods -n greenkube \
+     -l app.kubernetes.io/name=greenkube,app.kubernetes.io/component=app \
+     -o jsonpath='{.items[0].metadata.name}')
 
-   # Exec into the pod
-   kubectl exec -it $GREENKUBE_POD -n greenkube -- bash
-
-   # Generate a daily report
-   greenkube report --daily
-
-   # Get optimization recommendations
-   greenkube recommend
+   kubectl exec -it $GREENKUBE_POD -n greenkube -- greenkube report --daily
+   kubectl exec -it $GREENKUBE_POD -n greenkube -- greenkube recommend
    ```
 
 </Steps>
 
 ## What You'll See
 
-After installation, the dashboard provides:
-
 - **Dashboard** — KPI cards showing total CO₂ emissions, costs, energy consumption, and active pods. Time-series charts and namespace breakdown.
 - **Metrics** — Interactive table with per-pod metrics: energy, cost, CPU, memory, network, disk, storage, and restarts.
 - **Nodes** — Cluster node inventory with CPU/memory capacity, hardware profiles, cloud provider info.
 - **Recommendations** — Actionable suggestions to reduce costs and emissions (zombie pods, rightsizing, autoscaling).
 - **Settings** — Current configuration, API health, version info, database connection details.
-
-## Adding an Electricity Maps Token (Optional)
-
-For accurate, region-specific carbon intensity data, add an Electricity Maps API token:
-
-```bash
-helm upgrade greenkube greenkube/greenkube \
-  -n greenkube \
-  --set secrets.electricityMapsToken="YOUR_TOKEN_HERE"
-```
-
-<Aside>
-  Without a token, GreenKube uses a default carbon intensity of **500 gCO₂e/kWh** for all zones. Get a free token at [electricitymaps.com](https://www.electricitymaps.com/).
-</Aside>
-
-## Demo Mode
-
-Want to explore GreenKube **without** a live cluster? Deploy the demo mode as a standalone pod:
-
-```bash
-# 1. Deploy GreenKube demo
-kubectl run greenkube-demo \
-  --image=greenkube/greenkube:0.2.3 \
-  --restart=Never \
-  --command -- greenkube demo --no-browser --port 9000
-
-# 2. Wait for it to start
-kubectl wait --for=condition=Ready pod/greenkube-demo --timeout=30s
-
-# 3. Access the dashboard
-kubectl port-forward pod/greenkube-demo 9000:9000
-```
-
-Open [http://localhost:9000](http://localhost:9000) to explore:
-- **7 days** of realistic Kubernetes metrics
-- **22 pods** across **5 namespaces** (production, staging, monitoring, data-pipeline, ci-cd)
-- Carbon emissions, costs, resource usage, and optimization recommendations
-- The full dashboard, API, and CLI experience
-
-<Aside type="tip">
-  The demo runs independently from your production installation. Clean up with `kubectl delete pod greenkube-demo` when done.
-</Aside>
 
 ## Next Steps
 
