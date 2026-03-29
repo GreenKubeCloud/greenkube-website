@@ -21,9 +21,27 @@ Before you begin, make sure you have:
   Don't have Prometheus yet? The most common setup is the **kube-prometheus-stack** Helm chart, which includes Prometheus, Grafana, and commonly used exporters.
 </Aside>
 
-## Try the Demo First (No Prometheus or OpenCost Required)
+## Try the Demo First (No Cluster Required)
 
-Want to explore GreenKube before setting up metrics collection? Run it as a standalone demo pod in under 30 seconds:
+Want to explore GreenKube without any infrastructure? Start with **Demo Mode** — it loads 7 days of realistic data for 22 pods across 5 namespaces, with carbon emissions, costs, and recommendations pre-loaded.
+
+<Tabs>
+  <TabItem label="🐳 Docker (no cluster needed)">
+
+The fastest way to try GreenKube. Only Docker is required — no Kubernetes, no Prometheus, no setup.
+
+```bash
+docker run --rm -p 9000:9000 \
+  greenkube/greenkube:0.2.3 \
+  demo --no-browser --port 9000
+```
+
+Open [http://localhost:9000](http://localhost:9000) in your browser. Press `Ctrl+C` to stop.
+
+  </TabItem>
+  <TabItem label="☸️ Kubernetes (standalone pod)">
+
+If you have a cluster available, you can run the demo as a temporary pod:
 
 ```bash
 kubectl run greenkube-demo \
@@ -35,12 +53,19 @@ kubectl wait --for=condition=Ready pod/greenkube-demo --timeout=60s
 kubectl port-forward pod/greenkube-demo 9000:9000
 ```
 
-Open [http://localhost:9000](http://localhost:9000) — you'll get **7 days** of realistic metrics for 22 pods across 5 namespaces, with carbon emissions, costs, and recommendations pre-loaded.
+Open [http://localhost:9000](http://localhost:9000) in your browser.
 
 ```bash
 # Clean up when done
 kubectl delete pod greenkube-demo
 ```
+
+  </TabItem>
+</Tabs>
+
+<Aside type="tip">
+  Demo mode does not require Prometheus, OpenCost, or any live cluster. It's a great way to evaluate the dashboard and understand what metrics GreenKube collects before committing to a full installation.
+</Aside>
 
 ## Installation
 
