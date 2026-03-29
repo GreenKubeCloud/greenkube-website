@@ -159,14 +159,17 @@ Then open [http://localhost:8000](http://localhost:8000) in your browser.
 Explore GreenKube instantly with **Demo Mode** — no live cluster metrics needed:
 
 ```bash
-# Deploy a standalone demo pod
+# With Docker (no Kubernetes needed):
+docker run --rm -p 9000:9000 greenkube/greenkube:0.2.3 demo --no-browser --port 9000
+# → Open http://localhost:9000
+
+# Or deploy a standalone demo pod:
 kubectl run greenkube-demo \
   --image=greenkube/greenkube:0.2.3 \
   --restart=Never \
   --command -- greenkube demo --no-browser --port 9000
 
-# Wait and port-forward
-kubectl wait --for=condition=Ready pod/greenkube-demo --timeout=30s
+kubectl wait --for=condition=Ready pod/greenkube-demo --timeout=60s
 kubectl port-forward pod/greenkube-demo 9000:9000
 ```
 

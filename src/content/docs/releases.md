@@ -62,6 +62,12 @@ A feature-packed release bringing full Prometheus/Grafana integration, a demo mo
 - PostgreSQL credentials no longer shipped as plain text in Helm defaults
 - DB connection string sourced from Secret instead of inline env var in deployment
 - Removed `.tgz` artifacts from git tracking
+- Fixed SQLite startup and demo mode port binding edge cases
+- Fixed Electricity Maps token mismatch and PostgreSQL password configuration conflict
+
+#### ⚡ Performance (post-release patches)
+- **SQL-level aggregation** for `/api/v1/metrics/summary` and `/api/v1/metrics/timeseries`: aggregation now happens directly in the database instead of loading all rows into Python — typically **10–20× faster** for large datasets and demo mode
+- **Non-blocking dashboard recommendations**: recommendations are loaded asynchronously in the background, so the rest of the dashboard renders immediately
 
 #### 📦 Downloads
 
