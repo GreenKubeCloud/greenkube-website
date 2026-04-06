@@ -1,0 +1,85 @@
+# GreenKube
+
+> GreenKube is an open-source FinGreenOps platform for Kubernetes.
+> It measures, reports (CSRD/ESRS E1 compliant), and optimizes the carbon footprint and cloud costs of Kubernetes workloads.
+
+## What is GreenKube?
+
+GreenKube is a self-hosted, open-source tool designed for DevOps, SRE, FinOps, and sustainability teams. It provides real-time visibility into the energy consumption, CO₂e emissions, and cloud costs of every pod and namespace in a Kubernetes cluster. It combines FinOps (cost optimization) with GreenOps (carbon reduction) into a single platform — without requiring expensive SaaS subscriptions.
+
+- **License:** Apache 2.0
+- **Language:** Python 3.11+
+- **Current version:** 0.2.7
+- **Deployment:** Helm chart (single command install)
+- **GitHub:** https://github.com/GreenKubeCloud/GreenKube
+- **Docker Hub:** https://hub.docker.com/r/greenkube/greenkube
+- **Artifact Hub:** https://artifacthub.io/packages/helm/greenkube/greenkube
+- **Documentation:** https://greenkube.cloud/docs/
+- **Helm Repository:** https://GreenKubeCloud.github.io/GreenKube
+
+## Key Capabilities
+
+- **Carbon Tracking:** Converts CPU energy consumption to CO₂e using real-time grid carbon intensity (via Electricity Maps API). Supports AWS, GCP, Azure, OVH, Scaleway, and on-premises clusters.
+- **Energy Estimation:** Pod-level energy consumption (Joules) based on CPU usage and cloud instance power profiles.
+- **Cost Monitoring:** Integrates with OpenCost for accurate cost-per-pod and cost-per-namespace breakdown.
+- **Sustainability Score:** Composite 0–100 cluster health score across 7 dimensions: resource efficiency, carbon efficiency, waste, node efficiency, scaling, carbon-aware scheduling, and stability.
+- **Smart Recommendations:** Detects zombie pods, oversized workloads, autoscaling candidates, and carbon-aware scheduling opportunities with estimated savings.
+- **Historical Reporting:** Daily, monthly, yearly analysis. Export to CSV or JSON. CSRD/ESRS E1 ready.
+- **Real-time Dashboard:** Built-in SvelteKit SPA with ECharts, per-pod metrics table, node inventory, and recommendations.
+- **REST API:** FastAPI backend with OpenAPI docs at `/api/v1/docs`.
+- **Prometheus Integration:** Exposes Prometheus gauges (`greenkube_pod_co2e_grams`, `greenkube_pod_energy_joules`, `greenkube_pod_cost_dollars`, `greenkube_sustainability_score`, etc.).
+- **Grafana Dashboard:** Pre-built JSON dashboard, import in one click.
+- **Flexible Storage:** PostgreSQL (production), SQLite (dev/standalone), Elasticsearch (scale).
+- **Auto-Discovery:** Automatically discovers in-cluster Prometheus and OpenCost — zero manual configuration in most cases.
+
+## Who is it for?
+
+- **DevOps / SRE** teams wanting carbon and cost visibility on their Kubernetes clusters
+- **FinOps** practitioners looking for a free, open-source alternative to commercial tools
+- **Sustainability / ESG** teams needing CSRD/ESRS E1 Scope 2 reporting for IT infrastructure
+- **CTOs and Engineering Managers** at tech SMEs wanting to reduce cloud spending and carbon emissions simultaneously
+- **Platform Engineers** building internal developer platforms with sustainability observability
+
+## Quick Start
+
+```bash
+helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube
+helm repo update
+helm install greenkube greenkube/greenkube -n greenkube --create-namespace
+```
+
+## Screenshots
+
+- Dashboard: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-dashboard.png
+- Per-pod metrics table: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-metrics.png
+- Node inventory: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-nodes.png
+- Optimization recommendations: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-recommendations.png
+- Report builder & export: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-report.png
+- Settings & service health: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-settings.png
+
+## Comparison with Alternatives
+
+| Feature | GreenKube | Kepler | Scaphandre | Cloud Carbon Footprint |
+|---|---|---|---|---|
+| Kubernetes native | ✅ | ✅ | ✅ | ✅ |
+| Pod-level CO₂e | ✅ | ✅ | ✅ | ❌ |
+| Cost integration (OpenCost) | ✅ | ❌ | ❌ | ❌ |
+| Built-in dashboard | ✅ | ❌ | ❌ | ✅ |
+| CSRD/ESRS reporting | ✅ | ❌ | ❌ | ❌ |
+| Recommendations engine | ✅ | ❌ | ❌ | ❌ |
+| Sustainability Score | ✅ | ❌ | ❌ | ❌ |
+| Single Helm install | ✅ | ✅ | ❌ | ❌ |
+| Open source | ✅ | ✅ | ✅ | ✅ |
+| Self-hosted | ✅ | ✅ | ✅ | ✅ |
+
+## Documentation Sections
+
+- [Quickstart](https://greenkube.cloud/docs/getting-started/quickstart/)
+- [Installation](https://greenkube.cloud/docs/getting-started/installation/)
+- [Configuration](https://greenkube.cloud/docs/getting-started/configuration/)
+- [Architecture](https://greenkube.cloud/docs/architecture/)
+- [Features: Carbon Tracking](https://greenkube.cloud/docs/features/carbon-tracking/)
+- [Features: Cost Optimization](https://greenkube.cloud/docs/features/cost-optimization/)
+- [Features: Dashboard](https://greenkube.cloud/docs/features/real-time-dashboard/)
+- [Features: Recommendations](https://greenkube.cloud/docs/features/smart-recommendations/)
+- [Changelog / Releases](https://greenkube.cloud/docs/releases/)

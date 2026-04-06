@@ -21,7 +21,7 @@ export default defineConfig({
 			head: [
 				{
 					tag: 'meta',
-					attrs: { name: 'keywords', content: 'kubernetes, carbon footprint, CO2, FinOps, GreenOps, sustainability, CSRD, cloud optimization, cost reduction, open source, helm chart, monitoring' },
+					attrs: { name: 'keywords', content: 'kubernetes carbon footprint, kubernetes CO2, FinOps, GreenOps, FinGreenOps, sustainability, CSRD, ESRS E1, cloud carbon monitoring, cloud cost optimization, open source, helm chart, prometheus, kubernetes monitoring, green kubernetes, carbon aware scheduling' },
 				},
 				{
 					tag: 'meta',
@@ -33,11 +33,24 @@ export default defineConfig({
 				},
 				{
 					tag: 'meta',
+					attrs: { property: 'og:site_name', content: 'GreenKube' },
+				},
+				{
+					tag: 'meta',
 					attrs: { name: 'twitter:card', content: 'summary_large_image' },
+				},
+				{
+					tag: 'meta',
+					attrs: { name: 'twitter:image', content: 'https://www.greenkube.cloud/og-image.png' },
 				},
 				{
 					tag: 'link',
 					attrs: { rel: 'canonical', href: 'https://www.greenkube.cloud' },
+				},
+				// LLM/AI crawler guidance (llms.txt convention)
+				{
+					tag: 'link',
+					attrs: { rel: 'alternate', type: 'text/plain', href: 'https://www.greenkube.cloud/llms.txt', title: 'LLM-readable project description' },
 				},
 				{
 					tag: 'script',
@@ -46,21 +59,45 @@ export default defineConfig({
 						'@context': 'https://schema.org',
 						'@type': 'SoftwareApplication',
 						name: 'GreenKube',
+						alternateName: 'GreenKube FinGreenOps',
 						applicationCategory: 'DeveloperApplication',
+						applicationSubCategory: 'Monitoring, FinOps, GreenOps, Sustainability',
 						operatingSystem: 'Kubernetes',
-						description: 'Open-source FinGreenOps tool to measure, understand, and reduce the carbon footprint of Kubernetes infrastructure.',
+						description: 'Open-source FinGreenOps platform for Kubernetes. Measure CO₂e emissions, energy usage, and cloud costs per pod and namespace. CSRD/ESRS E1 reporting ready. Deploy in minutes with a single Helm command.',
 						url: 'https://www.greenkube.cloud',
+						downloadUrl: 'https://hub.docker.com/r/greenkube/greenkube',
+						releaseNotes: 'https://www.greenkube.cloud/docs/releases/',
+						softwareVersion: '0.2.7',
+						datePublished: '2025-08-01',
 						license: 'https://opensource.org/licenses/Apache-2.0',
+						keywords: 'kubernetes, carbon footprint, CO2, FinOps, GreenOps, CSRD, ESRS, sustainability, cloud cost, prometheus, helm',
+						featureList: [
+							'Real-time CO₂e and energy monitoring per pod and namespace',
+							'Cloud cost tracking via OpenCost integration',
+							'Sustainability Score (0–100) across 7 dimensions',
+							'Smart recommendations: zombie pods, rightsizing, autoscaling',
+							'CSRD/ESRS E1 compliance reporting',
+							'Multi-cloud support: AWS, GCP, Azure, OVH, Scaleway',
+							'Grafana dashboard and Prometheus metrics',
+							'Single Helm chart deployment',
+							'Historical analysis with CSV/JSON export',
+						],
 						author: {
 							'@type': 'Organization',
 							name: 'GreenKube Cloud',
 							url: 'https://github.com/GreenKubeCloud',
+							email: 'hugo.lelievre@greenkube.cloud',
 						},
 						offers: {
 							'@type': 'Offer',
 							price: '0',
 							priceCurrency: 'USD',
 						},
+						sameAs: [
+							'https://github.com/GreenKubeCloud/GreenKube',
+							'https://hub.docker.com/r/greenkube/greenkube',
+							'https://artifacthub.io/packages/helm/greenkube/greenkube',
+						],
 					}),
 				},
 			],
