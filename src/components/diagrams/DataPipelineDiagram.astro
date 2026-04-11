@@ -11,22 +11,22 @@
     <div class="pipeline-phase-body">
       <div class="pipeline-nodes-grid">
         <div class="pipeline-node pn-source">
-          <span class="pn-icon">🔥</span>
+          <span class="pn-icon"><img src="/prometheus-logo.png" alt="Prometheus" class="pn-logo" /></span>
           <span class="pn-label">Prometheus</span>
           <span class="pn-detail">8 concurrent PromQL queries</span>
         </div>
         <div class="pipeline-node pn-source">
-          <span class="pn-icon">☸️</span>
+          <span class="pn-icon"><img src="/kubernetes-logo.png" alt="Kubernetes" class="pn-logo" /></span>
           <span class="pn-label">Kubernetes API</span>
           <span class="pn-detail">Nodes, Pods, HPAs</span>
         </div>
         <div class="pipeline-node pn-source">
-          <span class="pn-icon">💲</span>
+          <span class="pn-icon"><img src="/greenkube-logo.png" alt="OpenCost" class="pn-logo" /></span>
           <span class="pn-label">OpenCost</span>
           <span class="pn-detail">Cost allocation</span>
         </div>
         <div class="pipeline-node pn-source">
-          <span class="pn-icon">⚡</span>
+          <span class="pn-icon"><img src="/eletricity-maps-logo.png" alt="Electricity Maps" class="pn-logo" /></span>
           <span class="pn-label">Electricity Maps</span>
           <span class="pn-detail">gCO₂/kWh per zone</span>
         </div>
@@ -52,38 +52,38 @@
       <div class="pipeline-steps">
         <div class="pipeline-step-row">
           <div class="pipeline-node pn-step">
-            <span class="pn-icon">📋</span>
+            <span class="pn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg></span>
             <span class="pn-label">Aggregate</span>
             <span class="pn-detail">Build per-pod resource maps</span>
           </div>
           <div class="pipeline-step-arrow">→</div>
           <div class="pipeline-node pn-step">
-            <span class="pn-icon">🔋</span>
+            <span class="pn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg></span>
             <span class="pn-label">Estimate Energy</span>
             <span class="pn-detail">CPU × TDP → Joules</span>
           </div>
           <div class="pipeline-step-arrow">→</div>
           <div class="pipeline-node pn-step">
-            <span class="pn-icon">🗺️</span>
+            <span class="pn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></span>
             <span class="pn-label">Map Zones</span>
             <span class="pn-detail">Region → Carbon zone</span>
           </div>
         </div>
         <div class="pipeline-step-row">
           <div class="pipeline-node pn-step">
-            <span class="pn-icon">📡</span>
+            <span class="pn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 12h-4l-3 9L9 3l-3 9H2"/></svg></span>
             <span class="pn-label">Fetch Intensity</span>
             <span class="pn-detail">Cache + API + fallback</span>
           </div>
           <div class="pipeline-step-arrow">→</div>
           <div class="pipeline-node pn-step">
-            <span class="pn-icon">🌿</span>
+            <span class="pn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg></span>
             <span class="pn-label">Calculate CO₂</span>
             <span class="pn-detail">kWh × gCO₂/kWh × PUE</span>
           </div>
           <div class="pipeline-step-arrow">→</div>
           <div class="pipeline-node pn-step pn-highlight">
-            <span class="pn-icon">📦</span>
+            <span class="pn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
             <span class="pn-label">Assemble</span>
             <span class="pn-detail">CombinedMetric per pod</span>
           </div>
@@ -109,17 +109,17 @@
     <div class="pipeline-phase-body">
       <div class="pipeline-nodes-grid pipeline-output-grid">
         <div class="pipeline-node pn-output">
-          <span class="pn-icon">🗄️</span>
+          <span class="pn-icon"><img src="/postgres-logo.png" alt="Database" class="pn-logo" /></span>
           <span class="pn-label">Database</span>
           <span class="pn-detail">Batch INSERT / COPY</span>
         </div>
         <div class="pipeline-node pn-output">
-          <span class="pn-icon">🚀</span>
+          <span class="pn-icon"><img src="/fastapi-logo.svg" alt="REST API" class="pn-logo" /></span>
           <span class="pn-label">REST API</span>
           <span class="pn-detail">Real-time endpoints</span>
         </div>
         <div class="pipeline-node pn-output">
-          <span class="pn-icon">🧠</span>
+          <span class="pn-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></span>
           <span class="pn-label">Recommender</span>
           <span class="pn-detail">Optimization analysis</span>
         </div>
@@ -215,8 +215,8 @@
     border-radius: 0.5rem;
     border: 1px solid var(--sl-color-gray-5);
     transition: border-color 0.2s;
-    height: 100%;
     box-sizing: border-box;
+    margin-top: 0 !important;
   }
 
   .pipeline-node:hover { border-color: var(--sl-color-accent); }
@@ -226,7 +226,9 @@
   .pn-highlight { background: rgba(245, 158, 11, 0.08); border-color: rgba(245, 158, 11, 0.3); }
   .pn-output { background: rgba(59, 130, 246, 0.04); }
 
-  .pn-icon { font-size: 1.25rem; margin-bottom: 0.25rem; }
+  .pn-icon { font-size: 1.25rem; margin-bottom: 0.25rem; display: flex; align-items: center; justify-content: center; }
+  .pn-logo { width: 1.25rem; height: 1.25rem; object-fit: contain; }
+  .pn-icon svg { flex-shrink: 0; }
   .pn-label { font-size: 0.75rem; font-weight: 700; color: var(--sl-color-white); line-height: 1.2; }
   .pn-detail { font-size: 0.625rem; color: var(--sl-color-gray-3); margin-top: 0.15rem; line-height: 1.3; }
 

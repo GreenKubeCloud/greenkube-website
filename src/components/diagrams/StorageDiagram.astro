@@ -6,7 +6,7 @@
     <div class="sd-layer-label">Business Logic (Core)</div>
     <div class="sd-layer-content">
       <div class="sd-box sd-primary">
-        <span class="sd-icon">⚙️</span>
+        <span class="sd-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
         <span class="sd-title">DataProcessor</span>
         <span class="sd-sub">Calls <code>repository.save_metric()</code></span>
       </div>
@@ -26,7 +26,7 @@
     <div class="sd-layer-label">Abstract Repository</div>
     <div class="sd-layer-content">
       <div class="sd-box sd-abstract">
-        <span class="sd-icon">📐</span>
+        <span class="sd-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg></span>
         <span class="sd-title">MetricRepository</span>
         <span class="sd-sub">write_combined_metrics() · read_combined_metrics()</span>
       </div>
@@ -54,19 +54,19 @@
     <div class="sd-layer-label">Storage Adapters</div>
     <div class="sd-impl-row">
       <div class="sd-box sd-impl sd-pg">
-        <span class="sd-icon">🐘</span>
+        <span class="sd-icon"><img src="/postgres-logo.png" alt="PostgreSQL" class="sd-logo" /></span>
         <span class="sd-title">PostgreSQL</span>
         <span class="sd-sub">Production · asyncpg</span>
         <span class="sd-tag sd-tag-rec">Recommended</span>
       </div>
       <div class="sd-box sd-impl sd-sqlite">
-        <span class="sd-icon">📁</span>
+        <span class="sd-icon"><img src="/sqlite-logo.png" alt="SQLite" class="sd-logo" /></span>
         <span class="sd-title">SQLite</span>
         <span class="sd-sub">Development · aiosqlite</span>
         <span class="sd-tag sd-tag-dev">Dev / CI</span>
       </div>
       <div class="sd-box sd-impl sd-es">
-        <span class="sd-icon">🔍</span>
+        <span class="sd-icon"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></span>
         <span class="sd-title">Elasticsearch</span>
         <span class="sd-sub">Scale · elasticsearch-py</span>
         <span class="sd-tag sd-tag-scale">Scale</span>
@@ -76,7 +76,7 @@
 
   <!-- Factory note -->
   <div class="sd-factory">
-    <span class="sd-factory-icon">🏭</span>
+    <span class="sd-factory-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg></span>
     <span class="sd-factory-text">Instantiated by <strong>core/factory.py</strong> based on <code>DB_TYPE</code> config</span>
   </div>
 </div>
@@ -132,7 +132,8 @@
   .sd-primary { background: rgba(59, 130, 246, 0.06); border-color: rgba(59, 130, 246, 0.25); min-width: 220px; }
   .sd-abstract { background: rgba(168, 85, 247, 0.06); border-color: rgba(168, 85, 247, 0.25); min-width: 260px; border-style: dashed; }
 
-  .sd-icon { font-size: 1.25rem; margin-bottom: 0.25rem; }
+  .sd-icon { font-size: 1.25rem; margin-bottom: 0.25rem; display: flex; align-items: center; justify-content: center; }
+  .sd-logo { width: 1.25rem; height: 1.25rem; object-fit: contain; }
   .sd-title { font-size: 0.8rem; font-weight: 700; color: var(--sl-color-white); }
   .sd-sub { font-size: 0.65rem; color: var(--sl-color-gray-3); margin-top: 0.15rem; }
   .sd-sub code { font-size: 0.6rem; background: var(--sl-color-gray-5); padding: 0.1rem 0.3rem; border-radius: 0.2rem; }
@@ -171,8 +172,8 @@
   .sd-impl {
     position: relative;
     padding-bottom: 2rem;
-    height: 100%;
     box-sizing: border-box;
+    margin-top: 0 !important;
   }
 
   .sd-pg { background: rgba(59, 130, 246, 0.04); }

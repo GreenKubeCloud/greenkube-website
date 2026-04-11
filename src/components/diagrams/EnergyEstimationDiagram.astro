@@ -8,17 +8,17 @@
       <div class="energy-stage-body">
         <div class="energy-items">
           <div class="energy-item">
-            <span class="ei-icon">📈</span>
+            <span class="ei-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></span>
             <span class="ei-label">CPU Usage</span>
             <span class="ei-unit">cores</span>
           </div>
           <div class="energy-item">
-            <span class="ei-icon">💾</span>
+            <span class="ei-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg></span>
             <span class="ei-label">Instance Type</span>
             <span class="ei-unit">metadata</span>
           </div>
           <div class="energy-item">
-            <span class="ei-icon">🖥️</span>
+            <span class="ei-icon"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--sl-color-accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg></span>
             <span class="ei-label">Node TDP</span>
             <span class="ei-unit">watts/vCPU</span>
           </div>
@@ -156,7 +156,7 @@
     border: 1px solid var(--sl-color-gray-5);
   }
 
-  .ei-icon { font-size: 1rem; flex-shrink: 0; }
+  .ei-icon { font-size: 1rem; flex-shrink: 0; display: flex; align-items: center; justify-content: center; }
   .ei-label { font-size: 0.7rem; font-weight: 600; color: var(--sl-color-white); flex: 1; }
   .ei-unit { font-size: 0.6rem; color: var(--sl-color-gray-3); }
 

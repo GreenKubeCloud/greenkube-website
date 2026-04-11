@@ -59,11 +59,24 @@
   grid-template-columns: repeat(2, 1fr);
   gap: 1.25rem;
   margin: 2rem 0;
-  align-items: stretch;
 }
 
 .feature-cards.cols-3 {
   grid-template-columns: repeat(3, 1fr);
+}
+
+/* Contact page: 3-col grid, last partial row is centered */
+.contact-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  margin: 2rem 0;
+  justify-content: center;
+}
+
+.contact-grid > a {
+  flex: 0 1 calc(33.333% - 0.875rem);
+  min-width: 240px;
 }
 
 .feature-card {
@@ -104,11 +117,10 @@
 a.feature-card-link {
   text-decoration: none;
   color: inherit;
-  display: flex;
-  flex-direction: column;
+  display: grid;
   border-radius: 0.75rem;
   cursor: pointer;
-  height: 100%;
+  margin-top: 0 !important;
 }
 
 a.feature-card-link:hover {
@@ -116,10 +128,8 @@ a.feature-card-link:hover {
 }
 
 a.feature-card-link .feature-card {
-  flex: 1;
   display: flex;
   flex-direction: column;
-  height: 100%;
 }
 
 a.feature-card-link .feature-card p {
@@ -130,6 +140,23 @@ a.feature-card-link .feature-card p {
   font-size: 2rem;
   margin-bottom: 0.75rem;
   line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  height: 2.25rem;
+}
+
+.feature-icon svg {
+  width: 2rem;
+  height: 2rem;
+  color: var(--sl-color-accent);
+  flex-shrink: 0;
+}
+
+.feature-logo {
+  width: 2rem;
+  height: 2rem;
+  object-fit: contain;
 }
 
 .feature-card h3 {
@@ -164,6 +191,17 @@ a.feature-card-link .feature-card p {
 .feature-card.compact .feature-icon {
   font-size: 1.5rem;
   margin-bottom: 0.5rem;
+  height: 1.75rem;
+}
+
+.feature-card.compact .feature-icon svg {
+  width: 1.5rem;
+  height: 1.5rem;
+}
+
+.feature-card.compact .feature-logo {
+  width: 1.5rem;
+  height: 1.5rem;
 }
 
 .feature-card.compact h3 {
@@ -233,7 +271,8 @@ a.feature-card-link .feature-card p {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  min-height: 100px;
+  box-sizing: border-box;
+  margin-top: 0 !important;
 }
 
 .stat-card .stat-value {
@@ -241,6 +280,7 @@ a.feature-card-link .feature-card p {
   font-weight: 800;
   color: var(--sl-color-accent);
   line-height: 1.2;
+  white-space: nowrap;
 }
 
 .stat-card .stat-label {
@@ -545,4 +585,27 @@ a[data-variant="primary"].sl-link-button {
 a[data-variant="primary"].sl-link-button:hover {
   background-color: #166534 !important;
   border-color: #166534 !important;
+}
+
+/* ===== Sidebar: hide the duplicate caret/arrow below section names ===== */
+.top-level details > summary > svg.caret {
+  display: none;
+}
+
+/* SVG icon colors in contact CTA */
+.contact-cta-icon svg {
+  color: var(--sl-color-accent);
+}
+
+/* ===== Responsive: contact grid ===== */
+@media (max-width: 1024px) {
+  .contact-grid > a {
+    flex: 0 1 calc(50% - 0.625rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-grid > a {
+    flex: 0 1 100%;
+  }
 }
