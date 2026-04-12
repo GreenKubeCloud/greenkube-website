@@ -55,6 +55,19 @@ GreenKube automatically detects:
 - **Grafana dashboard** — Pre-built JSON dashboard for one-click import
 - **Structured logging** — JSON-formatted logs for easy aggregation
 
+## Security
+
+As of v0.2.8, the Helm chart ships with comprehensive security hardening enabled by default:
+
+- **Non-root containers** — `runAsNonRoot: true`, `runAsUser/Group: 10001`
+- **Read-only root filesystem** — `readOnlyRootFilesystem: true` on all containers; `/tmp` directories served by bounded `emptyDir` volumes
+- **Dropped capabilities** — `capabilities.drop: [ALL]`, `allowPrivilegeEscalation: false`
+- **Seccomp** — `seccompProfile.type: RuntimeDefault` on every container
+- **SCRAM-SHA-256** — PostgreSQL enforces the stronger SCRAM-SHA-256 password protocol
+- **Least-privilege RBAC** — ClusterRole grants only the minimum required permissions (no `secrets` access)
+- **API security headers** — 7 OWASP-recommended HTTP response headers on every response
+- **Automated CVE scanning** — Weekly Trivy scans (image, IaC, deps) with results in GitHub Security
+
 ## Configuration
 
 All settings are configurable via `values.yaml`:
@@ -73,6 +86,16 @@ electricityMaps:
 postgresql:
   enabled: true
   storage: "5Gi"
+
+# Production: use a pre-created Secret instead of inline credentials
+secrets:
+  existingSecret: ""         # Set to your Secret name to skip chart-managed credentials
+
+# Connection pool tuning
+db:
+  poolMinSize: 2
+  poolMaxSize: 10
+  statementTimeoutMs: 30000
 ```
 
 Every parameter can also be set via environment variables (12-Factor App compliant).
@@ -81,8 +104,9 @@ Every parameter can also be set via environment variables (12-Factor App complia
 
 The Docker image is:
 - **Lightweight** — Based on `python:3.14-slim`
-- **Secure** — Runs as non-root user
+- **Secure** — Runs as non-root user (`greenkube`, UID 10001), read-only root filesystem
 - **Multi-arch** — Available for `linux/amd64` and `linux/arm64`
+- **Hardened** — Builder stage uses `node:22-alpine`; OS packages upgraded at build time
 
 ```bash
 docker pull greenkube/greenkube:latest

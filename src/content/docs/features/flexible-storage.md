@@ -26,7 +26,7 @@ postgresql:
 - Zero infrastructure — single file database
 - Perfect for local development and testing
 - Great for single-node standalone deployments
-- No additional services required
+- **SCD2 node snapshots** — Slowly Changing Dimensions Type 2 tracking stores only changed node rows (`instance_type`, `vcpu`, `memory_gb`, `region`, `provider`, `zone`), avoiding write amplification on stable clusters
 
 ```yaml
 greenkube:

@@ -9,9 +9,55 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 <div class="release-card">
 
-### 🚀 v0.2.7 — Service Health, CI/CD Gates & Scaleway
+### 🚀 v0.2.8 — Security Hardening & SCD2
 
 <span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
+
+**Release Date:** April 11, 2026
+
+#### 🔒 Security
+
+- **Dockerfile hardening:** Builder stage upgraded to `node:22-alpine`. Both stages now run `apt-get upgrade` to patch OS CVEs. The final image runs as `greenkube` (UID/GID 10001) with `/sbin/nologin` shell.
+- **Helm securityContext:** Full pod + container hardening on collector and API — `runAsNonRoot`, `allowPrivilegeEscalation: false`, `readOnlyRootFilesystem: true`, `capabilities.drop: [ALL]`, `seccompProfile: RuntimeDefault`. `/tmp` served by `emptyDir` volumes (64 MiB each).
+- **PostgreSQL securityContext:** `readOnlyRootFilesystem: true`, `capabilities.drop: [ALL]`, `seccompProfile: RuntimeDefault`. Upgraded from `17-alpine` to `18-alpine`. `/var/run/postgresql` and `/tmp` mounted as `emptyDir` volumes.
+- **SCRAM-SHA-256:** `POSTGRES_INITDB_ARGS` now enforces `scram-sha-256` authentication, replacing the legacy MD5 protocol. Liveness and readiness probes added via `pg_isready`.
+- **ClusterRole least-privilege:** Removed `secrets` from the ClusterRole resource list — eliminates the critical RBAC over-permission (KSV-0041) that allowed reading cluster-wide secrets.
+- **API security headers:** New `SecurityHeadersMiddleware` injects 7 OWASP-recommended headers on every response: `X-Content-Type-Options`, `X-Frame-Options`, `X-XSS-Protection`, `Referrer-Policy`, `Permissions-Policy`, `Cache-Control`, and `Content-Security-Policy`. CORS now restricted to `GET`, `POST`, `OPTIONS` and explicit headers.
+- **Automated vulnerability scanning (CI):** New `security.yml` GitHub Actions workflow — Trivy image scan, Trivy IaC scan (Dockerfile + Helm), Trivy filesystem scan (Python deps), and `npm audit`. Runs on every push/PR to `main`/`dev` and weekly. SARIF results uploaded to GitHub Security.
+- **`.trivyignore`:** Documents 8 upstream-unfixable CVEs with justifications and a quarterly review date.
+
+#### ✨ Added
+
+- **`secrets.existingSecret` Helm value:** Pass a pre-created Kubernetes Secret instead of storing credentials in `values.yaml` — recommended for production.
+- **SQLite SCD2 node snapshots:** `SQLiteNodeRepository` implements Slowly Changing Dimensions Type 2. A `node_snapshots_scd` table stores only rows where tracked columns (`instance_type`, `vcpu`, `memory_gb`, `region`, `provider`, `zone`) actually changed, avoiding write amplification on stable clusters.
+- **Recommendation `scope` column:** `recommendation_history` now includes a `scope` column (`pod`, `namespace`, `node`) for granularity filtering. `pod_name` and `namespace` are nullable for node-scope recommendations. Applied in migration `0003`.
+- **Configurable connection pool:** `DB_POOL_MIN_SIZE` (default: 2) and `DB_POOL_MAX_SIZE` (default: 10) control `asyncpg` pool bounds. Exposed as `db.poolMinSize` / `db.poolMaxSize` in `values.yaml`.
+- **Configurable statement timeout:** `DB_STATEMENT_TIMEOUT_MS` (default: 30 000 ms) sets per-statement timeout via `server_settings`. Exposed as `db.statementTimeoutMs`.
+- **Database indexes (migration 0003):** Compound indexes on `combined_metrics(namespace, timestamp)`, `namespace_cache(last_seen)`, `carbon_intensity_history(datetime)`.
+- **Artifact Hub listing:** `Chart.yaml` enriched with full Artifact Hub annotations (category, 6 screenshots, links, recommendations, images for amd64 + arm64, maintainers, readme). `artifacthub-repo.yml` added for Verified Publisher badge.
+- **`llms.txt`:** LLM/AI crawler guidance file (`greenkube-website/public/llms.txt`) following the [llms.txt](https://llmstxt.org/) convention.
+
+#### 🐛 Fixed
+
+- **Aggregate queries spanning raw + hourly tables:** `aggregate_summary` and `aggregate_timeseries` now correctly query both `combined_metrics` and `hourly_metrics`, preventing gaps between live and archived data.
+- **Infinite aggregated retention by default:** `METRICS_AGGREGATED_RETENTION_DAYS` defaults to `-1` (infinite) for CSRD/ESRS E1 compliance. Set a positive integer to enforce a rolling window.
+- **Frontend npm audit (HIGH):** Updated `svelte`, `vite`, `rollup`, `picomatch`, `devalue`, and `@sveltejs/kit` to resolve all HIGH-severity advisories.
+
+#### 📦 Downloads
+
+| Asset | Link |
+|-------|------|
+| Docker Image | `docker pull greenkube/greenkube:0.2.8` |
+| Helm Chart | `helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm install greenkube greenkube/greenkube -n greenkube --create-namespace` |
+| Source Code | [GitHub Release v0.2.8](https://github.com/GreenKubeCloud/GreenKube/releases/tag/v0.2.8) |
+
+</div>
+
+---
+
+<div class="release-card">
+
+### 🚀 v0.2.7 — Service Health, CI/CD Gates & Scaleway
 
 **Release Date:** April 5, 2026
 
@@ -244,7 +290,7 @@ The first public release of GreenKube, establishing the core carbon tracking cap
 
 ## Upgrade Guide
 
-### From v0.2.x to v0.2.7
+### From v0.2.x to v0.2.8
 
 <Steps>
 
@@ -253,14 +299,16 @@ The first public release of GreenKube, establishing the core carbon tracking cap
    helm repo update
    ```
 
-2. **Upgrade the release:**
+2. **Review security changes:** The ClusterRole no longer includes `secrets`. If your deployment depended on this, adjust accordingly. SCRAM-SHA-256 replaces MD5 for PostgreSQL — existing clusters upgrading the PostgreSQL StatefulSet to `18-alpine` should run the provided `scripts/pg_upgrade_17_to_18.sh` migration script first.
+
+3. **Upgrade the release:**
    ```bash
    helm upgrade greenkube greenkube/greenkube \
      -f my-values.yaml \
      -n greenkube
    ```
 
-3. **Verify the upgrade:**
+4. **Verify the upgrade:**
    ```bash
    kubectl get pods -n greenkube
    kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube
@@ -311,6 +359,6 @@ GreenKube follows [Semantic Versioning](https://semver.org/):
 
 | Channel | Description | Docker Tag |
 |---------|-------------|-----------|
-| **Stable** | Current tested release | `greenkube/greenkube:0.2.7` |
+| **Stable** | Current tested release | `greenkube/greenkube:0.2.8` |
 | **Latest** | Most recent stable | `greenkube/greenkube:latest` |
 | **Dev** | Development builds (unstable) | `greenkube/greenkube:dev-latest` |

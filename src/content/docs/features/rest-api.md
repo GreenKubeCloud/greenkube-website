@@ -25,6 +25,9 @@ The API is served at `http://<service>:8000/api/v1/` and includes:
 | GET | `/health` | Health check (liveness) |
 | GET | `/api/v1/version` | API and app version |
 | GET | `/api/v1/config` | Current configuration (redacted) |
+| GET | `/api/v1/health/services` | Aggregated health status for all data sources (supports `?force=true` to bypass cache) |
+| GET | `/api/v1/health/services/{service_name}` | Health status for a single named service |
+| POST | `/api/v1/config/services` | Update service URLs and tokens at runtime (session-scoped) |
 
 ### Metrics
 | Method | Path | Description |
@@ -46,13 +49,19 @@ The API is served at `http://<service>:8000/api/v1/` and includes:
 | Method | Path | Description |
 |---|---|---|
 | GET | `/api/v1/recommendations` | Active recommendations |
-| GET | `/api/v1/recommendations/history` | Historical recommendations |
+| GET | `/api/v1/recommendations/history` | Historical recommendations (filterable by `scope`: `pod`, `namespace`, `node`) |
 | GET | `/api/v1/recommendations/summary` | Aggregated savings potential |
+
+### Reports
+| Method | Path | Description |
+|---|---|---|
+| GET | `/api/v1/report/summary` | Preview row count and totals (CO₂e, energy, cost) before downloading |
+| GET | `/api/v1/report/export` | Stream a downloadable CSV or JSON file |
 
 ### Prometheus Metrics
 | Method | Path | Description |
 |---|---|---|
-| GET | `/prometheus/metrics` | Prometheus-format metrics for scraping (CO₂e, cost, energy, CPU, memory, network, nodes, grid intensity, recommendations) |
+| GET | `/prometheus/metrics` | Prometheus-format metrics for scraping (CO₂e, cost, energy, CPU, memory, network, nodes, grid intensity, sustainability score, recommendations) |
 
 ## Query Parameters
 
