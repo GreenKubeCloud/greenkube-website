@@ -9,9 +9,58 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 <div class="release-card">
 
-### 🚀 v0.2.8 — Security Hardening & SCD2
+### 🚀 v0.2.9 — Dashboard Cache, OOM Fixes & K8s Config Persistence
 
 <span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
+
+**Release Date:** April 21, 2026
+
+#### ✨ Added
+
+- **Frontend config persistence via K8s Secret:** UI-applied settings (`PROMETHEUS_URL`, `OPENCOST_API_URL`, `ELECTRICITY_MAPS_TOKEN`, `BOAVIZTA_API_URL`) are now patched into the GreenKube Kubernetes Secret on save, surviving pod restarts and `helm upgrade --reuse-values` without manual intervention. A namespaced `Role`/`RoleBinding` grants the service account `get`+`patch` access to exactly the GreenKube Secret.
+- **GreenKube favicon:** Browser tab now shows the real GreenKube logo (`favicon.ico`) instead of the Svelte placeholder SVG.
+- **`GET /api/v1/metrics/by-namespace`:** Lightweight endpoint returning CO2e, embodied emissions, energy, and cost aggregated by namespace over a time window, using a dual-table `UNION ALL + GROUP BY` — avoids loading full row sets into memory.
+- **`GET /api/v1/metrics/top-pods`:** Lightweight endpoint returning the top-N pods by CO2e over a time window. Dashboard donut and top-pods charts now use these endpoints instead of the expensive `GET /metrics` route, eliminating OOM restarts on large time ranges.
+- **GHG Scope 2 / Scope 3 carbon classification:** Emissions are now formally categorised per the GHG Protocol Corporate Standard.
+- **Pre-computed dashboard cache (`metrics_summary` + `metrics_timeseries_cache`):** Two new DB tables (migrations `0004` and `0005` for PostgreSQL and SQLite) store pre-aggregated KPI scalars and time-series buckets for five fixed windows (`24h`, `7d`, `30d`, `1y`, `ytd`). Refreshed hourly by the background scheduler — eliminates full-table scans on every dashboard load.
+- **`SummaryRefresher`:** New service computing cluster-wide and per-namespace KPI totals and time-series buckets with adaptive granularity per window (hourly / daily / weekly / monthly).
+- **Dashboard API endpoints:**
+  - `GET /api/v1/metrics/dashboard-summary` — cached KPI scalars, optionally filtered by namespace.
+  - `GET /api/v1/metrics/dashboard-timeseries/{window_slug}` — cached time-series for `24h`, `7d`, `30d`, `1y`, or `ytd`.
+  - `POST /api/v1/metrics/dashboard-summary/refresh` — on-demand background refresh (HTTP 202).
+- **Adaptive chart granularity:** Dashboard charts automatically select optimal time bucket per window — hourly for `24h`, daily for `7d`/`30d`, weekly for `1y`, monthly for `ytd`.
+- **Boavizta fallback with configurable default:** When Boavizta does not recognise a cloud provider or instance type, `EmbodiedEmissionsService` injects a fallback profile using `DEFAULT_EMBODIED_EMISSIONS_KG` (default: **350 kg CO2e**) instead of silently using 0 g. Metrics are flagged `is_estimated=True` with descriptive reasons.
+
+#### 🐛 Fixed
+
+- **Async K8s Secret patching:** In-cluster Secret patch now correctly uses `kubernetes_asyncio` (the async client that is installed) instead of the sync `kubernetes` package.
+- **Elasticsearch optional dependency:** `elasticsearch` and `elasticsearch-dsl` moved to an optional extra (`pip install greenkube[elasticsearch]`). All imports are now lazy, removing heavy transitive dependencies and startup warnings for PostgreSQL/SQLite users.
+- **Electricity Maps not called for OpenStack providers (zone = `nova`):** The scheduler now falls back to the node's geographic region when the provider zone (`nova`) is not a recognised Electricity Maps zone code. Restores carbon-intensity data on OVH, Infomaniak, and similar OpenStack clouds.
+- **Race condition in collection orchestrator:** Node collection is now an explicit Phase 1 in `DataProcessor.run()` that runs alone before any concurrent collection, preventing K8s API client races and cascade Electricity Maps errors.
+- **Pod CPU utilisation aggregation per node:** `CollectionOrchestrator` was averaging pod CPU usage per node across timestamps instead of summing — caused underestimated energy figures on nodes with multiple measured pods.
+- **Chart legends overlapping:** ECharts legend layout fixed to prevent label overlap on small viewports.
+- **`DEFAULT_ZONE` spurious warning:** `NodeZoneMapper` no longer emits a false warning when the zone was correctly resolved via a valid `DEFAULT_ZONE`.
+
+#### 🔄 Changed
+
+- **`DataProcessor.run()` restructured into four explicit phases:** Phase 1 (node discovery, sequential), Phase 2 (zone resolution), Phase 3 (parallel metrics + Boavizta), Phase 4 (carbon-intensity prefetch + assembly). Eliminates the previous race condition and the redundant second K8s `collect_instance_types()` call.
+- **`CollectionOrchestrator` simplified:** `NodeCollector` dependency removed; node enrichment uses the `nodes_info` dict passed in from Phase 1.
+
+#### 📦 Downloads
+
+| Asset | Link |
+|-------|------|
+| Docker Image | `docker pull greenkube/greenkube:0.2.9` |
+| Helm Chart | `helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm install greenkube greenkube/greenkube -n greenkube --create-namespace` |
+| Source Code | [GitHub Release v0.2.9](https://github.com/GreenKubeCloud/GreenKube/releases/tag/v0.2.9) |
+
+</div>
+
+---
+
+<div class="release-card">
+
+### 🚀 v0.2.8 — Security Hardening & SCD2
 
 **Release Date:** April 11, 2026
 

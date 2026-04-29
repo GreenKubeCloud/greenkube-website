@@ -67,7 +67,7 @@ export default defineConfig({
 						url: 'https://www.greenkube.cloud',
 						downloadUrl: 'https://hub.docker.com/r/greenkube/greenkube',
 						releaseNotes: 'https://www.greenkube.cloud/docs/releases/',
-						softwareVersion: '0.2.7',
+						softwareVersion: '0.2.9',
 						datePublished: '2025-08-01',
 						license: 'https://opensource.org/licenses/Apache-2.0',
 						keywords: 'kubernetes, carbon footprint, CO2, FinOps, GreenOps, CSRD, ESRS, sustainability, cloud cost, prometheus, helm',
