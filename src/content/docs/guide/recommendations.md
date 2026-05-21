@@ -1,6 +1,6 @@
 ---
 title: Recommendations
-description: Understand GreenKube's optimization recommendations — zombie pods, rightsizing, autoscaling, and carbon-aware scheduling.
+description: Understand GreenKube's 9 optimization recommendation types, lifecycle management, savings tracking, and CI/CD integration.
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
@@ -9,7 +9,13 @@ GreenKube analyzes your cluster metrics to generate actionable recommendations t
 
 ## Recommendation Engine
 
-The recommendation engine examines metrics collected over a configurable lookback period (default: 7 days) and applies multiple analysis algorithms:
+The recommendation engine reads metrics from the database over a configurable lookback window (default: `24h`) and applies threshold-based detection algorithms. Results are deduplicated at the **Deployment level** — pods belonging to the same Deployment are grouped so you see one recommendation per workload, not one per replica.
+
+Each recommendation includes:
+- **Type** — one of 9 detection categories
+- **Priority** — `high`, `medium`, or `low`
+- **Scope** — `pod`, `workload`, `namespace`, or `node`
+- **Annual savings** — projected CO₂e and cost savings extrapolated to 1 year
 
 <CardGrid>
   <Card title="🧟 Zombie Detection">
@@ -19,22 +25,22 @@ The recommendation engine examines metrics collected over a configurable lookbac
     Finds pods with CPU or memory requests significantly higher than actual usage, suggesting smaller resource allocations.
   </Card>
   <Card title="📈 Autoscaling">
-    Detects workloads with high usage variability that would benefit from Horizontal or Vertical Pod Autoscalers.
+    Detects workloads with high usage variability that would benefit from Horizontal Pod Autoscalers.
   </Card>
   <Card title="🌍 Carbon-Aware Scheduling">
-    Identifies batch workloads that could be time-shifted to periods of lower grid carbon intensity.
+    Identifies workloads that could be time-shifted to periods of lower grid carbon intensity.
   </Card>
   <Card title="🗂️ Idle Namespace">
     Spots namespaces with minimal activity that may contain forgotten resources consuming energy and cost.
   </Card>
   <Card title="🌙 Off-Peak Scaling">
-    Suggests scaling down workloads during off-peak hours when high resource allocation isn't needed.
+    Suggests scaling down workloads during off-peak hours with a generated CronJob schedule.
   </Card>
   <Card title="🖥️ Overprovisioned Node">
     Identifies nodes with far more capacity than their scheduled pods require.
   </Card>
   <Card title="💤 Underutilized Node">
-    Flags nodes running at very low utilization, wasting energy and money.
+    Flags nodes running at very low CPU and memory utilization — consolidation candidates.
   </Card>
 </CardGrid>
 
@@ -42,162 +48,212 @@ The recommendation engine examines metrics collected over a configurable lookbac
 
 ### 🧟 Zombie Pods (`ZOMBIE_POD`)
 
-**What:** Pods that are running and consuming resources but show minimal CPU/energy usage.
+**What:** Pods that are running and consuming resources but show near-zero energy usage.
 
-**Detection Criteria:**
-- CPU usage consistently below threshold
-- Energy consumption below `zombieEnergyThreshold` (default: 1000 J)
-- Cost above `zombieCostThreshold` (default: $0.01)
-- Running for extended periods
+**Detection:**
+- Energy consumption `< ZOMBIE_ENERGY_THRESHOLD`
+- Cost `> ZOMBIE_COST_THRESHOLD` (default: $0.01)
 
-**Example Output:**
-```
-🧟 ZOMBIE POD — High Severity
-Pod: legacy-api-deployment-5d8f7c-k2m4p
-Namespace: staging
-  CPU usage: 2m (avg over 7 days)
-  Energy: 450 J
-  Cost: $0.85/day
-  Estimated savings: $0.85/day, 3.2g CO₂e/day
-  Action: Consider terminating this idle workload
-    kubectl delete deployment legacy-api-deployment -n staging
-```
+**Scope:** pod
 
-### 📏 Rightsizing (`RIGHTSIZING_CPU` / `RIGHTSIZING_MEMORY`)
+---
 
-**What:** Pods with resource requests (CPU or memory) significantly higher than actual utilization. Two sub-types: `RIGHTSIZING_CPU` for over-provisioned CPU and `RIGHTSIZING_MEMORY` for over-provisioned memory.
+### 📏 Rightsizing CPU (`RIGHTSIZING_CPU`)
 
-**Detection Criteria:**
-- Average CPU usage < `rightsizingCpuThreshold` × CPU request (default: 30%)
-- Average memory usage < `rightsizingMemoryThreshold` × memory request (default: 30%)
-- Applies `rightsizingHeadroom` multiplier (default: 1.2x) for safe recommendations
+**What:** Pods with CPU requests significantly higher than actual utilization.
 
-**Example Output:**
-```
-📏 RIGHTSIZING — Medium Severity
-Pod: web-frontend-7b5f8c9d6-x2k4p
-Namespace: production
-  CPU: Using 45m of 500m requested (9%)
-  Recommendation: Reduce CPU request to 55m (45m × 1.2 headroom)
-  Memory: Using 128Mi of 512Mi requested (25%)
-  Recommendation: Reduce memory request to 154Mi
-  Estimated savings: $1.20/day, 5.4g CO₂e/day
-```
+**Detection:**
+- Average CPU utilization `< RIGHTSIZING_CPU_THRESHOLD` × CPU request (default: **50%**)
+- Recommendation uses a headroom multiplier for safe reductions (e.g., 1.2×)
+- Only reductions are surfaced — recommendations that would increase a request are discarded
+
+**Scope:** workload (grouped per Deployment)
+
+---
+
+### 📏 Rightsizing Memory (`RIGHTSIZING_MEMORY`)
+
+**What:** Pods with memory requests significantly higher than actual utilization.
+
+**Detection:**
+- Average memory utilization `< RIGHTSIZING_MEMORY_THRESHOLD` × memory request (default: **50%**)
+
+**Scope:** workload (grouped per Deployment)
+
+---
 
 ### 📈 Autoscaling Candidates (`AUTOSCALING_CANDIDATE`)
 
-**What:** Workloads with high variability in resource usage that would benefit from autoscaling.
+**What:** Workloads with high CPU usage variability that would benefit from autoscaling.
 
-**Detection Criteria:**
-- High coefficient of variation (CV > `autoscalingCvThreshold`, default: 0.7)
-- Spike detection (max/avg ratio > `autoscalingSpikeRatio`, default: 3.0)
-- No existing HPA/VPA detected
+**Detection:**
+- Coefficient of Variation `> AUTOSCALING_CV_THRESHOLD` (default: 0.7)
+- Max/min ratio `> AUTOSCALING_SPIKE_RATIO` (default: 3.0)
+- No existing HPA detected
 
-**Example Output:**
-```
-📈 AUTOSCALING — Medium Severity
-Pod: batch-processor-deployment-8c7d6-n3m2p
-Namespace: default
-  CPU variability: CV = 1.2 (high)
-  Peak: 800m, Average: 150m (5.3x spike ratio)
-  Recommendation: Configure HPA with:
-    minReplicas: 1, maxReplicas: 5
-    targetCPUUtilization: 70%
-```
+**Scope:** workload
+
+---
 
 ### 🌍 Carbon-Aware Scheduling (`CARBON_AWARE_SCHEDULING`)
 
-**What:** Batch or deferrable workloads that could be scheduled during periods of lower grid carbon intensity.
+**What:** Workloads running during high-carbon-intensity windows that could be shifted to cleaner periods.
 
-**Detection Criteria:**
-- Grid intensity during workload execution exceeds `carbonAwareThreshold` × average (default: 1.5x)
-- Workload appears to be a batch job (CronJob, Job owner)
-- Lower-intensity periods available in the same zone
+**Detection:** Grid intensity `> zone average × CARBON_AWARE_THRESHOLD` (default: 1.5×)
 
-**Example Output:**
-```
-🌍 CARBON-AWARE — Low Severity
-Pod: nightly-etl-job-28445-k2m4p
-Namespace: data-pipeline
-  Current intensity: 520 gCO₂e/kWh (peak hours)
-  Average zone intensity: 280 gCO₂e/kWh
-  Recommendation: Schedule during off-peak hours (02:00-06:00 UTC)
-  Estimated savings: 8.5g CO₂e/run
-```
+**Scope:** pod / workload
+
+---
 
 ### 🗂️ Idle Namespace Cleanup (`IDLE_NAMESPACE`)
 
-**What:** Namespaces with minimal activity that may contain forgotten resources.
+**What:** Namespaces with minimal energy consumption.
 
-**Detection Criteria:**
-- Total energy below `idleNamespaceEnergyThreshold` (default: 1000 J)
-- Low pod count with minimal resource usage
+**Detection:** Total namespace energy `< IDLE_NAMESPACE_ENERGY_THRESHOLD` (default: 1,000 J)
+
+**Scope:** namespace
+
+---
 
 ### 🌙 Off-Peak Scaling (`OFF_PEAK_SCALING`)
 
-**What:** Workloads that maintain high resource allocation during off-peak hours and could benefit from scheduled scaling down.
+**What:** Workloads with sustained idle periods during consistent time windows.
 
-**Detection Criteria:**
-- Consistently low utilization during off-peak periods
-- Workloads without existing time-based scaling policies
+**Detection:** Idle period `>= OFF_PEAK_MIN_IDLE_HOURS` (default: 2h) at consistent hours.
+
+**Output:** Suggested CronJob/KEDA scale-down + scale-up schedule.
+
+**Scope:** workload (grouped per Deployment)
+
+---
 
 ### 🖥️ Overprovisioned Node (`OVERPROVISIONED_NODE`)
 
-**What:** Nodes with significantly more capacity than what the scheduled pods require.
+**What:** Nodes with far more capacity than their scheduled workloads require.
 
-**Detection Criteria:**
-- Node resource utilization consistently below threshold
-- Opportunity to consolidate workloads onto fewer, right-sized nodes
+**Detection:** Node CPU utilization `< NODE_UTILIZATION_THRESHOLD` (default: 20%)
+
+**Scope:** node
+
+---
 
 ### 💤 Underutilized Node (`UNDERUTILIZED_NODE`)
 
-**What:** Nodes running with very low utilization that are wasting energy and money.
+**What:** Nodes running at very low CPU and memory utilization — consolidation candidates.
 
-**Detection Criteria:**
-- Node utilization below `nodeUtilizationThreshold` (default: 20%)
-- Running for extended periods at low usage
+**Detection:** Node CPU `< 0.05 cores` with workloads that could migrate to other nodes.
+
+**Scope:** node
+
+---
+
+## Recommendation Lifecycle
+
+Each recommendation is persisted in the database with a full status lifecycle.
+
+```
+open → in_progress → resolved
+         ↓
+      dismissed / snoozed
+```
+
+| Status | Meaning |
+|--------|---------|
+| `open` | Active recommendation, not yet acted on |
+| `in_progress` | Team is working on this |
+| `resolved` | Applied — triggers a **savings ledger entry** |
+| `dismissed` | Permanently ignored |
+| `snoozed` | Hidden for N days (default: 30) |
+
+### Managing Lifecycle in the Dashboard
+
+On the `/recommendations` page:
+- **Status filters** — show only active, snoozed, dismissed, or resolved recommendations
+- **Per-recommendation controls** — mark in-progress, resolve, dismiss, or snooze (30 days)
+- **Bulk dismiss** — dismiss all recommendations of a given type at once
+- **Annual savings preview** — estimated CO₂e and cost savings per recommendation
+
+### Managing Lifecycle via API
+
+```bash
+# Mark a recommendation as applied (resolved)
+PATCH /api/v1/recommendations/{id}/apply
+
+# Permanently ignore
+PATCH /api/v1/recommendations/{id}/ignore
+
+# Snooze for 14 days
+PATCH /api/v1/recommendations/{id}/snooze?days=14
+
+# Get active recommendations (optionally trigger a live refresh)
+GET /api/v1/recommendations/active?refresh=true
+
+# Get savings summary
+GET /api/v1/recommendations/savings
+```
+
+## Savings Ledger
+
+When a recommendation is marked **resolved**, GreenKube creates a `SavingsLedgerRecord` that prorates the projected annual savings to the actual collection window. Over time this accumulates into:
+
+- `greenkube_co2e_savings_attributed_grams_total` — cumulative CO₂e savings (Prometheus gauge)
+- `greenkube_cost_savings_attributed_dollars_total` — cumulative cost savings (Prometheus gauge)
+
+The savings ledger is visible in:
+- The Grafana dashboard's **Impact Command Center** section (attributed savings timeline)
+- The `/api/v1/recommendations/savings` endpoint
 
 ## Using Recommendations
 
 ### CLI
 
 ```bash
-# Get all recommendations
+# Get all recommendations (reads from database)
 greenkube recommend
 
 # Filter by namespace
 greenkube recommend -n production
 
-# JSON output for automation
-greenkube recommend --format json
+# Longer lookback window
+greenkube recommend --last 7d
+
+# Live collection (re-runs the full collection pipeline)
+greenkube recommend --live
+
+# CI/CD gate: exit 1 if any recommendations exist
+greenkube recommend --fail-on-recommendations
 ```
 
 ### API
 
 ```bash
-curl "http://localhost:8000/api/v1/recommendations?namespace=production"
+# Live recommendations (runs the recommender)
+GET /api/v1/recommendations
+
+# Persisted active recommendations
+GET /api/v1/recommendations/active
+
+# History
+GET /api/v1/recommendations/history
 ```
-
-### Dashboard
-
-Navigate to the **Recommendations** tab in the web dashboard for a visual, filterable view of all suggestions.
 
 ## Tuning Thresholds
 
-All thresholds are configurable via Helm values:
+All thresholds are configurable via Helm `values.yaml` or environment variables:
 
 ```yaml
 config:
   recommendations:
-    lookbackDays: 7
-    rightsizingCpuThreshold: 0.3      # 30% usage triggers rightsizing
-    rightsizingMemoryThreshold: 0.3
-    rightsizingHeadroom: 1.2           # 20% safety margin
-    zombieCostThreshold: 0.01         # $0.01/day minimum
-    zombieEnergyThreshold: 1000       # 1000 Joules minimum
-    autoscalingCvThreshold: 0.7       # High variability
-    autoscalingSpikeRatio: 3.0        # 3x spike ratio
-    carbonAwareThreshold: 1.5         # 1.5x average intensity
+    rightsizingCpuThreshold: 0.5      # 50% usage triggers CPU rightsizing
+    rightsizingMemoryThreshold: 0.5   # 50% usage triggers memory rightsizing
+    rightsizingHeadroom: 1.2          # 20% safety margin on new request
+    zombieCostThreshold: 0.01         # $0.01/day minimum to flag
+    zombieEnergyThreshold: 1000       # 1,000 Joules minimum to flag
+    autoscalingCvThreshold: 0.7       # High variability coefficient
+    autoscalingSpikeRatio: 3.0        # 3× max/min ratio
+    carbonAwareThreshold: 1.5         # 1.5× average intensity
+    nodeUtilizationThreshold: 0.2     # 20% CPU for overprovisioned node
+    offPeakMinIdleHours: 2            # 2h idle to suggest off-peak scaling
 ```
 
 Adjust these based on your cluster size, workload patterns, and organizational priorities.

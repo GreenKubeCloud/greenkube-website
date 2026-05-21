@@ -17,16 +17,25 @@ greenkube --help
 
 | Command | Description |
 |---------|-------------|
-| `greenkube start` | Start the continuous monitoring service |
+| `greenkube start` | Start the monitoring service + API server + background scheduler |
 | `greenkube report` | Generate on-demand reports |
 | `greenkube recommend` | Get optimization recommendations |
 | `greenkube demo` | Launch a demo with realistic sample data |
-| `greenkube api` | Start the API server |
 | `greenkube version` | Show version information |
+
+### Global Options
+
+| Option | Description |
+|--------|-------------|
+| `--no-color` | Disable Rich formatting (useful for CI/CD logs) |
+| `--version` | Print version and exit |
+| `--help` | Show help |
+
+You can also set `NO_COLOR=1` in your environment to disable Rich output globally.
 
 ## `greenkube start`
 
-Starts the background monitoring service that continuously collects metrics.
+Starts the combined monitoring service: FastAPI server, web dashboard, and background metrics collection scheduler — all in a single process.
 
 ```bash
 greenkube start [OPTIONS]
@@ -34,23 +43,24 @@ greenkube start [OPTIONS]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--with-api` | Also start the API server | `false` |
-| `--interval` | Collection interval (e.g., `5m`, `1h`) | `5m` |
-| `--analyze-nodes` | Enable node analysis | `true` |
+| `--port` | Listen port | `8000` |
+| `--no-browser` | Don't auto-open the browser | `false` |
 
 **Example:**
 
 ```bash
-# Start collector + API server
-greenkube start --with-api
+# Start server on default port 8000
+greenkube start
 
-# Start collector only with custom interval
-greenkube start --interval 10m
+# Start on a custom port without opening browser
+greenkube start --port 9000 --no-browser
 ```
+
+This is the default entrypoint used by the Docker image and Helm chart.
 
 ## `greenkube report`
 
-Generate reports for any time period with flexible grouping options.
+Generate reports for any time period with flexible grouping and filtering options.
 
 ```bash
 greenkube report [OPTIONS]
@@ -60,25 +70,29 @@ greenkube report [OPTIONS]
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `--last` | Report for the last N time units | `--last 7d`, `--last 3m`, `--last 1y` |
-| `--daily` | Shortcut for `--last 1d` | `--daily` |
-| `--start` | Start date (ISO format) | `--start 2024-01-01` |
-| `--end` | End date (ISO format) | `--end 2024-01-31` |
+| `--last` | Relative window | `--last 7d`, `--last 3m`, `--last ytd` |
+| `--start` | Start date (ISO 8601) | `--start 2024-01-01` |
+| `--end` | End date (ISO 8601) | `--end 2024-12-31` |
+| `--years` | Full calendar year (repeatable) | `--years 2024 --years 2023` |
 
 ### Grouping Options
 
 | Option | Description |
 |--------|-------------|
+| `--hourly` | Group results by hour |
 | `--daily` | Group results by day |
+| `--weekly` | Group results by week |
 | `--monthly` | Group results by month |
 | `--yearly` | Group results by year |
+| `--group-by-namespace` | Return one row per namespace instead of per pod |
 
 ### Filtering Options
 
 | Option | Description | Example |
 |--------|-------------|---------|
-| `--namespace` / `-n` | Filter by namespace | `-n default` |
-| `--pod` | Filter by pod name pattern | `--pod "api-*"` |
+| `--namespace` / `-n` | Filter by namespace | `-n production` |
+| `--pod` | Filter by pod name | `--pod "api-*"` |
+| `--node` | Filter by node name | `--node "worker-1"` |
 
 ### Output Options
 
@@ -87,35 +101,45 @@ greenkube report [OPTIONS]
 | `--format` | Output format: `table`, `csv`, `json` | `table` |
 | `--output` / `-o` | Write output to file | stdout |
 
+### CI/CD Gate Options
+
+| Option | Description |
+|--------|-------------|
+| `--fail-on-co2 N` | Exit code 1 if total CO₂e (grams) exceeds N |
+| `--fail-on-cost N` | Exit code 1 if total cost (USD) exceeds N |
+
 ### Examples
 
 ```bash
 # Daily report for the last 24 hours (terminal table)
-greenkube report --daily
+greenkube report --last 24h --daily
 
-# Weekly report in JSON format
-greenkube report --last 7d --format json
+# Monthly report for a specific namespace, saved to CSV
+greenkube report --last 30d --monthly -n production --format csv -o report.csv
 
-# Monthly report for a specific namespace, saved to file
-greenkube report --last 30d --monthly -n production -o report.csv --format csv
+# Full calendar year 2024 for CSRD reporting
+greenkube report --years 2024 --monthly --format json -o 2024-annual.json
 
-# Custom date range
-greenkube report --start 2024-01-01 --end 2024-01-31 --monthly
+# Custom date range with namespace grouping
+greenkube report --start 2024-01-01 --end 2024-06-30 \
+  --monthly --group-by-namespace --format csv
 
-# Last 3 months, grouped by month
-greenkube report --last 3m --monthly
+# CI/CD policy gate
+greenkube report --last 24h --fail-on-co2 50000 --fail-on-cost 1000
 ```
 
 ### Report Columns
 
-The report includes the following data per pod/group:
+Each row in the report includes:
 
 | Column | Unit | Description |
 |--------|------|-------------|
 | Pod | — | Pod name |
 | Namespace | — | Kubernetes namespace |
 | Energy | Joules | Estimated energy consumption |
-| CO₂e | grams | Carbon dioxide equivalent emissions |
+| CO₂e | grams | GHG Scope 2 (operational) |
+| Embodied CO₂e | grams | GHG Scope 3 (hardware manufacturing) |
+| Total CO₂e | grams | Scope 2 + Scope 3 |
 | Cost | $ | Allocated cost from OpenCost |
 | CPU Usage | millicores | Average CPU utilization |
 | Memory Usage | bytes | Average memory usage |
@@ -137,36 +161,38 @@ greenkube recommend [OPTIONS]
 | Option | Description | Default |
 |--------|-------------|---------|
 | `--namespace` / `-n` | Filter by namespace | All namespaces |
-| `--lookback` | Days of historical data to analyze | `7` |
-| `--format` | Output format: `table`, `json` | `table` |
-| `--live` | Use real-time collection instead of database | `false` |
+| `--last` | Analysis window | `24h` |
+| `--live` | Run live collection instead of reading from database | `false` |
+| `--fail-on-recommendations` | Exit code 1 if any recommendations are found | `false` |
 
-**Example:**
+**Examples:**
 
 ```bash
-# Get all recommendations
+# Get all recommendations (reads from database)
 greenkube recommend
 
 # Recommendations for a specific namespace
 greenkube recommend -n production
 
-# JSON output for automation
-greenkube recommend --format json
+# Longer lookback window
+greenkube recommend --last 7d
+
+# CI/CD gate: fail the pipeline if optimizations exist
+greenkube recommend --fail-on-recommendations
 ```
 
 ### Recommendation Output
 
 Each recommendation includes:
-- **Type**: zombie, rightsizing, autoscaling, carbon-aware
-- **Severity**: low, medium, high, critical
-- **Resource**: Affected pod or namespace
-- **Details**: Current usage vs. recommended
-- **Savings**: Estimated cost and CO₂ reduction
-- **Action**: Suggested kubectl command
+- **Type** — zombie, rightsizing (CPU/memory), autoscaling, carbon-aware, idle namespace, off-peak scaling, overprovisioned node, underutilized node
+- **Priority** — high, medium, low
+- **Scope** — pod, workload, namespace, or node
+- **Details** — Current usage vs. recommended
+- **Annual savings** — Projected CO₂e and cost savings extrapolated to 1 year
 
 ## `greenkube demo`
 
-Launch a standalone demo instance with realistic sample data — no live cluster metrics required. Perfect for evaluating GreenKube or creating demos for your team.
+Launch a standalone demo instance with realistic sample data — no live cluster metrics required.
 
 ```bash
 greenkube demo [OPTIONS]
@@ -174,44 +200,32 @@ greenkube demo [OPTIONS]
 
 | Option | Description | Default |
 |--------|-------------|---------|
-| `--days` | Number of days of sample data to generate | `7` |
+| `--days` | Number of days of sample data to generate | `30` |
 | `--port` | Port for the demo API/dashboard server | `9000` |
 | `--no-browser` | Don't auto-open the browser | `false` |
 
 **What it does:**
 - Creates a temporary SQLite database with realistic Kubernetes metrics
-- Generates data for **22 pods** across **5 namespaces** (production, staging, monitoring, data-pipeline, ci-cd)
-- Includes carbon emissions, costs, resource usage, and optimization recommendations
+- Simulates the fictional **GreenOptic** company with **22 pods** across **5 namespaces**
+- Generates 30 days of carbon emissions, costs, resource usage, and optimization recommendations
+- Includes a pre-populated savings ledger with resolved demo recommendations
 - Starts the API server and dashboard on the specified port
 
 **Examples:**
 
 ```bash
-# Quick demo (7 days of data, opens browser)
+# Quick demo (30 days of data, opens browser)
 greenkube demo
 
-# Demo with 14 days of data, no browser
-greenkube demo --days 14 --no-browser
+# Demo with 60 days of data, no browser
+greenkube demo --days 60 --no-browser
 
 # Deploy as a standalone Kubernetes pod
 kubectl run greenkube-demo \
-  --image=greenkube/greenkube:0.2.3 \
+  --image=greenkube/greenkube:latest \
   --restart=Never \
   --command -- greenkube demo --no-browser --port 9000
 ```
-
-## `greenkube api`
-
-Start the FastAPI server (and web dashboard) independently.
-
-```bash
-greenkube api [OPTIONS]
-```
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--host` | Listen address | `0.0.0.0` |
-| `--port` | Listen port | `8000` |
 
 ## `greenkube version`
 
@@ -221,14 +235,9 @@ Display version information.
 greenkube version
 ```
 
-Output:
-```
-GreenKube v0.2.3
-```
-
 <Aside type="tip">
   When running inside a Kubernetes pod, use `kubectl exec` to access the CLI:
   ```bash
-  kubectl exec -it <pod-name> -n greenkube -- greenkube report --daily
+  kubectl exec -it <pod-name> -n greenkube -- greenkube report --last 24h --daily
   ```
 </Aside>

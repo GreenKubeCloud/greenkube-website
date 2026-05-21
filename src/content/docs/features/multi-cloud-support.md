@@ -47,33 +47,20 @@ Scaleway fr-par   → FR              (France)
 
 This mapping is crucial for accurate carbon tracking — a workload in `eu-west-1` (Ireland, ~300 gCO₂/kWh) has a very different footprint than one in `eu-north-1` (Sweden, ~20 gCO₂/kWh).
 
-## Multi-Cluster Support
+## On-Premises or Unknown Providers
 
-GreenKube can monitor multiple clusters across different providers:
-
-```yaml
-clusters:
-  - name: production-aws
-    provider: aws
-    region: eu-west-1
-    kubeconfig: /path/to/aws-kubeconfig
-  - name: staging-gcp
-    provider: gcp
-    region: europe-west1
-    kubeconfig: /path/to/gcp-kubeconfig
-```
-
-## Custom Providers
-
-For on-premises or unsupported providers, you can configure:
+For on-premises clusters or unsupported providers, set:
 
 ```yaml
-greenkube:
-  cloudProvider: "custom"
-  carbonZone: "FR"              # Electricity Maps zone
-  defaultTdpWatts: 150          # Fallback TDP per node
-  defaultPueRatio: 1.2          # Power Usage Effectiveness
+# values.yaml
+config:
+  cloudProvider: on-prem    # or leave as "unknown" for auto-detection
+  defaultZone: "FR"         # Electricity Maps zone code
+  defaults:
+    pue: 1.5                # Your data center PUE
 ```
+
+GreenKube uses the SPECpower linear model for power estimation regardless of provider.
 
 ## PUE (Power Usage Effectiveness)
 

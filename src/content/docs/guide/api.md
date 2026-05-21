@@ -21,250 +21,165 @@ The API supports **optional bearer-token authentication** via the `GREENKUBE_API
 curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8000/api/v1/metrics
 ```
 
-When no API key is configured, the API is open (designed for cluster-internal use). For external exposure, you can combine the API key with:
-- Kubernetes Ingress with authentication
-- OAuth2 proxy
-- Network policies
+When no API key is configured, the API is open (designed for cluster-internal use).
 
 ## Endpoints
 
 ### Health & System
 
-#### `GET /api/v1/health`
-
-Health check endpoint. Returns the application status and version.
-
-**Response:**
-```json
-{
-  "status": "healthy",
-  "version": "0.2.3",
-  "uptime_seconds": 3600
-}
-```
-
-#### `GET /api/v1/version`
-
-Returns the application version.
-
-**Response:**
-```json
-{
-  "version": "0.2.3"
-}
-```
-
-#### `GET /api/v1/config`
-
-Returns the current configuration (sensitive values are redacted).
-
-**Response:**
-```json
-{
-  "db_type": "postgres",
-  "cloud_provider": "aws",
-  "default_zone": "FR",
-  "default_intensity": 500.0,
-  "prometheus_url": "http://prometheus:9090",
-  "api_port": 8000,
-  "normalization_granularity": "hour"
-}
-```
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/health` | GET | Liveness check — returns `{"status":"ok","version":"0.2.10"}` |
+| `/version` | GET | Version info |
+| `/config` | GET | Non-sensitive configuration |
+| `/health/services` | GET | Aggregated health status for all data sources (Prometheus, OpenCost, Electricity Maps, Boavizta, K8s) |
+| `/health/services/{name}` | GET | Single service health — add `?force=true` to bypass 30s cache |
+| `/config/services` | POST | Update service URLs/tokens at runtime and persist to K8s Secret |
 
 ### Metrics
 
-#### `GET /api/v1/metrics`
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/metrics` | GET | Per-pod metrics with pagination (`?offset=0&limit=1000`) |
+| `/metrics/summary` | GET | Aggregated cluster/namespace totals |
+| `/metrics/timeseries` | GET | Bucketed time-series for charts |
+| `/metrics/by-namespace` | GET | CO₂e, embodied emissions, energy, cost aggregated by namespace |
+| `/metrics/top-pods` | GET | Top-N pods by CO₂e over a time window |
+| `/metrics/dashboard-summary` | GET | Pre-computed KPI cache — fast, no full-table scan |
+| `/metrics/dashboard-timeseries/{window_slug}` | GET | Pre-computed timeseries for `24h`, `7d`, `30d`, `1y`, or `ytd` |
+| `/metrics/dashboard-summary/refresh` | POST | Trigger on-demand cache refresh (returns HTTP 202) |
 
-Retrieve per-pod metrics with optional filtering.
+**Common query parameters:** `namespace`, `last` (e.g. `24h`, `7d`, `30d`, `1y`, `ytd`), `granularity` (`hour`, `day`, `week`, `month`)
 
-**Query Parameters:**
+#### Example: Get metrics with Scope 2 + Scope 3
 
-| Parameter | Type | Description | Default |
-|-----------|------|-------------|---------|
-| `namespace` | string | Filter by namespace | All |
-| `last` | string | Time range (e.g., `24h`, `7d`, `30d`) | `24h` |
-| `pod` | string | Filter by pod name pattern | All |
-| `limit` | integer | Maximum number of results | 100 |
-| `offset` | integer | Offset for pagination | 0 |
-
-**Example Request:**
 ```bash
-curl "http://localhost:8000/api/v1/metrics?namespace=default&last=24h"
+curl "http://localhost:8000/api/v1/metrics?namespace=production&last=24h"
 ```
 
-**Response:**
 ```json
 {
   "metrics": [
     {
       "pod_name": "api-deployment-7b5f8c9d6-x2k4p",
-      "namespace": "default",
+      "namespace": "production",
       "timestamp": "2024-02-21T14:00:00Z",
-      "duration_seconds": 300,
       "joules": 1250.5,
       "co2e_grams": 0.174,
+      "embodied_co2e_grams": 0.012,
+      "total_co2e_all_scopes": 0.186,
       "total_cost": 0.0023,
       "grid_intensity": 45.2,
-      "pue": 1.2,
-      "cpu_request": 250,
+      "pue": 1.15,
       "cpu_usage_millicores": 85.3,
-      "memory_request": 268435456,
       "memory_usage_bytes": 134217728,
-      "network_receive_bytes": 1048576,
-      "network_transmit_bytes": 524288,
-      "disk_read_bytes": 2097152,
-      "disk_write_bytes": 1048576,
-      "restart_count": 0,
-      "node": "ip-10-0-1-42",
-      "node_instance_type": "m5.xlarge",
-      "emaps_zone": "FR",
-      "is_estimated": false
+      "is_estimated": false,
+      "estimation_reasons": []
     }
   ],
-  "total": 42,
-  "period": {
-    "start": "2024-02-20T14:00:00Z",
-    "end": "2024-02-21T14:00:00Z"
-  }
+  "total": 42
 }
 ```
 
-#### `GET /api/v1/metrics/summary`
+### Report
 
-Aggregated summary across all pods.
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/report/summary` | GET | Preview: row count, totals before downloading |
+| `/report/export` | GET | Downloadable file (CSV or JSON) with correct `Content-Disposition` headers |
 
-**Query Parameters:**
+**Report parameters:**
+- `format` — `csv` or `json`
+- `last` — relative window (e.g. `7d`, `ytd`)
+- `start` / `end` — ISO 8601 date range
+- `years` — calendar year, e.g. `?years=2024&years=2025`
+- `granularity` — `hourly`, `daily`, `weekly`, `monthly`, `yearly`
+- `namespace` — filter by namespace
+- `group_by_namespace` — return namespace breakdown
 
-| Parameter | Type | Description | Default |
-|-----------|------|-------------|---------|
-| `namespace` | string | Filter by namespace | All |
-| `last` | string | Time range | `24h` |
-
-**Response:**
-```json
-{
-  "total_co2e_grams": 45.2,
-  "total_cost": 12.35,
-  "total_energy_joules": 325000,
-  "total_pods": 42,
-  "period": {
-    "start": "2024-02-20T14:00:00Z",
-    "end": "2024-02-21T14:00:00Z"
-  }
-}
-```
-
-#### `GET /api/v1/metrics/timeseries`
-
-Time-series data for charting.
-
-**Query Parameters:**
-
-| Parameter | Type | Description | Default |
-|-----------|------|-------------|---------|
-| `granularity` | string | `hour`, `day`, `week`, `month` | `day` |
-| `last` | string | Time range | `7d` |
-| `namespace` | string | Filter by namespace | All |
-
-**Response:**
-```json
-{
-  "timeseries": [
-    {
-      "timestamp": "2024-02-21T00:00:00Z",
-      "co2e_grams": 45.2,
-      "total_cost": 12.35,
-      "energy_joules": 325000,
-      "pod_count": 42
-    }
-  ]
-}
-```
-
-### Namespaces
-
-#### `GET /api/v1/namespaces`
-
-List all active namespaces with metrics.
-
-**Response:**
-```json
-{
-  "namespaces": [
-    {
-      "name": "default",
-      "pod_count": 15,
-      "total_co2e_grams": 12.3,
-      "total_cost": 3.45
-    },
-    {
-      "name": "production",
-      "pod_count": 27,
-      "total_co2e_grams": 32.9,
-      "total_cost": 8.90
-    }
-  ]
-}
-```
-
-### Nodes
-
-#### `GET /api/v1/nodes`
-
-Cluster node inventory with hardware and capacity details.
-
-**Response:**
-```json
-{
-  "nodes": [
-    {
-      "name": "ip-10-0-1-42",
-      "instance_type": "m5.xlarge",
-      "cloud_provider": "aws",
-      "zone": "eu-west-1a",
-      "emaps_zone": "FR",
-      "cpu_capacity": 4000,
-      "memory_capacity": 17179869184,
-      "architecture": "amd64",
-      "os": "linux"
-    }
-  ]
-}
+```bash
+# CSRD annual report
+curl -O -J "http://localhost:8000/api/v1/report/export?format=csv&years=2024&granularity=monthly"
 ```
 
 ### Recommendations
 
-#### `GET /api/v1/recommendations`
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/recommendations` | GET | Generate live recommendations (runs the recommender engine) |
+| `/recommendations/active` | GET | Persisted active recommendations — add `?refresh=true` to re-run engine |
+| `/recommendations/ignored` | GET | All permanently ignored recommendations |
+| `/recommendations/history` | GET | Historical records with optional time filtering |
+| `/recommendations/savings` | GET | Aggregate savings by recommendation type |
+| `/recommendations/{id}/apply` | PATCH | Mark applied with optional realized savings |
+| `/recommendations/{id}/ignore` | PATCH | Permanently ignore a recommendation |
+| `/recommendations/{id}/snooze` | PATCH | Hide for N days — add `?days=14` |
 
-Optimization recommendations based on recent metrics.
+#### Example: Get active recommendations
 
-**Query Parameters:**
+```bash
+curl "http://localhost:8000/api/v1/recommendations/active"
+```
 
-| Parameter | Type | Description | Default |
-|-----------|------|-------------|---------|
-| `namespace` | string | Filter by namespace | All |
+```json
+[
+  {
+    "id": 42,
+    "type": "RIGHTSIZING_CPU",
+    "status": "open",
+    "priority": "high",
+    "scope": "workload",
+    "pod_name": "api-deployment",
+    "namespace": "production",
+    "description": "CPU request (500m) is 6× higher than average usage (85m). Recommended: 105m.",
+    "annual_co2e_savings_grams": 1250.0,
+    "annual_cost_savings_usd": 45.60,
+    "current_cpu_request_millicores": 500,
+    "recommended_cpu_request_millicores": 105
+  }
+]
+```
 
-**Response:**
+#### Example: Resolve a recommendation
+
+```bash
+curl -X PATCH "http://localhost:8000/api/v1/recommendations/42/apply"
+```
+
+This triggers a savings ledger entry and updates the `greenkube_co2e_savings_attributed_grams_total` Prometheus gauge.
+
+### Sustainability Score
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `/sustainability` | GET | Compute and return the 7-dimension 0–100 score |
+
+```bash
+curl "http://localhost:8000/api/v1/sustainability"
+```
+
 ```json
 {
-  "recommendations": [
-    {
-      "type": "rightsizing",
-      "severity": "high",
-      "resource": "api-deployment-7b5f8c9d6-x2k4p",
-      "namespace": "default",
-      "details": "CPU usage is 15% of request (250m). Recommend reducing to 50m.",
-      "current": {"cpu_request": 250, "cpu_usage_avg": 37.5},
-      "recommended": {"cpu_request": 50},
-      "estimated_savings": {
-        "cost_per_day": 0.45,
-        "co2e_grams_per_day": 2.1
-      }
-    }
-  ],
-  "total": 5
+  "overall_score": 72.4,
+  "dimension_scores": {
+    "resource_efficiency": 68.0,
+    "carbon_efficiency": 81.0,
+    "waste_elimination": 92.0,
+    "node_efficiency": 65.0,
+    "scaling_practices": 70.0,
+    "carbon_aware_scheduling": 55.0,
+    "stability": 95.0
+  }
 }
 ```
+
+### Prometheus Metrics
+
+| Endpoint | Format | Description |
+|----------|--------|-------------|
+| `/prometheus/metrics` | Prometheus text | Scraped by Prometheus |
+
+See the [Grafana guide](/guide/grafana/) for the full list of exposed gauges.
 
 ## Error Handling
 
@@ -273,16 +188,10 @@ All endpoints return standard HTTP status codes:
 | Status | Description |
 |--------|-------------|
 | `200` | Success |
+| `202` | Accepted (background operation started) |
 | `400` | Bad request (invalid parameters) |
 | `404` | Resource not found |
 | `500` | Internal server error |
-
-Error response format:
-```json
-{
-  "detail": "Description of the error"
-}
-```
 
 ## Interactive Documentation
 

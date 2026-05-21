@@ -1,20 +1,19 @@
 ---
 title: Grafana & Prometheus Integration
-description: Set up Prometheus scraping and import the pre-built GreenKube Grafana dashboard for comprehensive FinGreenOps monitoring.
+description: Set up Prometheus scraping and import the pre-built GreenKube Grafana dashboard (v2) for comprehensive FinGreenOps monitoring.
 ---
 
 import { Aside, Steps } from '@astrojs/starlight/components';
 
-GreenKube exposes Prometheus metrics at `/prometheus/metrics` and ships with a **pre-built Grafana dashboard** for comprehensive FinGreenOps monitoring.
+GreenKube exposes Prometheus metrics at `/prometheus/metrics` and ships with a **pre-built Grafana dashboard (v2)** for comprehensive FinGreenOps monitoring.
 
 ## Prometheus Integration
 
 ### Automatic Setup (kube-prometheus-stack)
 
-If you use the **kube-prometheus-stack** (Prometheus Operator), the Helm chart automatically creates a `ServiceMonitor` and a `NetworkPolicy`:
+If you use the **kube-prometheus-stack** (Prometheus Operator), enable the `ServiceMonitor` in your `values.yaml`:
 
 ```yaml
-# In your values.yaml
 monitoring:
   serviceMonitor:
     enabled: true            # Creates a ServiceMonitor resource
@@ -39,26 +38,48 @@ scrape_configs:
       - targets: ['greenkube-api.greenkube.svc.cluster.local:8000']
 ```
 
-### Exposed Metrics
+### Exposed Prometheus Metrics
 
-GreenKube exposes the following Prometheus metrics:
+GreenKube exposes the following gauges:
 
-| Metric | Type | Description |
-|--------|------|-------------|
-| `greenkube_co2e_grams` | Gauge | CO₂e emissions per pod |
-| `greenkube_energy_joules` | Gauge | Energy consumption per pod |
-| `greenkube_cost_total` | Gauge | Cost per pod |
-| `greenkube_cpu_usage_millicores` | Gauge | CPU utilization per pod |
-| `greenkube_memory_usage_bytes` | Gauge | Memory usage per pod |
-| `greenkube_network_receive_bytes` | Gauge | Network bytes received per pod |
-| `greenkube_network_transmit_bytes` | Gauge | Network bytes transmitted per pod |
-| `greenkube_grid_intensity` | Gauge | Grid carbon intensity per zone |
-| `greenkube_recommendation_total` | Gauge | Recommendation counts by type |
-| `greenkube_node_info` | Info | Node metadata (instance type, zone, capacity) |
+#### Pod-Level Metrics (labels: `cluster`, `namespace`, `pod`, `node`, `region`)
 
-All metrics include labels for `pod`, `namespace`, `node`, and `zone` where applicable.
+| Metric | Description |
+|--------|-------------|
+| `greenkube_pod_co2e_grams` | GHG Scope 2 emissions per pod (operational) |
+| `greenkube_pod_embodied_co2e_grams` | GHG Scope 3 emissions per pod (hardware manufacturing) |
+| `greenkube_pod_energy_joules` | Energy consumption per pod |
+| `greenkube_pod_cost_dollars` | Cost allocation per pod |
+| `greenkube_pod_cpu_usage_millicores` | CPU utilization per pod |
+| `greenkube_pod_memory_usage_bytes` | Memory usage per pod |
+| `greenkube_pod_restart_count` | Container restart count per pod |
 
-## Grafana Dashboard
+#### Cluster-Wide Metrics (label: `cluster`)
+
+| Metric | Description |
+|--------|-------------|
+| `greenkube_cluster_co2e_grams_total` | Total Scope 2 CO₂e for the cluster |
+| `greenkube_cluster_embodied_co2e_grams_total` | Total Scope 3 CO₂e for the cluster |
+| `greenkube_cluster_cost_dollars_total` | Total cost |
+| `greenkube_cluster_energy_joules_total` | Total energy |
+| `greenkube_cluster_pod_count` | Total pod count |
+| `greenkube_cluster_namespace_count` | Total namespace count |
+| `greenkube_sustainability_score` | Composite 0–100 sustainability score |
+| `greenkube_sustainability_dimension_score` | Per-dimension score (7 dimensions) |
+| `greenkube_recommendation_total` | Recommendation counts by type |
+| `greenkube_co2e_savings_attributed_grams_total` | Cumulative CO₂e savings from applied recommendations |
+| `greenkube_cost_savings_attributed_dollars_total` | Cumulative cost savings from applied recommendations |
+
+#### Grid Intensity Metrics
+
+| Metric | Description |
+|--------|-------------|
+| `greenkube_carbon_intensity_score` | Energy-weighted average grid intensity |
+| `greenkube_carbon_intensity_zone` | Real-time grid intensity per Electricity Maps zone |
+
+## Grafana Dashboard (v2)
+
+The dashboard has been completely rebuilt in v0.2.10 for clarity, correctness, and high-impact visualization.
 
 ### Import the Dashboard
 
@@ -84,51 +105,61 @@ All metrics include labels for `pod`, `namespace`, `node`, and `zone` where appl
 
 </Steps>
 
-### Dashboard Panels
+### Dashboard Structure (4 Sections, 9 Panels)
 
-The pre-built Grafana dashboard includes:
+#### 1. GreenKube Impact Command Center
+Strategic overview of cluster sustainability and savings.
 
-**KPI Row:**
-- Total CO₂e emissions
-- Total cost
-- Total energy consumption
-- Active pods count
-- Active nodes count
+- **Sustainability Score** — Composite 0–100 gauge from 7 dimensions (resource efficiency, carbon efficiency, waste elimination, node efficiency, scaling practices, carbon-aware scheduling, stability)
+- **Footprint Mix** — Pie chart: Scope 2 vs. Scope 3 CO₂e breakdown
+- **Impact Ledger** — Timeline of attributed CO₂e and cost savings from applied recommendations
+- **Action Priorities** — Bar chart: top recommendation types by count
 
-**Time-Series Charts:**
-- CO₂e emissions over time
-- Cost trends over time
-- Energy consumption over time
+#### 2. CO₂e by Namespace
+Operational carbon breakdown for per-team accountability.
 
-**Namespace Breakdown:**
-- Pie charts for CO₂e distribution by namespace
-- Pie charts for cost distribution by namespace
+- Pie charts: Scope 2 CO₂e per namespace, Scope 3 CO₂e per namespace, Total CO₂e per namespace
+- Sorted by top emitters; filters by `$cluster` and `$namespace` variables
 
-**Top Pods:**
-- Bar charts for highest-emitting pods
-- Bar charts for most expensive pods
+#### 3. Regional Node Cleanliness
+Geographic view of infrastructure carbon intensity.
 
-**Node Utilization:**
-- CPU usage per node
-- Memory usage per node
+- Geomap with node count bubbles; bubble color reflects grid carbon intensity per Electricity Maps zone
+- Filters by cluster
 
-**Grid Intensity:**
-- Carbon intensity over time per zone
+#### 4. Top Emitters & Spenders
+Pod-level detail for targeted optimization.
 
-**Recommendations:**
-- Summary table of optimization suggestions with estimated savings
+- Top-15 pods by CO₂e emissions (bar chart, instant query)
+- Top-15 pods by cost (bar chart, instant query)
+
+### Template Variables
+
+| Variable | Description |
+|----------|-------------|
+| `$cluster` | Filter all panels by cluster name |
+| `$namespace` | Filter all panels by namespace |
+
+All panels respect both template variables consistently.
+
+### PromQL Notes
+
+The dashboard uses correct aggregation for multi-instance metrics:
+- **Cluster scalars:** `sum(max by (cluster)(greenkube_cluster_co2e_grams_total{cluster="$cluster"}))`
+- **Namespace breakdowns:** `sum by (namespace)(greenkube_pod_co2e_grams{...})`
+- **Pod-level top-N:** `topk(15, max by (pod, namespace)(greenkube_pod_co2e_grams{...}))`
+
+This prevents value inflation from multiple Prometheus scrape instances.
 
 ### Customization
 
-The dashboard is fully customizable in Grafana. Common modifications include:
-
-- Adjusting time ranges and refresh intervals
-- Adding alerts on CO₂e thresholds
-- Filtering by specific namespaces
-- Adding custom panels using the GreenKube Prometheus metrics
+The dashboard is fully customizable in Grafana. Common additions:
+- Grafana alerts on `greenkube_sustainability_score` for carbon budget enforcement
+- Additional namespace filters
+- Custom panels using any of the GreenKube Prometheus metrics
 
 <Aside type="tip">
-  You can set up Grafana alerts on metrics like `greenkube_co2e_grams` to get notified when carbon emissions exceed a threshold — enabling **carbon budget** enforcement.
+  Set up a Grafana alert on `greenkube_sustainability_score < 60` to get notified when cluster sustainability degrades — enabling proactive carbon budget management.
 </Aside>
 
 ## Related

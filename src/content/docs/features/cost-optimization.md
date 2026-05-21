@@ -31,31 +31,40 @@ Suggestions to shift non-urgent workloads to times or regions with lower carbon 
 
 ## Savings Estimation
 
-Each recommendation includes an estimated impact:
+Each recommendation includes an estimated annual impact:
 
 | Metric | Description |
-|---|---|
-| **Cost savings** | Estimated monthly $ reduction |
-| **Energy savings** | Estimated kWh reduction |
-| **Carbon savings** | Estimated kgCO₂e reduction |
-| **Confidence** | High / Medium / Low |
+|--------|-------------|
+| **Annual cost savings** | Projected $ reduction per year |
+| **Annual CO₂e savings** | Projected gCO₂e reduction per year |
+| **Priority** | `high`, `medium`, or `low` |
 
-## Recommendation Categories
+## Recommendation Lifecycle & Savings Tracking
 
-Recommendations are grouped by priority:
+Once you act on a recommendation, you can mark it as **resolved** in the dashboard or via the API. This triggers a **savings ledger entry** that attributes the projected annual savings to actual collection periods, driving Prometheus gauges:
 
-- 🔴 **Critical** — Immediate action recommended (e.g., zombie pods burning significant resources)
-- 🟡 **Warning** — Notable optimization opportunity (e.g., 3× over-provisioned)
-- 🟢 **Info** — Minor improvement possible (e.g., slight rightsizing)
+- `greenkube_co2e_savings_attributed_grams_total`
+- `greenkube_cost_savings_attributed_dollars_total`
+
+These appear in the Grafana **Impact Command Center** and on the dashboard summary.
 
 ## How to Use
 
 ### Via Dashboard
-Navigate to the **Recommendations** tab to see all active suggestions with inline actions.
+Navigate to the `/recommendations` page to see all suggestions with status filters, per-recommendation controls (dismiss, snooze, mark in-progress/resolved), and estimated annual savings.
 
 ### Via CLI
 ```bash
-greenkube report --recommendations
+greenkube recommend
+# CI/CD gate: exit 1 if recommendations found
+greenkube recommend --fail-on-recommendations
+```
+
+### Via API
+```bash
+GET /api/v1/recommendations/active
+GET /api/v1/recommendations/savings
+PATCH /api/v1/recommendations/{id}/apply
 ```
 
 ### Via API

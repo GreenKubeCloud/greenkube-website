@@ -73,29 +73,23 @@ As of v0.2.8, the Helm chart ships with comprehensive security hardening enabled
 All settings are configurable via `values.yaml`:
 
 ```yaml
-greenkube:
-  prometheusUrl: "http://prometheus-server.monitoring:9090"
-  opencostUrl: "http://opencost.opencost:9003"
-  dbType: "postgresql"       # or "sqlite", "elasticsearch"
-  collectionInterval: 300    # seconds
+config:
+  cloudProvider: aws          # auto-detected from node labels if left as "unknown"
+  db:
+    type: postgres            # or "sqlite"
+    poolMinSize: 2
+    poolMaxSize: 10
+    statementTimeoutMs: 30000
 
-electricityMaps:
-  enabled: true
-  token: ""                  # Your API token
+secrets:
+  electricityMapsToken: ""   # Your Electricity Maps API token
+  existingSecret: ""         # Set to use a pre-created K8s Secret
 
 postgresql:
   enabled: true
-  storage: "5Gi"
-
-# Production: use a pre-created Secret instead of inline credentials
-secrets:
-  existingSecret: ""         # Set to your Secret name to skip chart-managed credentials
-
-# Connection pool tuning
-db:
-  poolMinSize: 2
-  poolMaxSize: 10
-  statementTimeoutMs: 30000
+  persistence:
+    enabled: true
+    size: 5Gi
 ```
 
 Every parameter can also be set via environment variables (12-Factor App compliant).

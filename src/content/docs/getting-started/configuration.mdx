@@ -14,7 +14,7 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `image.repository` | Docker image repository | `greenkube/greenkube` |
-| `image.tag` | Image tag | `0.2.3` |
+| `image.tag` | Image tag | `0.2.10` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 
 ### Database
@@ -38,7 +38,7 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `config.cloudProvider` | Cloud provider: `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem` | `aws` |
+| `config.cloudProvider` | Cloud provider: `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem` | `unknown` |
 | `config.defaultZone` | Fallback carbon zone (ISO country code) | `FR` |
 | `config.defaultIntensity` | Default grid intensity (gCO₂e/kWh) when API unavailable | `500.0` |
 | `config.normalizationGranularity` | Intensity lookup granularity: `hour`, `day`, `none` | `hour` |
@@ -96,8 +96,8 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `config.recommendations.lookbackDays` | Days of data for analysis | `7` |
-| `config.recommendations.rightsizingCpuThreshold` | CPU usage ratio triggering rightsizing | `0.3` |
-| `config.recommendations.rightsizingMemoryThreshold` | Memory usage ratio triggering rightsizing | `0.3` |
+| `config.recommendations.rightsizingCpuThreshold` | CPU usage ratio triggering rightsizing | `0.5` |
+| `config.recommendations.rightsizingMemoryThreshold` | Memory usage ratio triggering rightsizing | `0.5` |
 | `config.recommendations.rightsizingHeadroom` | Safety headroom multiplier | `1.2` |
 | `config.recommendations.zombieCostThreshold` | Cost threshold for zombie detection ($) | `0.01` |
 | `config.recommendations.zombieEnergyThreshold` | Energy threshold for zombie detection (J) | `1000` |
@@ -125,7 +125,7 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 |-----------|-------------|---------|
 | `postgres.enabled` | Deploy bundled PostgreSQL | `true` |
 | `postgres.image.repository` | PostgreSQL image | `postgres` |
-| `postgres.image.tag` | PostgreSQL version | `17-alpine` |
+| `postgres.image.tag` | PostgreSQL version | `18-alpine` |
 | `postgres.auth.username` | Database username | `greenkube` |
 | `postgres.auth.password` | Database password (auto-generated if empty) | `""` |
 | `postgres.auth.database` | Database name | `greenkube` |
@@ -155,21 +155,26 @@ When running outside Helm (Docker, source), use these environment variables:
 | `OPENCOST_URL` | OpenCost server URL | Auto-discovery |
 | `ELECTRICITY_MAPS_TOKEN` | Electricity Maps API token | — |
 | `BOAVIZTA_TOKEN` | Boavizta API token | — |
-| `CLOUD_PROVIDER` | `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem` | `aws` |
+| `CLOUD_PROVIDER` | `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem` | `unknown` |
 | `DEFAULT_ZONE` | Fallback carbon zone | `FR` |
 | `DEFAULT_INTENSITY` | Fallback grid intensity (gCO₂e/kWh) | `500.0` |
+| `DEFAULT_EMBODIED_EMISSIONS_KG` | Fallback embodied emissions when Boavizta has no data | `100.0` |
+| `DEFAULT_HARDWARE_LIFESPAN_YEARS` | Cloud hardware lifespan assumption | `4` |
 | `LOG_LEVEL` | Logging level | `INFO` |
 | `NORMALIZATION_GRANULARITY` | `hour`, `day`, `none` | `hour` |
 | `PROMETHEUS_QUERY_RANGE_STEP` | Range query step | `5m` |
-| `NODE_ANALYSIS_INTERVAL` | Node analysis interval | `5m` |
-| `NODE_DATA_MAX_AGE_DAYS` | Max node data age | `30` |
 | `API_HOST` | API listen address | `0.0.0.0` |
 | `API_PORT` | API listen port | `8000` |
 | `GREENKUBE_API_KEY` | Bearer token for API authentication (empty = no auth) | — |
 | `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | `*` |
-| `RECOMMENDATION_LOOKBACK_DAYS` | Recommendation lookback | `7` |
-| `RIGHTSIZING_CPU_THRESHOLD` | CPU rightsizing threshold | `0.3` |
+| `RIGHTSIZING_CPU_THRESHOLD` | CPU rightsizing threshold | `0.5` |
 | `ZOMBIE_COST_THRESHOLD` | Zombie detection cost ($) | `0.01` |
+| `METRICS_RAW_RETENTION_DAYS` | Days to keep 5-min raw metrics | `7` |
+| `METRICS_AGGREGATED_RETENTION_DAYS` | Days to keep hourly aggregates (-1 = infinite) | `-1` |
+| `METRICS_COMPRESSION_AGE_HOURS` | Age after which raw metrics are compressed | `24` |
+| `DB_POOL_MIN_SIZE` | PostgreSQL min connection pool size | `2` |
+| `DB_POOL_MAX_SIZE` | PostgreSQL max connection pool size | `10` |
+| `DB_STATEMENT_TIMEOUT_MS` | PostgreSQL per-statement timeout (ms) | `30000` |
 
 <Aside type="tip">
   GreenKube works without an Electricity Maps token. When no token is provided, the `DEFAULT_INTENSITY` value (default: 500 gCO₂e/kWh) is used for all zones. For accurate, zone-specific carbon data, get a free token at [electricitymaps.com](https://www.electricitymaps.com/).

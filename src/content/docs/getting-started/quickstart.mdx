@@ -23,7 +23,7 @@ Before you begin, make sure you have:
 
 ## Try the Demo First (No Cluster Required)
 
-Want to explore GreenKube without any infrastructure? Start with **Demo Mode** — it loads 7 days of realistic data for 22 pods across 5 namespaces, with carbon emissions, costs, and recommendations pre-loaded.
+Want to explore GreenKube without any infrastructure? Start with **Demo Mode** — it loads 30 days of realistic data for the fictional **GreenOptic** company: 22 pods across 5 namespaces with carbon emissions, costs, recommendations, and a pre-populated savings ledger.
 
 <Tabs>
   <TabItem label="🐳 Docker (no cluster needed)">
@@ -32,7 +32,7 @@ The fastest way to try GreenKube. Only Docker is required — no Kubernetes, no 
 
 ```bash
 docker run --rm -p 9000:9000 \
-  greenkube/greenkube:0.2.3 \
+  greenkube/greenkube:latest \
   demo --no-browser --port 9000
 ```
 
@@ -45,7 +45,7 @@ If you have a cluster available, you can run the demo as a temporary pod:
 
 ```bash
 kubectl run greenkube-demo \
-  --image=greenkube/greenkube:0.2.3 \
+  --image=greenkube/greenkube:latest \
   --restart=Never \
   --command -- greenkube demo --no-browser --port 9000
 
@@ -131,11 +131,12 @@ kubectl delete pod greenkube-demo
 
 ## What You'll See
 
-- **Dashboard** — KPI cards showing total CO₂ emissions, costs, energy consumption, and active pods. Time-series charts and namespace breakdown.
-- **Metrics** — Interactive table with per-pod metrics: energy (CPU-based), cost, CPU, memory, network, disk, storage, and restarts.
-- **Nodes** — Cluster node inventory with CPU/memory capacity, hardware profiles, cloud provider info.
-- **Recommendations** — Actionable suggestions to reduce costs and emissions (zombie pods, rightsizing, autoscaling).
-- **Settings** — Current configuration, API health, version info, database connection details.
+- **Dashboard** — KPI cards showing total CO₂ emissions (Scope 2 + Scope 3), costs, energy consumption, sustainability score (0–100), and active pods. Time-series charts and namespace breakdown.
+- **Metrics** — Interactive table with per-pod metrics: energy (CPU-based), cost, CO₂e, embodied CO₂e, CPU, memory, network, disk, and restarts.
+- **Nodes** — Cluster node inventory with CPU/memory capacity, hardware profiles, cloud provider info, and utilization.
+- **Recommendations** — Actionable suggestions with full lifecycle management (dismiss, snooze, mark resolved). Projected annual CO₂e and cost savings per recommendation.
+- **Report** — Time-range picker, namespace filter, granularity options, and direct CSV/JSON download for CSRD/ESRS E1 reporting.
+- **Settings** — Service health overview (Prometheus, OpenCost, Electricity Maps, Boavizta), runtime config updates, K8s Secret persistence.
 
 ## Next Steps
 

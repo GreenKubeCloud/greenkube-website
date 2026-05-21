@@ -14,7 +14,7 @@ GreenKube's repository pattern allows you to choose the storage backend that bes
 
 | Feature | PostgreSQL | SQLite | Elasticsearch |
 |---------|-----------|--------|---------------|
-| **Use Case** | Production | Development / CI | Large-scale analytics |
+| **Use Case** | Production | Development / Demo | Large-scale analytics (not production-ready) |
 | **Persistence** | ✅ StatefulSet | ⚠️ Lost on pod restart* | ✅ External cluster |
 | **Performance** | High | Moderate | Very High |
 | **Setup** | Helm chart included | Zero config | External cluster needed |
@@ -58,7 +58,7 @@ secrets:
 - Automatic schema creation and migration
 - Connection pooling via `asyncpg`
 - Transactional integrity
-- Bundled PostgreSQL 17 StatefulSet via Helm
+- Bundled PostgreSQL **18** StatefulSet via Helm (upgraded from 17 in v0.2.8 with SCRAM-SHA-256)
 - Support for external PostgreSQL instances
 
 </TabItem>

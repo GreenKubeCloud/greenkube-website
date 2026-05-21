@@ -160,12 +160,12 @@ Explore GreenKube instantly with **Demo Mode** — no live cluster metrics neede
 
 ```bash
 # With Docker (no Kubernetes needed):
-docker run --rm -p 9000:9000 greenkube/greenkube:0.2.3 demo --no-browser --port 9000
+docker run --rm -p 9000:9000 greenkube/greenkube:latest demo --no-browser --port 9000
 # → Open http://localhost:9000
 
 # Or deploy a standalone demo pod:
 kubectl run greenkube-demo \
-  --image=greenkube/greenkube:0.2.3 \
+  --image=greenkube/greenkube:latest \
   --restart=Never \
   --command -- greenkube demo --no-browser --port 9000
 
@@ -173,7 +173,7 @@ kubectl wait --for=condition=Ready pod/greenkube-demo --timeout=60s
 kubectl port-forward pod/greenkube-demo 9000:9000
 ```
 
-Then open [http://localhost:9000](http://localhost:9000) — you'll see **7 days** of realistic data for **22 pods** across **5 namespaces**, including carbon emissions, costs, and recommendations.
+Then open [http://localhost:9000](http://localhost:9000) — you'll see **30 days** of realistic data for a fictional **GreenOptic** company — **22 pods** across **5 namespaces** with carbon emissions, costs, recommendations, and a pre-populated savings ledger.
 
 <LinkCard title="Learn more about Demo Mode →" href="/getting-started/quickstart/#demo-mode" />
 
@@ -203,7 +203,7 @@ GreenKube is an open-source, community-driven project. We welcome contributions 
 
 <div class="stats-grid">
   <div class="stat-card">
-    <div class="stat-value">v0.2.8</div>
+    <div class="stat-value">v0.2.10</div>
     <div class="stat-label">Latest Version</div>
   </div>
   <div class="stat-card">
@@ -211,7 +211,7 @@ GreenKube is an open-source, community-driven project. We welcome contributions 
     <div class="stat-label">Cloud Providers</div>
   </div>
   <div class="stat-card">
-    <div class="stat-value">476+</div>
+    <div class="stat-value">750+</div>
     <div class="stat-label">Unit Tests</div>
   </div>
   <div class="stat-card">

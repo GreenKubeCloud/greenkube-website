@@ -12,9 +12,18 @@ GreenKube's data pipeline is the heart of the system — an asynchronous, multi-
 
 <DataPipelineDiagram />
 
-## Phase 1: Data Collection
+## Four-Phase Orchestration
 
-All collectors run **concurrently** via `asyncio.gather` for maximum throughput.
+The `DataProcessor` runs collection in **four explicit phases** to prevent race conditions and ensure deterministic results:
+
+| Phase | Description | Execution |
+|-------|-------------|-----------|
+| **Phase 1** | Node discovery (Kubernetes API) | Sequential — must complete before anything else |
+| **Phase 2** | Zone resolution (cloud provider → Electricity Maps zone) | Sequential |
+| **Phase 3** | Metrics + Boavizta collection | Concurrent (`asyncio.gather`) |
+| **Phase 4** | Carbon-intensity prefetch + metric assembly | Sequential |
+
+## Phase 1: Data Collection
 
 ### Prometheus Collector
 

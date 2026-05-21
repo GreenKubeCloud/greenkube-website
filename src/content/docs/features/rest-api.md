@@ -32,25 +32,31 @@ The API is served at `http://<service>:8000/api/v1/` and includes:
 ### Metrics
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/v1/metrics` | Latest metrics snapshot |
-| GET | `/api/v1/metrics/namespaces` | Metrics grouped by namespace |
-| GET | `/api/v1/metrics/nodes` | Per-node metrics and hardware info |
-| GET | `/api/v1/metrics/pods` | Per-pod detailed metrics |
+| GET | `/api/v1/metrics` | Per-pod metrics with pagination |
+| GET | `/api/v1/metrics/summary` | Aggregated cluster/namespace totals |
+| GET | `/api/v1/metrics/timeseries` | Bucketed time-series for charts |
+| GET | `/api/v1/metrics/by-namespace` | CO₂e, cost, energy aggregated per namespace |
+| GET | `/api/v1/metrics/top-pods` | Top-N pods by CO₂e for a time window |
+| GET | `/api/v1/metrics/dashboard-summary` | Pre-computed KPI cache (fast) |
+| GET | `/api/v1/metrics/dashboard-timeseries/{window_slug}` | Pre-computed timeseries for `24h`, `7d`, `30d`, `1y`, `ytd` |
+| POST | `/api/v1/metrics/dashboard-summary/refresh` | On-demand cache refresh |
 
 ### Time Series
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/v1/timeseries` | Historical metrics with filtering |
-| GET | `/api/v1/timeseries/energy` | Energy consumption over time |
-| GET | `/api/v1/timeseries/carbon` | Carbon emissions over time |
-| GET | `/api/v1/timeseries/cost` | Cost data over time |
+| GET | `/api/v1/metrics/timeseries` | Historical metrics with `last`, `start`/`end`, granularity |
 
 ### Recommendations
 | Method | Path | Description |
 |---|---|---|
-| GET | `/api/v1/recommendations` | Active recommendations |
-| GET | `/api/v1/recommendations/history` | Historical recommendations (filterable by `scope`: `pod`, `namespace`, `node`) |
-| GET | `/api/v1/recommendations/summary` | Aggregated savings potential |
+| GET | `/api/v1/recommendations` | Run recommender engine live |
+| GET | `/api/v1/recommendations/active` | Persisted active recommendations (`?refresh=true` to re-run) |
+| GET | `/api/v1/recommendations/ignored` | Permanently ignored recommendations |
+| GET | `/api/v1/recommendations/history` | Historical records with optional time filtering |
+| GET | `/api/v1/recommendations/savings` | Aggregate savings by recommendation type |
+| PATCH | `/api/v1/recommendations/{id}/apply` | Mark as applied and record savings |
+| PATCH | `/api/v1/recommendations/{id}/ignore` | Permanently ignore |
+| PATCH | `/api/v1/recommendations/{id}/snooze` | Hide for N days (`?days=14`) |
 
 ### Reports
 | Method | Path | Description |
@@ -68,10 +74,11 @@ The API is served at `http://<service>:8000/api/v1/` and includes:
 Most endpoints support common query parameters:
 
 ```
-?from=2024-01-01T00:00:00Z    # Start time (ISO 8601)
-&to=2024-01-31T23:59:59Z      # End time (ISO 8601)
+?start=2024-01-01T00:00:00Z    # Start time (ISO 8601)
+&end=2024-01-31T23:59:59Z      # End time (ISO 8601)
+&last=7d                        # Relative window (e.g., 24h, 7d, 30d, ytd, 1y)
 &namespace=production           # Filter by namespace
-&group_by=daily                 # Aggregation: hourly/daily/weekly/monthly
+&granularity=daily              # Aggregation: hourly/daily/weekly/monthly
 &limit=100                      # Pagination
 &offset=0                       # Pagination offset
 ```
@@ -85,12 +92,12 @@ curl http://localhost:8000/api/v1/metrics | jq
 
 ### Get Carbon Emissions for a Namespace
 ```bash
-curl "http://localhost:8000/api/v1/timeseries/carbon?namespace=production&from=2024-01-01&group_by=daily"
+curl "http://localhost:8000/api/v1/metrics/timeseries?namespace=production&last=7d&granularity=daily"
 ```
 
 ### Get Active Recommendations
 ```bash
-curl http://localhost:8000/api/v1/recommendations?severity=critical
+curl http://localhost:8000/api/v1/recommendations/active
 ```
 
 ## Authentication
@@ -114,8 +121,7 @@ Rate limiting is available via [slowapi](https://github.com/laurents/slowapi) to
 ```yaml
 # In values.yaml
 config:
-  api:
-    rateLimit: 60  # requests per minute (0 = disabled)
+  apiRateLimit: "60/minute"  # slowapi format (0 = disabled)
 ```
 
 ## CORS Configuration
@@ -123,8 +129,8 @@ config:
 CORS is enabled by default to allow the dashboard to communicate with the API:
 
 ```yaml
-greenkube:
-  corsOrigins: "*"  # Restrict in production
+config:
+  corsOrigins: "*"  # Restrict in production, e.g. "https://my-company.internal"
 ```
 
 ## Integration Examples
@@ -132,13 +138,17 @@ greenkube:
 ### Grafana Data Source
 Use the JSON API data source plugin to pull GreenKube metrics into Grafana dashboards.
 
-### CI/CD Pipeline
-Add carbon budget checks to your pipeline:
+### CI/CD Carbon Gate
+Use the `--fail-on-co2` CLI flag or poll the API:
 
 ```bash
-CARBON=$(curl -s http://greenkube:8000/api/v1/metrics | jq '.total_carbon_grams')
-if [ $(echo "$CARBON > 1000" | bc) -eq 1 ]; then
-  echo "Carbon budget exceeded!"
+# Via CLI
+greenkube report --last 24h --fail-on-co2 1000
+
+# Via API + jq
+CARBON=$(curl -s "http://greenkube:8000/api/v1/metrics/summary?last=24h" | jq '.total_co2e_grams')
+if [ "$(echo "$CARBON > 1000" | bc)" -eq 1 ]; then
+  echo "Carbon budget exceeded: ${CARBON}g CO₂e"
   exit 1
 fi
 ```

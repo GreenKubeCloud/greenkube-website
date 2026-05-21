@@ -9,9 +9,50 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 <div class="release-card">
 
-### 🚀 v0.2.9 — Dashboard Cache, OOM Fixes & K8s Config Persistence
+### 🚀 v0.2.10 — Recommendation Lifecycle, Savings Ledger & Grafana v2
 
 <span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
+
+**Release Date:** May 7, 2026
+
+#### ✨ Added
+
+- **Recommendation full lifecycle:** Recommendations now support a complete status lifecycle (`open`, `in_progress`, `resolved`, `dismissed`, `snoozed`). New API endpoints allow updating status, bulk-dismissing, and snoozing recommendations. DB migrations `0006` (lifecycle columns) and `0007` (upsert null-fix) applied for both PostgreSQL and SQLite.
+- **Frontend recommendation lifecycle UI:** The recommendations page exposes status filters, per-recommendation controls (dismiss, snooze, mark in-progress/resolved), and a lifecycle summary on the dashboard.
+- **Recommendation deduplication by Deployment:** The recommender now groups pods by their parent Deployment (via regex on the standard ReplicaSet pod-name suffix) before generating rightsizing and off-peak recommendations — one consolidated recommendation per workload instead of one per pod replica.
+- **Annualised savings projections:** Each recommendation now exposes projected annual CO₂e savings (`annual_co2e_savings_grams`) and annual cost savings (`annual_cost_savings_usd`), surfaced in the API, frontend, and CLI output.
+- **Savings attribution system:** New `SavingsAttributor` service prorates projected annual CO₂e and cost savings to the actual observation window. Two new Prometheus gauges: `greenkube_co2e_savings_attributed_grams_total` and `greenkube_cost_savings_attributed_dollars_total`. DB migration `0008` applied for both engines.
+- **Report: Yearly and custom date ranges:** `GET /api/v1/report` now accepts `--years` (calendar year) and arbitrary `--start`/`--end` timestamps. Reports can additionally be grouped by namespace via `--group-by-namespace`.
+- **Redesigned frontend report page:** The `/report` page rebuilt with configurable report parameters, date range pickers, and a simplified export flow.
+- **Grafana dashboard v2 (complete rebuild):** Dashboard restructured to 4 sections and 9 panels: *GreenKube Impact Command Center* (sustainability radar, footprint mix, impact ledger, action priorities), *CO₂e by Namespace* (pie charts), *Regional Node Cleanliness* (geomap), and *Top Emitters & Spenders* (top-15 pods). All PromQL expressions corrected for proper aggregation; namespace/cluster variables wired to every panel.
+- **New Prometheus metrics:** Recommendation counts by status, attributed savings gauges, node activity flag (`is_active`).
+- **Demo mode "GreenOptic":** New comprehensive demo simulating the fictional `GreenOptic` company — realistic node topology, multi-namespace workloads, 30 days of historical metrics, and a backfilled savings ledger aligned with resolved demo recommendations.
+- **Expanded test coverage:** `docker-compose.test.yml` integration tests run against live SQLite and PostgreSQL. Full recommendation lifecycle end-to-end suite added.
+
+#### 🐛 Fixed
+
+- **Embodied emissions default reduced to 100 kg:** `DEFAULT_EMBODIED_EMISSIONS_KG` lowered from 350 kg to 100 kg to better match the average embodied footprint of a cloud VM vCPU slice, producing more accurate Scope 3 estimates when Boavizta returns no data.
+- **Node recommendation memory usage:** The underutilised-node recommender now correctly factors in memory utilisation alongside CPU, preventing false positives on memory-heavy workloads.
+- **Node-level recommendation persistence:** `pod_name` and `namespace` are now nullable in the DB schema for node-scope recommendations, fixing an integrity error on save.
+- **Rightsizing false positives:** CPU and memory rightsizing recommendations no longer suggest *increasing* requests — only reductions are surfaced.
+- **Grafana filters:** Namespace and cluster variable filters now consistently applied to every panel in the dashboard.
+- **Grafana coverage metrics removed** from emissions panels.
+
+#### 📦 Downloads
+
+| Asset | Link |
+|-------|------|
+| Docker Image | `docker pull greenkube/greenkube:0.2.10` |
+| Helm Chart | `helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm install greenkube greenkube/greenkube -n greenkube --create-namespace` |
+| Source Code | [GitHub Release v0.2.10](https://github.com/GreenKubeCloud/GreenKube/releases/tag/v0.2.10) |
+
+</div>
+
+---
+
+<div class="release-card">
+
+### 🚀 v0.2.9 — Dashboard Cache, OOM Fixes & K8s Config Persistence
 
 **Release Date:** April 21, 2026
 
@@ -339,7 +380,7 @@ The first public release of GreenKube, establishing the core carbon tracking cap
 
 ## Upgrade Guide
 
-### From v0.2.x to v0.2.8
+### From v0.2.x to v0.2.10
 
 <Steps>
 
@@ -348,7 +389,7 @@ The first public release of GreenKube, establishing the core carbon tracking cap
    helm repo update
    ```
 
-2. **Review security changes:** The ClusterRole no longer includes `secrets`. If your deployment depended on this, adjust accordingly. SCRAM-SHA-256 replaces MD5 for PostgreSQL — existing clusters upgrading the PostgreSQL StatefulSet to `18-alpine` should run the provided `scripts/pg_upgrade_17_to_18.sh` migration script first.
+2. **Review schema migrations:** v0.2.10 applies DB migrations `0006`–`0009` automatically on startup (recommendation lifecycle columns, savings ledger table, and `is_active` node column). No manual action required.
 
 3. **Upgrade the release:**
    ```bash
@@ -362,6 +403,26 @@ The first public release of GreenKube, establishing the core carbon tracking cap
    kubectl get pods -n greenkube
    kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube
    # Open http://localhost:8000 → check Settings page for service health
+   ```
+
+</Steps>
+
+### From v0.2.7 to v0.2.8+
+
+<Steps>
+
+1. **Update the Helm repository:**
+   ```bash
+   helm repo update
+   ```
+
+2. **Review security changes:** The ClusterRole no longer includes `secrets`. SCRAM-SHA-256 replaces MD5 for PostgreSQL — clusters upgrading to `18-alpine` should run `scripts/pg_upgrade_17_to_18.sh` first.
+
+3. **Upgrade the release:**
+   ```bash
+   helm upgrade greenkube greenkube/greenkube \
+     -f my-values.yaml \
+     -n greenkube
    ```
 
 </Steps>
@@ -408,6 +469,6 @@ GreenKube follows [Semantic Versioning](https://semver.org/):
 
 | Channel | Description | Docker Tag |
 |---------|-------------|-----------|
-| **Stable** | Current tested release | `greenkube/greenkube:0.2.8` |
+| **Stable** | Current tested release | `greenkube/greenkube:0.2.10` |
 | **Latest** | Most recent stable | `greenkube/greenkube:latest` |
 | **Dev** | Development builds (unstable) | `greenkube/greenkube:dev-latest` |

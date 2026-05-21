@@ -57,13 +57,20 @@ src/greenkube/
 │   ├── historical_range_processor.py # Day-chunked range queries
 │   ├── embodied_emissions_service.py # Boavizta integration
 │   ├── calculator.py        # Carbon emission calculator
-│   ├── recommender.py       # Optimization analysis
-│   ├── aggregator.py        # Metric aggregation
-│   ├── scheduler.py         # Collection scheduling
-│   ├── db.py                # Database initialization
-│   ├── migration.py         # Database schema migrations
-│   ├── k8s_client.py        # Kubernetes client helper
-│   └── exceptions.py        # Custom exceptions
+│   ├── recommender.py              # 9-type optimization analysis
+│   ├── savings_attributor.py       # Prorates annual savings to collection periods
+│   ├── recommendation_realization.py # Links savings to specific recommendations
+│   ├── sustainability_score.py     # 7-dimension 0–100 composite score
+│   ├── summary_refresher.py        # Pre-computes KPI cache (metrics_summary)
+│   ├── metrics_compressor.py       # Raw → hourly aggregation with retention policy
+│   ├── k8s_secret_store.py         # Persists config to Kubernetes Secret
+│   ├── aggregator.py               # Metric aggregation helpers
+│   ├── scheduler.py                # Collection + cache refresh scheduling
+│   ├── db.py                       # Database initialization
+│   ├── migrations/                 # Versioned SQL migration scripts (0001–0009)
+│   ├── k8s_client.py               # Kubernetes client helper
+│   ├── health.py                   # Service health check probes
+│   └── exceptions.py               # Custom exceptions
 ├── energy/                  # Energy modeling
 │   └── estimator.py         # BasicEstimator (power → energy)
 ├── data/                    # Static data & profiles
@@ -80,18 +87,15 @@ src/greenkube/
 │   └── region_mapping.py    # Cloud region → carbon zone
 ├── storage/                 # Output adapters (repositories)
 │   ├── base_repository.py   # Abstract interfaces (ABC)
-│   ├── postgres_repository.py
-│   ├── postgres_node_repository.py
-│   ├── postgres_recommendation_repository.py
-│   ├── postgres_carbon_intensity_repository.py
-│   ├── sqlite_repository.py
-│   ├── sqlite_node_repository.py
-│   ├── sqlite_recommendation_repository.py
-│   ├── sqlite_carbon_intensity_repository.py
-│   ├── elasticsearch_repository.py
-│   ├── elasticsearch_node_repository.py
-│   ├── elasticsearch_carbon_intensity_repository.py
-│   └── embodied_repository.py
+│   ├── postgres/            # PostgreSQL implementations
+│   │   ├── repository.py            # Metrics, carbon intensity
+│   │   ├── node_repository.py       # Node SCD2 snapshots
+│   │   ├── recommendation_repository.py
+│   │   ├── summary_repository.py    # Pre-computed KPI cache
+│   │   ├── timeseries_cache_repository.py
+│   │   └── savings_repository.py    # Savings ledger
+│   ├── sqlite/              # SQLite implementations (same interface)
+│   └── elastic/             # Elasticsearch (optional, not production-ready)
 ├── reporters/               # Report formatting
 ├── exporters/               # Data export (CSV, JSON)
 └── utils/                   # Utilities

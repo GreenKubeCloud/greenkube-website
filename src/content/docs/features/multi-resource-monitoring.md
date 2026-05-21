@@ -42,19 +42,14 @@ GreenKube provides **comprehensive resource monitoring** that goes far beyond ba
 - **Phase** — Running, Pending, Failed, Succeeded
 - **Container status** — Individual container readiness
 
-### GPU (when available)
-- **GPU utilization** — Percentage of GPU compute in use
-- **GPU memory** — VRAM usage
-- **GPU power** — Watts consumed by GPU
-- **GPU temperature** — Thermal monitoring
-
+> **Note:** GPU data is not collected and used for now. It's planned for future releases.
 ## Data Sources
 
 GreenKube collects metrics from multiple sources:
 
 | Source | Metrics |
 |---|---|
-| **Prometheus** | CPU, memory, network, disk, GPU |
+| **Prometheus** | CPU, memory, network, disk |
 | **Kubernetes API** | Pod status, restarts, node info, HPAs |
 | **OpenCost** | Cost allocation data |
 | **Electricity Maps** | Carbon intensity per region |
@@ -68,14 +63,14 @@ OpenCost ───┤                                        │
 Elec. Maps ─┘                                   Dashboard/API
 ```
 
-The collection pipeline runs asynchronously using `asyncio.gather`, ensuring minimal overhead on your cluster.
+The collection pipeline runs in phases: node discovery first (sequential), then zone resolution, then concurrent metrics collection via `asyncio.gather`, then carbon intensity prefetch and final assembly. This minimises overhead on your cluster.
 
 ## Retention & Aggregation
 
-- **Raw metrics** — Configurable retention (default: 30 days)
-- **Hourly aggregation** — Kept for 90 days
-- **Daily aggregation** — Kept for 1 year
-- **Export** — CSV/JSON for any time range
+- **Raw metrics (5-min)** — Retained for 7 days (configurable via `METRICS_RAW_RETENTION_DAYS`)
+- **Hourly aggregates** — Kept indefinitely by default (configurable via `METRICS_AGGREGATED_RETENTION_DAYS`, default `-1` = no limit). Required for multi-year CSRD/ESRS E1 reporting.
+- **Compression** — Raw rows are compressed into hourly aggregates after 24 hours (`METRICS_COMPRESSION_AGE_HOURS`)
+- **Export** — CSV/JSON for any time range via `/api/v1/report/export`
 
 ## Related
 

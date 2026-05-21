@@ -28,10 +28,12 @@ Then open [http://localhost:8000](http://localhost:8000) in your browser.
 The main dashboard provides a high-level overview of your cluster's environmental and financial impact:
 
 **KPI Cards:**
-- **Total CO₂e** — Aggregate carbon emissions across all pods
+- **Total CO₂e** — Scope 2 operational carbon emissions
+- **Embodied CO₂e** — Scope 3 category 1 hardware lifecycle emissions
 - **Total Cost** — Combined cost from OpenCost data
 - **Total Energy** — Energy consumption in kWh
 - **Active Pods** — Number of monitored pods
+- **Sustainability Score** — 0–100 composite score across 7 dimensions
 
 **Charts:**
 - **Time-series chart** — CO₂ emissions and cost trends over time (ECharts)
@@ -78,35 +80,37 @@ The node inventory page displays all cluster nodes with:
 
 ### 💡 Recommendations
 
-Actionable optimization suggestions organized by type:
+Actionable optimization suggestions organized by type and lifecycle status:
 
-**Recommendation Types:**
+**Recommendation Types:** Zombie Pod, CPU/Memory Rightsizing, Autoscaling Candidate, Carbon-Aware Scheduling, Idle Namespace, Off-Peak Scaling, Overprovisioned Node, Underutilized Node
 
-| Type | Icon | Description |
-|------|------|-------------|
-| **Zombie Pod** | 🧟 | Idle workloads consuming resources with minimal value |
-| **Rightsizing** | 📏 | Over-provisioned CPU or memory that can be reduced |
-| **Autoscaling** | 📈 | Workloads with high usage variability that benefit from HPA/VPA |
-| **Carbon-Aware** | 🌍 | Opportunities for time-shifting to low-carbon periods |
-| **Idle Namespace** | 🗂️ | Namespaces with minimal activity |
+**Status filters:** Active, In Progress, Resolved, Snoozed, Dismissed
 
 Each recommendation includes:
-- Severity level (low, medium, high, critical)
-- Affected resource (pod/namespace)
-- Current vs. recommended configuration
-- Estimated savings (cost + CO₂e)
-- Actionable kubectl commands
+- Priority (high, medium, low)
+- Scope (pod, workload, namespace, node)
+- Annual savings projection (CO₂e + cost)
+- Controls: mark in-progress, resolve, dismiss, snooze (30 days)
+- Bulk dismiss by type
+
+### 📋 Report
+
+Visual report builder for CSRD/ESRS E1 exports:
+
+- **Time range picker** — relative window (1h → ytd) or custom `start`/`end` dates, or full calendar year (`--years 2024`)
+- **Namespace filter** — scope to a specific team/environment
+- **Granularity** — hourly, daily, weekly, monthly, yearly
+- **Preview** — row count and totals before downloading
+- **Export** — direct browser download to CSV or JSON
 
 ### ⚙️ Settings
 
 System configuration and health status:
 
-- **API Health** — Connection status and response times
+- **Service Health** — Popup-style health check for all data sources (Prometheus, OpenCost, Electricity Maps, Boavizta, Kubernetes, Database) with icons and last-checked timestamps
 - **Version** — Current GreenKube version
-- **Configuration** — Active settings (sanitized, no secrets)
-- **Database** — Connection type and status
-- **Prometheus** — Connected endpoint
-- **OpenCost** — Connected endpoint
+- **Configuration** — Active settings form for Prometheus URL, OpenCost URL, cloud provider, and default zone — changes are applied and persisted to a K8s Secret without restart
+- **API Key** — Set or clear the bearer token for API access
 
 ## Dashboard Features
 

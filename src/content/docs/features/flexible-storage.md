@@ -34,31 +34,19 @@ greenkube:
   sqlitePath: "/data/greenkube.db"
 ```
 
-### Elasticsearch (Scale & Analytics)
-- Optimized for large-scale metric storage
-- Advanced time-series aggregation queries
-- Integrates with Kibana for additional visualization
-- Ideal for organizations already running an ELK stack
-
-```yaml
-greenkube:
-  dbType: "elasticsearch"
-  elasticsearchUrl: "http://elasticsearch:9200"
-```
-
 ## Repository Pattern
 
 The storage agnosticism is achieved through the **Repository Pattern**:
 
 ```
 ┌──────────────────┐
-│   Business Logic  │  ← Calls repository.save_metric()
-│   (Core)          │     Never knows about SQL/NoSQL
+│   Business Logic │  ← Calls repository.save_metric()
+│   (Core)         │     Never knows about SQL/NoSQL
 └────────┬─────────┘
          │ interface
 ┌────────┴─────────┐
-│   Repository      │  ← Abstract interface
-│   Interface       │
+│   Repository     │  ← Abstract interface
+│   Interface      │
 └────────┬─────────┘
     ┌────┼────┐
     ▼    ▼    ▼
@@ -85,17 +73,17 @@ def create_repository(config: Config) -> MetricRepository:
         return ElasticsearchRepository(config.es_url)
 ```
 
-## Migration Between Backends
+## Data Retention & Compression
 
-GreenKube supports data export/import to facilitate migration:
+GreenKube uses a configurable multi-tier retention strategy:
 
-```bash
-# Export from current backend
-greenkube export --format json --output metrics.json
+| Tier | Default | Env Var |
+|------|---------|--------|
+| Raw metrics (5-min) | 7 days | `METRICS_RAW_RETENTION_DAYS` |
+| Hourly aggregates | Infinite | `METRICS_AGGREGATED_RETENTION_DAYS` (-1 = infinite) |
+| Compression threshold | 24 h | `METRICS_COMPRESSION_AGE_HOURS` |
 
-# Import into new backend
-greenkube import --input metrics.json
-```
+Raw metrics are automatically compressed to hourly aggregates after the threshold, keeping storage compact without losing historical visibility. Infinite aggregated retention is the default to support multi-year CSRD/ESRS E1 compliance.
 
 ## Related
 
