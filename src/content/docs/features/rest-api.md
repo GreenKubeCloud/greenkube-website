@@ -51,6 +51,7 @@ The API is served at `http://<service>:8000/api/v1/` and includes:
 |---|---|---|
 | GET | `/api/v1/recommendations` | Run recommender engine live |
 | GET | `/api/v1/recommendations/active` | Persisted active recommendations (`?refresh=true` to re-run) |
+| GET | `/api/v1/recommendations/top` | Top-N ranked by projected annual savings — `?limit=5&metric=co2` or `metric=cost` |
 | GET | `/api/v1/recommendations/ignored` | Permanently ignored recommendations |
 | GET | `/api/v1/recommendations/history` | Historical records with optional time filtering |
 | GET | `/api/v1/recommendations/savings` | Aggregate savings by recommendation type |

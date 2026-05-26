@@ -9,9 +9,40 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 <div class="release-card">
 
-### 🚀 v0.2.10 — Recommendation Lifecycle, Savings Ledger & Grafana v2
+### 🚀 v0.2.11 — Actionable Recommendations in Grafana & Startup Scan
 
 <span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
+
+**Release Date:** May 26, 2026
+
+#### ✨ Added
+
+- **Grafana: Actionable Recommendations section** — New dashboard row showing the top-N ranked active recommendations as horizontal bar cards with projected annual CO₂e and cost savings. Uses the new `greenkube_top_recommendations` Prometheus gauge.
+- **`GET /api/v1/recommendations/top`** — New endpoint returning the highest-impact active recommendations ranked by projected annual savings. Parameters: `limit` (1–50, default 5), `metric` (`co2` or `cost`), `refresh`, `namespace`. Returns `TopRecommendation` DTOs with rank, type, resource, scope, priority, and projected annual CO₂e / cost savings.
+- **Prometheus: `greenkube_top_recommendations` gauge** — Exposes ranked active recommendations with labels: `cluster`, `rank`, `sort_metric`, `value_metric`, `namespace`, `type`, `resource`, `scope`, `priority`.
+- **Prometheus: Per-namespace recommendation savings gauges** — `greenkube_namespace_recommendation_savings_co2e_grams_total` and `greenkube_namespace_recommendation_savings_cost_dollars_total` (labels: `cluster`, `namespace`).
+- **Startup recommendation scan** — The API now triggers a full recommendation scan immediately after startup, ensuring Grafana and the dashboard always have data to display after deployments or pod restarts (even with ephemeral SQLite storage).
+- **Grafana: `$recommendation_metric` and `$recommendation_limit` template variables** — Users can toggle the ranking metric (CO₂e / Cost) and the number of displayed recommendations (3 / 5 / 10) directly from the Grafana UI.
+
+#### 🔄 Changed
+
+- **Grafana: `$node` and `$region` template variables removed** — Both variables have been dropped from the dashboard; node and region filtering is now handled at the Prometheus/label level.
+
+#### 📦 Downloads
+
+| Asset | Link |
+|-------|------|
+| Docker Image | `docker pull greenkube/greenkube:0.2.11` |
+| Helm Chart | `helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm install greenkube greenkube/greenkube -n greenkube --create-namespace` |
+| Source Code | [GitHub Release v0.2.11](https://github.com/GreenKubeCloud/GreenKube/releases/tag/v0.2.11) |
+
+</div>
+
+---
+
+<div class="release-card">
+
+### v0.2.10 — Recommendation Lifecycle, Savings Ledger & Grafana v2
 
 **Release Date:** May 7, 2026
 
@@ -24,26 +55,23 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 - **Savings attribution system:** New `SavingsAttributor` service prorates projected annual CO₂e and cost savings to the actual observation window. Two new Prometheus gauges: `greenkube_co2e_savings_attributed_grams_total` and `greenkube_cost_savings_attributed_dollars_total`. DB migration `0008` applied for both engines.
 - **Report: Yearly and custom date ranges:** `GET /api/v1/report` now accepts `--years` (calendar year) and arbitrary `--start`/`--end` timestamps. Reports can additionally be grouped by namespace via `--group-by-namespace`.
 - **Redesigned frontend report page:** The `/report` page rebuilt with configurable report parameters, date range pickers, and a simplified export flow.
-- **Grafana dashboard v2 (complete rebuild):** Dashboard restructured to 4 sections and 9 panels: *GreenKube Impact Command Center* (sustainability radar, footprint mix, impact ledger, action priorities), *CO₂e by Namespace* (pie charts), *Regional Node Cleanliness* (geomap), and *Top Emitters & Spenders* (top-15 pods). All PromQL expressions corrected for proper aggregation; namespace/cluster variables wired to every panel.
+- **Grafana dashboard v2 (complete rebuild):** Dashboard restructured to 4 sections and 9 panels: *GreenKube Impact Command Center*, *CO₂e by Namespace*, *Regional Node Cleanliness*, and *Top Emitters & Spenders*. All PromQL expressions corrected for proper aggregation; namespace/cluster variables wired to every panel.
 - **New Prometheus metrics:** Recommendation counts by status, attributed savings gauges, node activity flag (`is_active`).
 - **Demo mode "GreenOptic":** New comprehensive demo simulating the fictional `GreenOptic` company — realistic node topology, multi-namespace workloads, 30 days of historical metrics, and a backfilled savings ledger aligned with resolved demo recommendations.
 - **Expanded test coverage:** `docker-compose.test.yml` integration tests run against live SQLite and PostgreSQL. Full recommendation lifecycle end-to-end suite added.
 
 #### 🐛 Fixed
 
-- **Embodied emissions default reduced to 100 kg:** `DEFAULT_EMBODIED_EMISSIONS_KG` lowered from 350 kg to 100 kg to better match the average embodied footprint of a cloud VM vCPU slice, producing more accurate Scope 3 estimates when Boavizta returns no data.
-- **Node recommendation memory usage:** The underutilised-node recommender now correctly factors in memory utilisation alongside CPU, preventing false positives on memory-heavy workloads.
-- **Node-level recommendation persistence:** `pod_name` and `namespace` are now nullable in the DB schema for node-scope recommendations, fixing an integrity error on save.
-- **Rightsizing false positives:** CPU and memory rightsizing recommendations no longer suggest *increasing* requests — only reductions are surfaced.
-- **Grafana filters:** Namespace and cluster variable filters now consistently applied to every panel in the dashboard.
-- **Grafana coverage metrics removed** from emissions panels.
+- **Embodied emissions default reduced to 100 kg:** `DEFAULT_EMBODIED_EMISSIONS_KG` lowered from 350 kg to 100 kg.
+- **Node recommendation memory usage:** The underutilised-node recommender now correctly factors in memory utilisation alongside CPU.
+- **Rightsizing false positives:** CPU and memory rightsizing recommendations no longer suggest *increasing* requests.
+- **Grafana filters:** Namespace and cluster variable filters now consistently applied to every panel.
 
 #### 📦 Downloads
 
 | Asset | Link |
 |-------|------|
 | Docker Image | `docker pull greenkube/greenkube:0.2.10` |
-| Helm Chart | `helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm install greenkube greenkube/greenkube -n greenkube --create-namespace` |
 | Source Code | [GitHub Release v0.2.10](https://github.com/GreenKubeCloud/GreenKube/releases/tag/v0.2.10) |
 
 </div>
@@ -380,7 +408,7 @@ The first public release of GreenKube, establishing the core carbon tracking cap
 
 ## Upgrade Guide
 
-### From v0.2.x to v0.2.10
+### From v0.2.x to v0.2.11
 
 <Steps>
 
@@ -389,7 +417,9 @@ The first public release of GreenKube, establishing the core carbon tracking cap
    helm repo update
    ```
 
-2. **Review schema migrations:** v0.2.10 applies DB migrations `0006`–`0009` automatically on startup (recommendation lifecycle columns, savings ledger table, and `is_active` node column). No manual action required.
+2. **No schema migrations:** v0.2.11 adds no new DB migrations — upgrade is a
+   drop-in replacement. The startup recommendation scan runs automatically on
+   first boot to populate the new `greenkube_top_recommendations` gauge.
 
 3. **Upgrade the release:**
    ```bash
@@ -469,6 +499,6 @@ GreenKube follows [Semantic Versioning](https://semver.org/):
 
 | Channel | Description | Docker Tag |
 |---------|-------------|-----------|
-| **Stable** | Current tested release | `greenkube/greenkube:0.2.10` |
+| **Stable** | Current tested release | `greenkube/greenkube:0.2.11` |
 | **Latest** | Most recent stable | `greenkube/greenkube:latest` |
 | **Dev** | Development builds (unstable) | `greenkube/greenkube:dev-latest` |

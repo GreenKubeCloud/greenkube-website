@@ -69,6 +69,9 @@ GreenKube exposes the following gauges:
 | `greenkube_recommendation_total` | Recommendation counts by type |
 | `greenkube_co2e_savings_attributed_grams_total` | Cumulative CO₂e savings from applied recommendations |
 | `greenkube_cost_savings_attributed_dollars_total` | Cumulative cost savings from applied recommendations |
+| `greenkube_top_recommendations` | Ranked active recommendations by projected annual savings — labels: `rank`, `sort_metric`, `value_metric`, `namespace`, `type`, `resource`, `scope`, `priority` |
+| `greenkube_namespace_recommendation_savings_co2e_grams_total` | Total potential CO₂e savings from active recommendations per namespace |
+| `greenkube_namespace_recommendation_savings_cost_dollars_total` | Total potential cost savings from active recommendations per namespace |
 
 #### Grid Intensity Metrics
 
@@ -105,7 +108,7 @@ The dashboard has been completely rebuilt in v0.2.10 for clarity, correctness, a
 
 </Steps>
 
-### Dashboard Structure (4 Sections, 9 Panels)
+### Dashboard Structure (5 Sections)
 
 #### 1. GreenKube Impact Command Center
 Strategic overview of cluster sustainability and savings.
@@ -115,19 +118,24 @@ Strategic overview of cluster sustainability and savings.
 - **Impact Ledger** — Timeline of attributed CO₂e and cost savings from applied recommendations
 - **Action Priorities** — Bar chart: top recommendation types by count
 
-#### 2. CO₂e by Namespace
+#### 2. Actionable Recommendations *(added in v0.2.11)*
+Highest-impact active recommendations ranked by projected annual savings.
+
+- **Top Actionable Recommendations** — Horizontal bar cards showing rank, type, target resource, and projected annual CO₂e + cost savings. Toggle ranking metric between CO₂e and Cost via the `$recommendation_metric` variable; adjust the number of displayed items via `$recommendation_limit`.
+
+#### 3. CO₂e and Cost by Namespace
 Operational carbon breakdown for per-team accountability.
 
 - Pie charts: Scope 2 CO₂e per namespace, Scope 3 CO₂e per namespace, Total CO₂e per namespace
 - Sorted by top emitters; filters by `$cluster` and `$namespace` variables
 
-#### 3. Regional Node Cleanliness
+#### 4. Regional Node Cleanliness
 Geographic view of infrastructure carbon intensity.
 
 - Geomap with node count bubbles; bubble color reflects grid carbon intensity per Electricity Maps zone
 - Filters by cluster
 
-#### 4. Top Emitters & Spenders
+#### 5. Top Emitters & Spenders
 Pod-level detail for targeted optimization.
 
 - Top-15 pods by CO₂e emissions (bar chart, instant query)
@@ -139,8 +147,11 @@ Pod-level detail for targeted optimization.
 |----------|-------------|
 | `$cluster` | Filter all panels by cluster name |
 | `$namespace` | Filter all panels by namespace |
+| `$dashboard_window` | Reporting window: 1h, 6h, 24h, 7d, 30d, YTD, 1y |
+| `$recommendation_metric` | Ranking metric for Actionable Recommendations: CO₂e or Cost |
+| `$recommendation_limit` | Number of recommendations to show: 3, 5, or 10 |
 
-All panels respect both template variables consistently.
+All panels respect `$cluster` and `$namespace` consistently. The `$node` and `$region` variables were removed in v0.2.11.
 
 ### PromQL Notes
 

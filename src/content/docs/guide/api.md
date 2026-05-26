@@ -108,6 +108,7 @@ curl -O -J "http://localhost:8000/api/v1/report/export?format=csv&years=2024&gra
 |----------|--------|-------------|
 | `/recommendations` | GET | Generate live recommendations (runs the recommender engine) |
 | `/recommendations/active` | GET | Persisted active recommendations — add `?refresh=true` to re-run engine |
+| `/recommendations/top` | GET | Top-N ranked active recommendations by projected annual savings — `?limit=5&metric=co2` (or `cost`), `?refresh=true` |
 | `/recommendations/ignored` | GET | All permanently ignored recommendations |
 | `/recommendations/history` | GET | Historical records with optional time filtering |
 | `/recommendations/savings` | GET | Aggregate savings by recommendation type |
