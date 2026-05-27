@@ -208,7 +208,7 @@ greenkube demo [OPTIONS]
 - Creates a temporary SQLite database with realistic Kubernetes metrics
 - Simulates the fictional **GreenOptic** company with **22 pods** across **5 namespaces**
 - Generates 30 days of carbon emissions, costs, resource usage, and optimization recommendations
-- Includes a pre-populated savings ledger with resolved demo recommendations
+- Includes a pre-populated savings ledger with applied demo recommendations
 - Starts the API server and dashboard on the specified port
 
 **Examples:**

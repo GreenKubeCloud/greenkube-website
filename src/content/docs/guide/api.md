@@ -29,7 +29,7 @@ When no API key is configured, the API is open (designed for cluster-internal us
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Liveness check — returns `{"status":"ok","version":"0.2.10"}` |
+| `/health` | GET | Liveness check — returns `{"status":"ok","version":"0.2.11"}` |
 | `/version` | GET | Version info |
 | `/config` | GET | Non-sensitive configuration |
 | `/health/services` | GET | Aggregated health status for all data sources (Prometheus, OpenCost, Electricity Maps, Boavizta, K8s) |
@@ -110,11 +110,12 @@ curl -O -J "http://localhost:8000/api/v1/report/export?format=csv&years=2024&gra
 | `/recommendations/active` | GET | Persisted active recommendations — add `?refresh=true` to re-run engine |
 | `/recommendations/top` | GET | Top-N ranked active recommendations by projected annual savings — `?limit=5&metric=co2` (or `cost`), `?refresh=true` |
 | `/recommendations/ignored` | GET | All permanently ignored recommendations |
+| `/recommendations/applied` | GET | Applied recommendations ordered by most recent application |
 | `/recommendations/history` | GET | Historical records with optional time filtering |
 | `/recommendations/savings` | GET | Aggregate savings by recommendation type |
 | `/recommendations/{id}/apply` | PATCH | Mark applied with optional realized savings |
 | `/recommendations/{id}/ignore` | PATCH | Permanently ignore a recommendation |
-| `/recommendations/{id}/snooze` | PATCH | Hide for N days — add `?days=14` |
+| `/recommendations/{id}/ignore` | DELETE | Restore an ignored recommendation to active |
 
 #### Example: Get active recommendations
 
@@ -127,27 +128,33 @@ curl "http://localhost:8000/api/v1/recommendations/active"
   {
     "id": 42,
     "type": "RIGHTSIZING_CPU",
-    "status": "open",
+    "status": "active",
     "priority": "high",
     "scope": "workload",
     "pod_name": "api-deployment",
     "namespace": "production",
     "description": "CPU request (500m) is 6× higher than average usage (85m). Recommended: 105m.",
-    "annual_co2e_savings_grams": 1250.0,
-    "annual_cost_savings_usd": 45.60,
+    "potential_savings_co2e_grams": 1250.0,
+    "potential_savings_cost": 45.60,
     "current_cpu_request_millicores": 500,
     "recommended_cpu_request_millicores": 105
   }
 ]
 ```
 
-#### Example: Resolve a recommendation
+#### Example: Apply a recommendation
 
 ```bash
 curl -X PATCH "http://localhost:8000/api/v1/recommendations/42/apply"
 ```
 
 This triggers a savings ledger entry and updates the `greenkube_co2e_savings_attributed_grams_total` Prometheus gauge.
+
+#### Example: Restore an ignored recommendation
+
+```bash
+curl -X DELETE "http://localhost:8000/api/v1/recommendations/42/ignore"
+```
 
 ### Sustainability Score
 

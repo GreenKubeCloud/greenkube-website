@@ -53,11 +53,12 @@ The API is served at `http://<service>:8000/api/v1/` and includes:
 | GET | `/api/v1/recommendations/active` | Persisted active recommendations (`?refresh=true` to re-run) |
 | GET | `/api/v1/recommendations/top` | Top-N ranked by projected annual savings — `?limit=5&metric=co2` or `metric=cost` |
 | GET | `/api/v1/recommendations/ignored` | Permanently ignored recommendations |
+| GET | `/api/v1/recommendations/applied` | Applied recommendations ordered by most recent application |
 | GET | `/api/v1/recommendations/history` | Historical records with optional time filtering |
 | GET | `/api/v1/recommendations/savings` | Aggregate savings by recommendation type |
 | PATCH | `/api/v1/recommendations/{id}/apply` | Mark as applied and record savings |
 | PATCH | `/api/v1/recommendations/{id}/ignore` | Permanently ignore |
-| PATCH | `/api/v1/recommendations/{id}/snooze` | Hide for N days (`?days=14`) |
+| DELETE | `/api/v1/recommendations/{id}/ignore` | Restore an ignored recommendation |
 
 ### Reports
 | Method | Path | Description |
@@ -99,6 +100,11 @@ curl "http://localhost:8000/api/v1/metrics/timeseries?namespace=production&last=
 ### Get Active Recommendations
 ```bash
 curl http://localhost:8000/api/v1/recommendations/active
+```
+
+### Get Ranked Top Recommendations
+```bash
+curl "http://localhost:8000/api/v1/recommendations/top?limit=5&metric=co2"
 ```
 
 ## Authentication

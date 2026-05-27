@@ -41,7 +41,7 @@ Each recommendation includes an estimated annual impact:
 
 ## Recommendation Lifecycle & Savings Tracking
 
-Once you act on a recommendation, you can mark it as **resolved** in the dashboard or via the API. This triggers a **savings ledger entry** that attributes the projected annual savings to actual collection periods, driving Prometheus gauges:
+Once you act on a recommendation, you can mark it as **applied** via the API. GreenKube then records realized savings and attributes them to actual collection periods through the savings ledger, driving Prometheus gauges:
 
 - `greenkube_co2e_savings_attributed_grams_total`
 - `greenkube_cost_savings_attributed_dollars_total`
@@ -51,7 +51,7 @@ These appear in the Grafana **Impact Command Center** and on the dashboard summa
 ## How to Use
 
 ### Via Dashboard
-Navigate to the `/recommendations` page to see all suggestions with status filters, per-recommendation controls (dismiss, snooze, mark in-progress/resolved), and estimated annual savings.
+Navigate to the `/recommendations` page to see current active recommendations, ignored recommendations, realized savings, and estimated annual savings. The current UI exposes ignore and restore actions; applying a recommendation is currently done through the API.
 
 ### Via CLI
 ```bash
@@ -63,8 +63,10 @@ greenkube recommend --fail-on-recommendations
 ### Via API
 ```bash
 GET /api/v1/recommendations/active
+GET /api/v1/recommendations/applied
 GET /api/v1/recommendations/savings
 PATCH /api/v1/recommendations/{id}/apply
+DELETE /api/v1/recommendations/{id}/ignore
 ```
 
 ### Via API

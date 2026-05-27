@@ -1,6 +1,6 @@
 ---
 title: Recommendations
-description: Understand GreenKube's 9 optimization recommendation types, lifecycle management, savings tracking, and CI/CD integration.
+description: Understand GreenKube's 9 optimization recommendation types, persisted lifecycle states, ranked top recommendations, and realized savings tracking.
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
@@ -9,13 +9,15 @@ GreenKube analyzes your cluster metrics to generate actionable recommendations t
 
 ## Recommendation Engine
 
-The recommendation engine reads metrics from the database over a configurable lookback window (default: `24h`) and applies threshold-based detection algorithms. Results are deduplicated at the **Deployment level** — pods belonging to the same Deployment are grouped so you see one recommendation per workload, not one per replica.
+The recommendation engine reads stored metrics over a configurable lookback window controlled by `RECOMMENDATION_LOOKBACK_DAYS` (default: `7` days) and applies threshold-based detection algorithms. Results are deduplicated at the **Deployment level** — pods belonging to the same Deployment are grouped so you see one recommendation per workload, not one per replica.
 
 Each recommendation includes:
 - **Type** — one of 9 detection categories
 - **Priority** — `high`, `medium`, or `low`
 - **Scope** — `pod`, `workload`, `namespace`, or `node`
-- **Annual savings** — projected CO₂e and cost savings extrapolated to 1 year
+- **Projected annual savings** — `potential_savings_co2e_grams` and `potential_savings_cost`
+
+When the API or startup scan runs, metrics from namespaces that no longer exist in Kubernetes are filtered out when the cluster API is reachable. That lets GreenKube reconcile old active recommendations as `stale` instead of regenerating them forever.
 
 <CardGrid>
   <Card title="🧟 Zombie Detection">
@@ -63,8 +65,8 @@ Each recommendation includes:
 **What:** Pods with CPU requests significantly higher than actual utilization.
 
 **Detection:**
-- Average CPU utilization `< RIGHTSIZING_CPU_THRESHOLD` × CPU request (default: **50%**)
-- Recommendation uses a headroom multiplier for safe reductions (e.g., 1.2×)
+- Average CPU utilization `< RIGHTSIZING_CPU_THRESHOLD` × CPU request (default: **30%**)
+- Recommendation uses P95 usage, observed max, average usage, and a headroom multiplier for safe reductions
 - Only reductions are surfaced — recommendations that would increase a request are discarded
 
 **Scope:** workload (grouped per Deployment)
@@ -76,7 +78,7 @@ Each recommendation includes:
 **What:** Pods with memory requests significantly higher than actual utilization.
 
 **Detection:**
-- Average memory utilization `< RIGHTSIZING_MEMORY_THRESHOLD` × memory request (default: **50%**)
+- Average memory utilization `< RIGHTSIZING_MEMORY_THRESHOLD` × memory request (default: **30%**)
 
 **Scope:** workload (grouped per Deployment)
 
@@ -119,7 +121,7 @@ Each recommendation includes:
 
 **What:** Workloads with sustained idle periods during consistent time windows.
 
-**Detection:** Idle period `>= OFF_PEAK_MIN_IDLE_HOURS` (default: 2h) at consistent hours.
+**Detection:** Idle period `>= OFF_PEAK_MIN_IDLE_HOURS` (default: 4h) at consistent hours, below `OFF_PEAK_IDLE_THRESHOLD` of the daily peak.
 
 **Output:** Suggested CronJob/KEDA scale-down + scale-up schedule.
 
@@ -141,7 +143,7 @@ Each recommendation includes:
 
 **What:** Nodes running at very low CPU and memory utilization — consolidation candidates.
 
-**Detection:** Node CPU `< 0.05 cores` with workloads that could migrate to other nodes.
+**Detection:** Node has fewer than 3 pods and average CPU utilization below 15%.
 
 **Scope:** node
 
@@ -149,44 +151,53 @@ Each recommendation includes:
 
 ## Recommendation Lifecycle
 
-Each recommendation is persisted in the database with a full status lifecycle.
+Each recommendation is persisted in the database and reconciled across scans.
 
 ```
-open → in_progress → resolved
-         ↓
-      dismissed / snoozed
+active -> applied
+  |
+  +-> ignored -> active
+  |
+  +-> stale
 ```
 
 | Status | Meaning |
 |--------|---------|
-| `open` | Active recommendation, not yet acted on |
-| `in_progress` | Team is working on this |
-| `resolved` | Applied — triggers a **savings ledger entry** |
-| `dismissed` | Permanently ignored |
-| `snoozed` | Hidden for N days (default: 30) |
+| `active` | Current valid recommendation, shown in active lists, top recommendations, Prometheus active gauges, Grafana cards, and the frontend Active tab |
+| `applied` | Recommendation explicitly implemented through the API; excluded from active lists and included in realized savings |
+| `ignored` | Recommendation intentionally hidden with an audit reason; preserved for review and can be restored |
+| `stale` | Previously active recommendation that no longer appears in the latest generated set |
 
 ### Managing Lifecycle in the Dashboard
 
 On the `/recommendations` page:
-- **Status filters** — show only active, snoozed, dismissed, or resolved recommendations
-- **Per-recommendation controls** — mark in-progress, resolve, dismiss, or snooze (30 days)
-- **Bulk dismiss** — dismiss all recommendations of a given type at once
-- **Annual savings preview** — estimated CO₂e and cost savings per recommendation
+- **Active tab** — current actionable recommendations with type filter and annual savings summary
+- **Ignored tab** — previously ignored recommendations with restore action
+- **Realized Savings tab** — applied recommendations and cumulative realized savings
+- **Ignore flow** — ignore requires a reason; restore is available from the Ignored tab
+
+The current frontend does **not** expose an Apply button yet, even though the API supports applying recommendations.
 
 ### Managing Lifecycle via API
 
 ```bash
-# Mark a recommendation as applied (resolved)
+# Mark a recommendation as applied
 PATCH /api/v1/recommendations/{id}/apply
 
-# Permanently ignore
+# Permanently ignore with a reason
 PATCH /api/v1/recommendations/{id}/ignore
 
-# Snooze for 14 days
-PATCH /api/v1/recommendations/{id}/snooze?days=14
+# Restore an ignored recommendation
+DELETE /api/v1/recommendations/{id}/ignore
 
 # Get active recommendations (optionally trigger a live refresh)
 GET /api/v1/recommendations/active?refresh=true
+
+# Get applied recommendations
+GET /api/v1/recommendations/applied
+
+# Get ranked top recommendations
+GET /api/v1/recommendations/top?limit=5&metric=co2
 
 # Get savings summary
 GET /api/v1/recommendations/savings
@@ -194,7 +205,7 @@ GET /api/v1/recommendations/savings
 
 ## Savings Ledger
 
-When a recommendation is marked **resolved**, GreenKube creates a `SavingsLedgerRecord` that prorates the projected annual savings to the actual collection window. Over time this accumulates into:
+When a recommendation is marked **applied**, GreenKube estimates realized annual savings on the recommendation row, then the `SavingsAttributor` converts those annual values into per-period ledger rows. Over time this accumulates into:
 
 - `greenkube_co2e_savings_attributed_grams_total` — cumulative CO₂e savings (Prometheus gauge)
 - `greenkube_cost_savings_attributed_dollars_total` — cumulative cost savings (Prometheus gauge)
@@ -202,6 +213,26 @@ When a recommendation is marked **resolved**, GreenKube creates a `SavingsLedger
 The savings ledger is visible in:
 - The Grafana dashboard's **Impact Command Center** section (attributed savings timeline)
 - The `/api/v1/recommendations/savings` endpoint
+
+For fixed Grafana windows, prefer the pre-computed dashboard gauges:
+
+- `greenkube_dashboard_savings_co2e_grams_total`
+- `greenkube_dashboard_savings_cost_dollars_total`
+
+## Ranked Top Recommendations
+
+GreenKube also exposes a ranked view of active recommendations with positive projected savings:
+
+```bash
+GET /api/v1/recommendations/top?limit=5&metric=co2
+GET /api/v1/recommendations/top?limit=10&metric=cost&refresh=true
+```
+
+This API powers:
+
+- The Grafana **Actionable Recommendations** row
+- The `greenkube_top_recommendations` Prometheus gauge
+- CO₂e-first or cost-first ranking via `metric=co2|cost`
 
 ## Using Recommendations
 
@@ -233,6 +264,12 @@ GET /api/v1/recommendations
 # Persisted active recommendations
 GET /api/v1/recommendations/active
 
+# Persisted applied recommendations
+GET /api/v1/recommendations/applied
+
+# Ranked active recommendations by projected annual savings
+GET /api/v1/recommendations/top
+
 # History
 GET /api/v1/recommendations/history
 ```
@@ -244,8 +281,9 @@ All thresholds are configurable via Helm `values.yaml` or environment variables:
 ```yaml
 config:
   recommendations:
-    rightsizingCpuThreshold: 0.5      # 50% usage triggers CPU rightsizing
-    rightsizingMemoryThreshold: 0.5   # 50% usage triggers memory rightsizing
+    lookbackDays: 7                   # Analysis window used by API/startup scan
+    rightsizingCpuThreshold: 0.3      # 30% usage triggers CPU rightsizing
+    rightsizingMemoryThreshold: 0.3   # 30% usage triggers memory rightsizing
     rightsizingHeadroom: 1.2          # 20% safety margin on new request
     zombieCostThreshold: 0.01         # $0.01/day minimum to flag
     zombieEnergyThreshold: 1000       # 1,000 Joules minimum to flag
@@ -253,7 +291,11 @@ config:
     autoscalingSpikeRatio: 3.0        # 3× max/min ratio
     carbonAwareThreshold: 1.5         # 1.5× average intensity
     nodeUtilizationThreshold: 0.2     # 20% CPU for overprovisioned node
-    offPeakMinIdleHours: 2            # 2h idle to suggest off-peak scaling
+    offPeakIdleThreshold: 0.05        # 5% of daily peak
+    offPeakMinIdleHours: 4            # 4h idle to suggest off-peak scaling
+    minCpuMillicores: 10              # Floor for generated CPU requests
+    minMemoryBytes: 16777216          # Floor for generated memory requests
+    applyTolerance: 0.25              # Reserved for future auto-apply detection
 ```
 
 Adjust these based on your cluster size, workload patterns, and organizational priorities.

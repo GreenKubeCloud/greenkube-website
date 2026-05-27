@@ -1,13 +1,13 @@
 ---
 title: Smart Recommendations
-description: Rule-based analysis detects zombie pods, rightsizing opportunities, autoscaling candidates, carbon-aware scheduling, and more — with a full lifecycle to track applied changes.
+description: Rule-based analysis detects zombie pods, rightsizing opportunities, autoscaling candidates, carbon-aware scheduling, and more — with persisted active, applied, ignored, and stale states.
 ---
 
 GreenKube's recommendation engine analyzes your cluster metrics to produce **actionable optimization suggestions** that reduce both costs and carbon emissions simultaneously.
 
 ## How It Works
 
-The recommendation engine runs after each collection cycle. It reads historical metrics from the database over a configurable lookback window (default: 24 h, configurable via `--last`) and applies threshold-based detection algorithms across multiple dimensions.
+The recommendation engine runs from the API, the startup scan, and the CLI. It reads historical metrics from the database over a configurable lookback window (`RECOMMENDATION_LOOKBACK_DAYS`, default: 7 days) and applies threshold-based detection algorithms across multiple dimensions.
 
 **Deployment-level deduplication:** Pods belonging to the same Deployment are grouped together (via pod-name suffix pattern matching) so you receive one recommendation per workload — not one per replica.
 
@@ -29,9 +29,9 @@ The recommendation engine runs after each collection cycle. It reads historical 
 
 **What:** Pods with CPU requests significantly higher than actual utilization.
 
-**Detection:** Average CPU utilization `< RIGHTSIZING_CPU_THRESHOLD` (default: 50%) of CPU request.
+**Detection:** Average CPU utilization `< RIGHTSIZING_CPU_THRESHOLD` (default: 30%) of CPU request.
 
-**Output:** Recommended new CPU request = `actual_usage × headroom_multiplier`. Only reductions are surfaced — recommendations that would increase a request are discarded.
+**Output:** Recommended new CPU request uses P95 usage, observed max, average usage, and headroom. Only reductions are surfaced — recommendations that would increase a request are discarded.
 
 **Scope:** workload (grouped per Deployment)
 
@@ -41,7 +41,7 @@ The recommendation engine runs after each collection cycle. It reads historical 
 
 **What:** Pods with memory requests significantly higher than actual utilization.
 
-**Detection:** Average memory utilization `< RIGHTSIZING_MEMORY_THRESHOLD` (default: 50%) of memory request.
+**Detection:** Average memory utilization `< RIGHTSIZING_MEMORY_THRESHOLD` (default: 30%) of memory request.
 
 **Scope:** workload (grouped per Deployment)
 
@@ -84,7 +84,7 @@ The recommendation engine runs after each collection cycle. It reads historical 
 
 **What:** Workloads that maintain full resource allocation during off-peak hours and could benefit from scheduled scale-down.
 
-**Detection:** Sustained idle periods `>= OFF_PEAK_MIN_IDLE_HOURS` (default: 2h) during consistent time windows.
+**Detection:** Sustained idle periods `>= OFF_PEAK_MIN_IDLE_HOURS` (default: 4h) during consistent time windows, below `OFF_PEAK_IDLE_THRESHOLD` of the daily peak.
 
 **Output:** Suggested CronJob/KEDA schedule for scale-down + scale-up.
 
@@ -106,7 +106,7 @@ The recommendation engine runs after each collection cycle. It reads historical 
 
 **What:** Nodes running at very low CPU and memory utilization — consolidation candidates.
 
-**Detection:** Node CPU usage `< 0.05 cores` and multiple pods could migrate to other nodes.
+**Detection:** Node has fewer than 3 pods and average CPU utilization below 15%.
 
 **Scope:** node
 
@@ -114,40 +114,48 @@ The recommendation engine runs after each collection cycle. It reads historical 
 
 ## Recommendation Lifecycle
 
-Each recommendation persists in the database with a full status lifecycle:
+Each recommendation persists in the database and is reconciled across scans:
 
 ```
-open → in_progress → resolved
-         ↓
-      dismissed / snoozed
+active -> applied
+      |
+      +-> ignored -> active
+      |
+      +-> stale
 ```
 
 | Status | Meaning |
 |--------|---------|
-| `open` | Active recommendation, not yet acted on |
-| `in_progress` | Team is actively working on this |
-| `resolved` | Applied — triggers a **savings ledger entry** |
-| `dismissed` | Permanently ignored |
-| `snoozed` | Hidden for N days (default: 30) |
+| `active` | Currently valid recommendation, shown in active lists and Grafana ranked cards |
+| `applied` | Recommendation explicitly implemented through the API and included in realized savings |
+| `ignored` | Recommendation intentionally hidden with an audit reason and restorable later |
+| `stale` | Previously active recommendation that disappeared after refresh/reconciliation |
 
 ### Savings Ledger
 
-When a recommendation is marked **resolved**, GreenKube records a `SavingsLedgerRecord` that prorates the projected annual savings to the actual observation window. This drives two Prometheus gauges:
+When a recommendation is marked **applied**, GreenKube records realized annual savings and the `SavingsAttributor` converts them into per-period ledger rows. This drives two Prometheus gauges:
 
 - `greenkube_co2e_savings_attributed_grams_total` — cumulative CO₂e savings
 - `greenkube_cost_savings_attributed_dollars_total` — cumulative cost savings
 
 These are displayed in the Grafana dashboard's **Impact Command Center** section and on the web dashboard's summary cards.
 
+The new **Actionable Recommendations** Grafana row ranks the highest-impact active recommendations using:
+
+- `GET /api/v1/recommendations/top`
+- `greenkube_top_recommendations`
+
 ## Accessing Recommendations
 
 ### Web Dashboard
 
 The `/recommendations` page provides:
-- **Status filters** — show only active, snoozed, dismissed, or resolved
-- **Per-recommendation controls** — mark in-progress, resolve, dismiss, snooze (30 days)
-- **Bulk actions** — dismiss all recommendations of a given type
-- **Annual savings preview** — CO₂e and cost savings per recommendation
+- **Active tab** — current recommendations with type filter and annual savings preview
+- **Ignored tab** — ignored recommendations with restore action
+- **Realized Savings tab** — applied recommendations plus cumulative realized savings
+- **Ignore flow** — ignore requires a reason
+
+The dashboard currently exposes **ignore** and **restore** flows, but not an Apply button.
 
 ### CLI
 
@@ -184,10 +192,16 @@ GET /api/v1/recommendations/history
 # Savings summary
 GET /api/v1/recommendations/savings
 
+# Get applied recommendations
+GET /api/v1/recommendations/applied
+
+# Ranked active recommendations
+GET /api/v1/recommendations/top?limit=5&metric=co2
+
 # Update lifecycle status
 PATCH /api/v1/recommendations/{id}/apply
 PATCH /api/v1/recommendations/{id}/ignore
-PATCH /api/v1/recommendations/{id}/snooze?days=14
+DELETE /api/v1/recommendations/{id}/ignore
 ```
 
 ## Related

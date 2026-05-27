@@ -40,6 +40,8 @@ The main dashboard provides a high-level overview of your cluster's environmenta
 - **Namespace breakdown** — Pie chart showing emission distribution by namespace
 - **Top pods** — Bar chart of highest-emitting and most expensive pods
 
+![GreenKube dashboard home page with KPI cards, trends, and top emitters](/screenshots/demo-dashboard.png)
+
 ### 📈 Metrics
 
 An interactive, sortable, and searchable table with per-pod metrics:
@@ -66,6 +68,8 @@ An interactive, sortable, and searchable table with per-pod metrics:
 - Export table data to CSV or JSON
 - Pagination for large clusters
 
+![GreenKube metrics page showing the per-pod metrics table](/screenshots/demo-metrics.png)
+
 ### 🖥️ Nodes
 
 The node inventory page displays all cluster nodes with:
@@ -78,20 +82,27 @@ The node inventory page displays all cluster nodes with:
 - **Architecture** — CPU architecture (amd64, arm64)
 - **Operating system** — Node OS
 
+![GreenKube nodes page showing node inventory and hardware metadata](/screenshots/demo-nodes.png)
+
 ### 💡 Recommendations
 
 Actionable optimization suggestions organized by type and lifecycle status:
 
 **Recommendation Types:** Zombie Pod, CPU/Memory Rightsizing, Autoscaling Candidate, Carbon-Aware Scheduling, Idle Namespace, Off-Peak Scaling, Overprovisioned Node, Underutilized Node
 
-**Status filters:** Active, In Progress, Resolved, Snoozed, Dismissed
+**Tabs:** Active, Ignored, Realized Savings
 
 Each recommendation includes:
 - Priority (high, medium, low)
 - Scope (pod, workload, namespace, node)
 - Annual savings projection (CO₂e + cost)
-- Controls: mark in-progress, resolve, dismiss, snooze (30 days)
-- Bulk dismiss by type
+- Ignore flow with a required reason
+- Restore action from the Ignored tab
+- Applied recommendations summarized in the Realized Savings tab
+
+The current UI does not expose an Apply button yet; applying a recommendation is done through the API.
+
+![GreenKube recommendations page with active recommendations and annual savings](/screenshots/demo-recommendations.png)
 
 ### 📋 Report
 
@@ -103,6 +114,8 @@ Visual report builder for CSRD/ESRS E1 exports:
 - **Preview** — row count and totals before downloading
 - **Export** — direct browser download to CSV or JSON
 
+![GreenKube report page with export parameters and preview](/screenshots/demo-report.png)
+
 ### ⚙️ Settings
 
 System configuration and health status:
@@ -111,6 +124,8 @@ System configuration and health status:
 - **Version** — Current GreenKube version
 - **Configuration** — Active settings form for Prometheus URL, OpenCost URL, cloud provider, and default zone — changes are applied and persisted to a K8s Secret without restart
 - **API Key** — Set or clear the bearer token for API access
+
+![GreenKube settings page with health checks and runtime configuration](/screenshots/demo-settings.png)
 
 ## Dashboard Features
 

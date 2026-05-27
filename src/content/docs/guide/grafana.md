@@ -7,6 +7,18 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 GreenKube exposes Prometheus metrics at `/prometheus/metrics` and ships with a **pre-built Grafana dashboard (v2)** for comprehensive FinGreenOps monitoring.
 
+## Dashboard Preview
+
+See the shipped Grafana dashboard before installing anything:
+
+![GreenKube Impact Command Center — sustainability score radar, footprint mix, impact ledger, and action priorities](/screenshots/grafana-dashboard-top-panel.png)
+
+![Top actionable recommendations — ranked recommendation cards by projected annual CO₂e or cost savings](/screenshots/grafana-dashboard-top-reco.png)
+
+![CO₂e and cost by namespace — pie charts breaking down operational and embodied emissions](/screenshots/grafana-dashboard-by-namespace.png)
+
+![Regional node cleanliness — geomap colored by electricity-zone carbon intensity](/screenshots/grafana-dashboard-node-map.png)
+
 ## Prometheus Integration
 
 ### Automatic Setup (kube-prometheus-stack)
@@ -66,7 +78,10 @@ GreenKube exposes the following gauges:
 | `greenkube_cluster_namespace_count` | Total namespace count |
 | `greenkube_sustainability_score` | Composite 0–100 sustainability score |
 | `greenkube_sustainability_dimension_score` | Per-dimension score (7 dimensions) |
-| `greenkube_recommendation_total` | Recommendation counts by type |
+| `greenkube_recommendations_total` | Active recommendation counts by namespace, type, and priority |
+| `greenkube_recommendations_implemented_total` | Applied recommendation counts by namespace and type |
+| `greenkube_recommendations_savings_co2e_grams` | Projected annual CO₂e savings by recommendation type |
+| `greenkube_recommendations_savings_cost_dollars` | Projected annual cost savings by recommendation type |
 | `greenkube_co2e_savings_attributed_grams_total` | Cumulative CO₂e savings from applied recommendations |
 | `greenkube_cost_savings_attributed_dollars_total` | Cumulative cost savings from applied recommendations |
 | `greenkube_top_recommendations` | Ranked active recommendations by projected annual savings — labels: `rank`, `sort_metric`, `value_metric`, `namespace`, `type`, `resource`, `scope`, `priority` |
@@ -82,7 +97,7 @@ GreenKube exposes the following gauges:
 
 ## Grafana Dashboard (v2)
 
-The dashboard has been completely rebuilt in v0.2.10 for clarity, correctness, and high-impact visualization.
+The dashboard was rebuilt in v0.2.10 and extended in v0.2.11 with the **Actionable Recommendations** row.
 
 ### Import the Dashboard
 
