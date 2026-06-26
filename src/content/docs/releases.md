@@ -9,9 +9,54 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 <div class="release-card">
 
-### 🚀 v0.2.11 — Actionable Recommendations in Grafana & Startup Scan
+### 🚀 v0.2.12 — Auth-proxy routing, structured logging, DB vacuuming & OOM fixes
 
 <span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
+
+**Release Date:** June 26, 2026
+
+#### ✨ Added
+
+- **Auth-proxy routing (`TRUST_AUTH_PROXY`)** — Forward authenticated user identities via `X-Forwarded-User` / `X-Auth-Request-User` headers when an external auth proxy is in use, avoiding direct credential exposure to the proxy.
+- **Structured logging with `structlog`** — New `LOG_FORMAT` config option (`json` or `text`, default `text`) enables machine-readable JSON logs for aggregation systems; exposed in Helm `values.yaml` via `config.logFormat`.
+- **DB vacuuming & savings-ledger pruning** — `MetricsCompressor` now vacuums main metrics tables after compaction and prunes stale hourly-savings-ledger records by retention window to bound storage usage.
+- **DB-backed metrics & pagination** — `GET /api/v1/metrics` and related flows now use SQL-level pagination and new repository methods (`read_combined_metrics_page`, `read_latest_per_pod`, `aggregate_grouped_row_count`) to avoid materialising large in-memory result sets.
+- **Prometheus gauge refresh optimisation** — Gauge refresh now uses `read_latest_per_pod` to update metrics efficiently without loading full history into Python.
+
+#### 🔄 Changed
+
+- **Toolchain:** switched from `pip` to `uv` for CI, Dockerfile, and developer docs; `uv.lock` replaces legacy requirements files.
+- **Settings:** migrated from `python-dotenv` to `pydantic-settings` for environment-driven configuration.
+- **Type checking:** Pyrefly added to pre-commit hooks.
+- **Frontend:** removed the legacy `/metrics` Svelte page and reordered dashboard panels accordingly.
+
+#### 🐛 Fixed
+
+- **API oversized headers** — Removed bloated debug/CORS headers that caused upstream proxy 502/503 errors.
+- **Frontend donut chart legend overflow** — Collapses low-ranked namespaces into an `other` slice to prevent legend overflow.
+- **Ruff CI mismatch** — Pinned `ruff` in CI to match local configuration.
+- **OOM fixes:** Multiple endpoints and the Prometheus gauge refresh were refactored to SQL-backed implementations to prevent OOMs on large datasets (#239).
+- **`report/summary?aggregate=true`** — Now relies on pure SQL (`COUNT DISTINCT`) to compute aggregates safely for wide date ranges.
+- **Kubernetes client memory leaks** — `NodeCollector` and `PodCollector` properly close the async client after collection cycles.
+- **Frontend dependency security updates** — Updated frontend deps to remediate transitive vulnerabilities.
+
+#### 📦 Downloads
+
+| Asset | Link |
+|-------|------|
+| Docker Image | `docker pull greenkube/greenkube:0.2.12` |
+| Helm Chart | `helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm install greenkube greenkube/greenkube -n greenkube --create-namespace` |
+| Source Code | [GitHub Release v0.2.12](https://github.com/GreenKubeCloud/GreenKube/releases/tag/v0.2.12) |
+
+</div>
+
+---
+
+<div class="release-card">
+
+### 🚀 v0.2.11 — Actionable Recommendations in Grafana & Startup Scan
+
+<span class="release-tag">Previous</span>
 
 **Release Date:** May 26, 2026
 
@@ -499,6 +544,6 @@ GreenKube follows [Semantic Versioning](https://semver.org/):
 
 | Channel | Description | Docker Tag |
 |---------|-------------|-----------|
-| **Stable** | Current tested release | `greenkube/greenkube:0.2.11` |
+| **Stable** | Current tested release | `greenkube/greenkube:0.2.12` |
 | **Latest** | Most recent stable | `greenkube/greenkube:latest` |
 | **Dev** | Development builds (unstable) | `greenkube/greenkube:dev-latest` |
