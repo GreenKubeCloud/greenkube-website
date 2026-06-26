@@ -14,6 +14,8 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `image.repository` | Docker image repository | `greenkube/greenkube` |
+| `config.logFormat` | Log output format: `json` or `console` | `json` |
+| `config.metricsListMaxRangeDays` | Maximum date range (days) for `GET /api/v1/metrics` | `30` |
 | `image.tag` | Image tag | `0.2.12` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 
@@ -96,8 +98,8 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `config.recommendations.lookbackDays` | Days of data for analysis | `7` |
-| `config.recommendations.rightsizingCpuThreshold` | CPU usage ratio triggering rightsizing | `0.5` |
-| `config.recommendations.rightsizingMemoryThreshold` | Memory usage ratio triggering rightsizing | `0.5` |
+| `config.recommendations.rightsizingCpuThreshold` | CPU usage ratio triggering rightsizing | `0.3` |
+| `config.recommendations.rightsizingMemoryThreshold` | Memory usage ratio triggering rightsizing | `0.3` |
 | `config.recommendations.rightsizingHeadroom` | Safety headroom multiplier | `1.2` |
 | `config.recommendations.zombieCostThreshold` | Cost threshold for zombie detection ($) | `0.01` |
 | `config.recommendations.zombieEnergyThreshold` | Energy threshold for zombie detection (J) | `1000` |
@@ -165,6 +167,8 @@ When running outside Helm (Docker, source), use these environment variables:
 | `PROMETHEUS_QUERY_RANGE_STEP` | Range query step | `5m` |
 | `API_HOST` | API listen address | `0.0.0.0` |
 | `API_PORT` | API listen port | `8000` |
+| `LOG_FORMAT` | Log output format: `json` (structured, Loki-ready) or `console` (human-readable) | `json` |
+| `METRICS_LIST_MAX_RANGE_DAYS` | Maximum date range (days) allowed for `GET /api/v1/metrics` raw listing; requests wider than this return HTTP 400 | `30` |
 | `GREENKUBE_API_KEY` | Bearer token for API authentication (empty = no auth) | — |
 | `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | `*` |
 | `RIGHTSIZING_CPU_THRESHOLD` | CPU rightsizing threshold | `0.5` |
@@ -172,7 +176,7 @@ When running outside Helm (Docker, source), use these environment variables:
 | `METRICS_RAW_RETENTION_DAYS` | Days to keep 5-min raw metrics | `7` |
 | `METRICS_AGGREGATED_RETENTION_DAYS` | Days to keep hourly aggregates (-1 = infinite) | `-1` |
 | `METRICS_COMPRESSION_AGE_HOURS` | Age after which raw metrics are compressed | `24` |
-| `DB_POOL_MIN_SIZE` | PostgreSQL min connection pool size | `2` |
+| `DB_POOL_MIN_SIZE` | PostgreSQL min connection pool size | `1` |
 | `DB_POOL_MAX_SIZE` | PostgreSQL max connection pool size | `10` |
 | `DB_STATEMENT_TIMEOUT_MS` | PostgreSQL per-statement timeout (ms) | `30000` |
 

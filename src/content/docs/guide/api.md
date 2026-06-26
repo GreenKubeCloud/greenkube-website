@@ -29,7 +29,7 @@ When no API key is configured, the API is open (designed for cluster-internal us
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Liveness check — returns `{"status":"ok","version":"0.2.11"}` |
+| `/health` | GET | Liveness check — returns `{"status":"ok","version":"0.2.12"}` |
 | `/version` | GET | Version info |
 | `/config` | GET | Non-sensitive configuration |
 | `/health/services` | GET | Aggregated health status for all data sources (Prometheus, OpenCost, Electricity Maps, Boavizta, K8s) |
@@ -46,7 +46,7 @@ When no API key is configured, the API is open (designed for cluster-internal us
 | `/metrics/by-namespace` | GET | CO₂e, embodied emissions, energy, cost aggregated by namespace |
 | `/metrics/top-pods` | GET | Top-N pods by CO₂e over a time window |
 | `/metrics/dashboard-summary` | GET | Pre-computed KPI cache — fast, no full-table scan |
-| `/metrics/dashboard-timeseries/{window_slug}` | GET | Pre-computed timeseries for `24h`, `7d`, `30d`, `1y`, or `ytd` |
+| `/metrics/dashboard-timeseries/{window_slug}` | GET | Pre-computed timeseries for `1h`, `6h`, `24h`, `7d`, `30d`, `1y`, or `ytd` |
 | `/metrics/dashboard-summary/refresh` | POST | Trigger on-demand cache refresh (returns HTTP 202) |
 
 **Common query parameters:** `namespace`, `last` (e.g. `24h`, `7d`, `30d`, `1y`, `ytd`), `granularity` (`hour`, `day`, `week`, `month`)

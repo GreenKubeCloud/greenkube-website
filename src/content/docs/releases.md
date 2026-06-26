@@ -453,6 +453,39 @@ The first public release of GreenKube, establishing the core carbon tracking cap
 
 ## Upgrade Guide
 
+### From v0.2.x to v0.2.12
+
+<Steps>
+
+1. **Update the Helm repository:**
+   ```bash
+   helm repo update
+   ```
+
+2. **Review behaviour changes:**
+   - **Log format** now defaults to `json` (structured, Loki-ready). If you prefer human-readable logs in the pod console, add `config.logFormat: console` to your `values.yaml`.
+   - **Frontend `/metrics` route removed** — the standalone per-pod metrics table page has been removed. Equivalent data is available via the `GET /api/v1/metrics` API endpoint and through the Grafana dashboard.
+   - **Auth-proxy support** — if GreenKube sits behind an auth proxy (Authentik, Caddy `forward_auth`), set `TRUST_AUTH_PROXY=true` / `config.trustAuthProxy: true` so the API reads the authenticated identity from `X-Forwarded-User` headers.
+   - **Source installs**: dependency management migrated from `pip` to `uv`. Run `uv sync` instead of `pip install -e '.[test,dev]'`.
+
+3. **No schema migrations** — v0.2.12 does not introduce new DB migrations. Upgrade is a drop-in replacement.
+
+4. **Upgrade the release:**
+   ```bash
+   helm upgrade greenkube greenkube/greenkube \
+     -f my-values.yaml \
+     -n greenkube
+   ```
+
+5. **Verify the upgrade:**
+   ```bash
+   kubectl get pods -n greenkube
+   kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube
+   # Open http://localhost:8000 → check Settings page for service health
+   ```
+
+</Steps>
+
 ### From v0.2.x to v0.2.11
 
 <Steps>

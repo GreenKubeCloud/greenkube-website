@@ -5,11 +5,11 @@
 
 ## What is GreenKube?
 
-GreenKube is a self-hosted, open-source tool designed for DevOps, SRE, FinOps, and sustainability teams. It provides real-time visibility into the energy consumption, CO₂e emissions, and cloud costs of every pod and namespace in a Kubernetes cluster. It combines FinOps (cost optimization) with GreenOps (carbon reduction) into a single platform — without requiring expensive SaaS subscriptions.
+GreenKube is a self-hosted, open-source tool designed for DevOps, SRE, FinOps, and sustainability teams. It provides real-time visibility into the energy consumption, CO₂e emissions, and cloud costs of every pod and namespace in a Kubernetes cluster. It combines FinOps (cost optimization) with GreenOps (carbon reduction) into a single platform with actionnable recommendations — without requiring expensive SaaS subscriptions.
 
 - **License:** Apache 2.0
 - **Language:** Python 3.11+
-- **Current version:** 0.2.7
+- **Current version:** 0.2.12
 - **Deployment:** Helm chart (single command install)
 - **GitHub:** https://github.com/GreenKubeCloud/GreenKube
 - **Docker Hub:** https://hub.docker.com/r/greenkube/greenkube

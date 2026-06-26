@@ -184,34 +184,41 @@ class PrometheusCollector:
 
 ## Concurrency Model
 
-GreenKube leverages Python's `asyncio` throughout. The `DataProcessor` delegates to focused collaborators:
+GreenKube leverages Python's `asyncio` throughout. The `DataProcessor` runs in **four sequential phases**, delegating to focused collaborators:
 
 ```
 DataProcessor.run()
     │
-    ├── CollectionOrchestrator    ← Parallel collection
+    ├── Phase 1 (sequential)     ← Node discovery (single K8s API call)
+    │     NodeCollector.collect()
+    │
+    ├── Phase 2 (sequential)     ← Zone resolution (uses Phase 1 data)
+    │     NodeZoneMapper.resolve_zones()
+    │
+    ├── Phase 3 (parallel)       ← External metrics + Boavizta
     │     asyncio.gather(
-    │       prometheus.collect(),
-    │       opencost.collect(),
+    │       prometheus_collector.collect(),
+    │       opencost_collector.collect(),
     │       pod_collector.collect(),
-    │       node_collector.collect()
+    │       boavizta.get_profiles()
     │     )
     │
-    ├── PrometheusResourceMapper  ← Build per-pod resource maps
-    ├── BasicEstimator            ← CPU → energy estimation
-    ├── NodeZoneMapper            ← Region → carbon zone
-    ├── CostNormalizer            ← Normalize costs per step
-    ├── CarbonCalculator          ← Energy → CO₂e
-    ├── EmbodiedEmissionsService  ← Boavizta embodied CO₂
-    ├── MetricAssembler           ← Combine into CombinedMetric
+    ├── Phase 4 (sequential)     ← Assembly pipeline
+    │     PrometheusResourceMapper  ← Build per-pod resource maps
+    │     BasicEstimator            ← CPU → energy estimation
+    │     CostNormalizer            ← Normalize costs per step
+    │     CarbonCalculator          ← Energy → CO₂e
+    │     EmbodiedEmissionsService  ← Apply Boavizta embodied CO₂
+    │     MetricAssembler           ← Combine into CombinedMetric
+    │
     └── repository.write()        ← Async batch insert
 ```
 
-This design allows GreenKube to efficiently handle large clusters with hundreds of nodes and thousands of pods without blocking.
+Node collection runs **alone in Phase 1** (not concurrently with Prometheus/OpenCost) to prevent Kubernetes API client races. Phases 3 and 4 use the node data collected in Phase 1 instead of performing a second redundant Kubernetes API call.
 
 ## Testing
 
-474+ unit tests cover all components:
+750+ unit and integration tests cover all components:
 
 - **pytest** with `pytest-asyncio` for async tests
 - **respx** for HTTP request mocking
@@ -220,10 +227,10 @@ This design allows GreenKube to efficiently handle large clusters with hundreds 
 
 ```bash
 # Run all tests
-pytest
+uv run pytest
 
 # Run with coverage
-pytest --cov=greenkube --cov-report=html
+uv run pytest --cov=greenkube --cov-report=html
 ```
 
 <Aside type="tip">

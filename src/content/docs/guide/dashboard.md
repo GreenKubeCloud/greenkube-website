@@ -42,35 +42,7 @@ The main dashboard provides a high-level overview of your cluster's environmenta
 
 ![GreenKube dashboard home page with KPI cards, trends, and top emitters](/screenshots/demo-dashboard.png)
 
-### 📈 Metrics
-
-An interactive, sortable, and searchable table with per-pod metrics:
-
-| Column | Description |
-|--------|-------------|
-| Pod Name | Full pod identifier |
-| Namespace | Kubernetes namespace |
-| Energy (J) | Energy consumption in Joules |
-| CO₂e (g) | Carbon emissions in grams |
-| Cost ($) | Allocated cost |
-| CPU Usage | Actual CPU utilization (millicores) |
-| CPU Request | Requested CPU (millicores) |
-| Memory Usage | Actual memory (bytes) |
-| Memory Request | Requested memory (bytes) |
-| Network Rx/Tx | Network bytes received/transmitted |
-| Disk Read/Write | Disk I/O bytes |
-| Storage | Ephemeral storage usage |
-| Restarts | Container restart count |
-
-**Features:**
-- Sort by any column (ascending/descending)
-- Search/filter by pod name or namespace
-- Export table data to CSV or JSON
-- Pagination for large clusters
-
-![GreenKube metrics page showing the per-pod metrics table](/screenshots/demo-metrics.png)
-
-### 🖥️ Nodes
+### ️ Nodes
 
 The node inventory page displays all cluster nodes with:
 
