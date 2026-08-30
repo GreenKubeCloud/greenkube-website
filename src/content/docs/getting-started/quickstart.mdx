@@ -11,11 +11,11 @@ This guide will have GreenKube up and running in your cluster in under 5 minutes
 
 Before you begin, make sure you have:
 
-- ✅ A running **Kubernetes cluster** (Minikube, EKS, GKE, AKS, etc.)
-- ✅ **Helm 3** installed ([install guide](https://helm.sh/docs/intro/install/))
-- ✅ **kubectl** configured to access your cluster
-- ✅ **Prometheus** deployed in your cluster (e.g., via kube-prometheus-stack)
-- ✅ **OpenCost** deployed for cost data (optional but recommended)
+- A running **Kubernetes cluster** (Minikube, EKS, GKE, AKS, etc.)
+- **Helm 3** installed ([install guide](https://helm.sh/docs/intro/install/))
+- **kubectl** configured to access your cluster
+- **Prometheus** deployed in your cluster (e.g., via kube-prometheus-stack)
+- **OpenCost** deployed for cost data (optional but recommended)
 
 <Aside type="tip">
   Don't have Prometheus yet? The most common setup is the **kube-prometheus-stack** Helm chart, which includes Prometheus, Grafana, and commonly used exporters.
@@ -26,7 +26,7 @@ Before you begin, make sure you have:
 Want to explore GreenKube without any infrastructure? Start with **Demo Mode** — it loads 30 days of realistic data for the fictional **GreenOptic** company: 22 pods across 5 namespaces with carbon emissions, costs, recommendations, and a pre-populated savings ledger.
 
 <Tabs>
-  <TabItem label="🐳 Docker (no cluster needed)">
+  <TabItem label="Docker (no cluster needed)">
 
 The fastest way to try GreenKube. Only Docker is required — no Kubernetes, no Prometheus, no setup.
 
@@ -39,7 +39,7 @@ docker run --rm -p 9000:9000 \
 Open [http://localhost:9000](http://localhost:9000) in your browser. Press `Ctrl+C` to stop.
 
   </TabItem>
-  <TabItem label="☸️ Kubernetes (standalone pod)">
+  <TabItem label="Kubernetes (standalone pod)">
 
 If you have a cluster available, you can run the demo as a temporary pod:
 
@@ -139,7 +139,7 @@ kubectl delete pod greenkube-demo
 
 ## Next Steps
 
-- 📖 [Full Installation Guide](/getting-started/installation/) — Advanced configuration options
-- ⚙️ [Configuration Reference](/getting-started/configuration/) — All environment variables and Helm values
-- 📊 [Dashboard Guide](/guide/dashboard/) — Learn to use the web interface
-- 🔧 [CLI Reference](/guide/cli/) — Master the command-line interface
+- [Full Installation Guide](/getting-started/installation/) — Advanced configuration options
+- [Configuration Reference](/getting-started/configuration/) — All environment variables and Helm values
+- [Dashboard Guide](/guide/dashboard/) — Learn to use the web interface
+- [CLI Reference](/guide/cli/) — Master the command-line interface
