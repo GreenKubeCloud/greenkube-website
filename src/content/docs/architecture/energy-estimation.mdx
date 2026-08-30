@@ -93,7 +93,7 @@ The carbon intensity of electricity varies by:
 - **Time of day** (renewable energy availability)
 - **Season** (heating/cooling demand)
 
-GreenKube uses the **Electricity Maps API** for real-time intensity data. When the API is unavailable, GreenKube follows a two-step fallback:
+GreenKube uses the **Electricity Maps API** for real-time intensity data by default. Since v0.3.0, the free EU-funded **[Wattnet](https://wattnet.eu)** API can be selected instead (`config.electricityProvider: wattnet`) for 15-minute-resolution data across 52 European zones — see the [Wattnet guide](/guide/wattnet/). When neither provider's API is reachable, GreenKube follows a two-step fallback:
 
 1. **Per-zone default** — A built-in table of average grid intensities per zone (e.g., France ≈ 85 gCO₂e/kWh, Germany ≈ 385 gCO₂e/kWh)
 2. **Global default** — If no per-zone default exists, the configurable global fallback is used (default: 500 gCO₂e/kWh)
@@ -201,7 +201,8 @@ Example reasons:
 |--------|------|-----------|
 | Prometheus | CPU, memory, network, disk metrics | Real-time (5m default) |
 | Kubernetes API | Node metadata, pod specs | Real-time |
-| Electricity Maps | Grid carbon intensity | Cached (hourly default) |
+| Electricity Maps | Grid carbon intensity (default provider) | Cached (hourly default) |
+| Wattnet | Grid carbon intensity (EU-only, alternative provider) | Cached (15-minute resolution) |
 | Boavizta API | Hardware embodied emissions | Cached (long-term) |
 | OpenCost | Cost allocation | Real-time |
 | CCF Coefficients | Instance power profiles | Built-in (static) |
@@ -211,4 +212,5 @@ Example reasons:
 - [Cloud Carbon Footprint Methodology](https://www.cloudcarbonfootprint.org/docs/methodology)
 - [SPECpower Benchmarks](https://www.spec.org/power_ssj2008/)
 - [Electricity Maps API](https://docs.electricitymaps.com/)
+- [Wattnet API](https://api.wattnet.eu/v1/docs)
 - [Boavizta API](https://doc.api.boavizta.org/)

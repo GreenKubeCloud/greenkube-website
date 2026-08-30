@@ -184,9 +184,9 @@ greenkube recommend --fail-on-recommendations
 ### Recommendation Output
 
 Each recommendation includes:
-- **Type** — zombie, rightsizing (CPU/memory), autoscaling, carbon-aware, idle namespace, off-peak scaling, overprovisioned node, underutilized node
+- **Type** — zombie, rightsizing (CPU/memory), autoscaling, carbon-aware, idle namespace, off-peak scaling, overprovisioned node, underutilized node, orphaned PersistentVolume, orphaned LoadBalancer
 - **Priority** — high, medium, low
-- **Scope** — pod, workload, namespace, or node
+- **Scope** — pod, workload, namespace, node, or cluster
 - **Details** — Current usage vs. recommended
 - **Annual savings** — Projected CO₂e and cost savings extrapolated to 1 year
 

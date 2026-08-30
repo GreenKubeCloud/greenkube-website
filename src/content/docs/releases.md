@@ -9,9 +9,44 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 <div class="release-card">
 
-### 🚀 v0.2.12 — Auth-proxy routing, structured logging, DB vacuuming & OOM fixes
+### 🚀 v0.3.0 — Wattnet electricity provider, orphaned volume & load balancer recommendations
 
 <span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
+
+**Release Date:** August 30, 2026
+
+#### ✨ Added
+
+- **Wattnet electricity provider:** Grid carbon intensity is now provider-agnostic via a new `BaseElectricityProvider` abstraction. A `WattnetCollector` fetches 15-minute carbon footprint data for 52 European zones from the free, EU-funded [Wattnet](https://wattnet.eu) API. Select it with `config.electricityProvider: wattnet` plus `secrets.wattnetEmail` / `secrets.wattnetPassword`. See the [Wattnet guide](/guide/wattnet/).
+- **Wattnet health check & runtime config:** New `wattnet` service in `GET /api/v1/health/services`; credentials can be updated at runtime from the Settings page and are persisted to the Kubernetes Secret.
+- **Orphaned LoadBalancer recommendation (`ORPHANED_LOAD_BALANCER`):** A new `LoadBalancerCollector` flags `LoadBalancer` Services with no ready backing endpoints — the cloud load balancer keeps billing hourly while routing traffic to nothing. Projected savings prefer real OpenCost data, falling back to the new `config.recommendations.loadBalancerCostPerMonth` (default `$18.00`/month). The Helm chart `ClusterRole` now also grants read access to `endpoints`.
+- **Orphaned PersistentVolume recommendation (`ORPHANED_PERSISTENT_VOLUME`, #244):** A new `PVCollector` flags PersistentVolumes whose claim was deleted (`Released` phase or a dangling `claimRef`). Projected savings prefer real OpenCost data, falling back to the new `config.recommendations.storageCostPerGibMonth` (default `$0.10`/GiB-month). The `ClusterRole` now also grants read access to `persistentvolumes` and `persistentvolumeclaims`.
+- **Recommendations: optional ignore reason (#252):** Ignoring a recommendation from the dashboard no longer requires a reason.
+- **Carbon intensity consolidation refresh:** After each hourly intensity collection, combined metrics from the last 24 hours are recomputed against the refreshed history, correcting provisional provider values in place.
+
+#### 🐛 Fixed
+
+- **Health status: inactive providers excluded** — Health checks for the non-selected electricity provider now report as `inactive` and are excluded from the overall health status and the frontend startup health popup.
+- **Config: token warnings only for the active provider** — Missing-credentials warnings are now scoped to whichever electricity provider is actually selected (#254).
+- **Security: dependency upgrades** — `aiohttp` upgraded to `3.14.3`; `structlog` promoted to a runtime dependency; several frontend transitive dependencies upgraded to remediate Trivy-flagged vulnerabilities.
+
+#### 📦 Downloads
+
+| Asset | Link |
+|-------|------|
+| Docker Image | `docker pull greenkube/greenkube:0.3.0` |
+| Helm Chart | `helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm install greenkube greenkube/greenkube -n greenkube --create-namespace` |
+| Source Code | [GitHub Release v0.3.0](https://github.com/GreenKubeCloud/GreenKube/releases/tag/v0.3.0) |
+
+</div>
+
+---
+
+<div class="release-card">
+
+### 🚀 v0.2.12 — Auth-proxy routing, structured logging, DB vacuuming & OOM fixes
+
+<span class="release-tag">Previous</span>
 
 **Release Date:** June 26, 2026
 
@@ -453,6 +488,37 @@ The first public release of GreenKube, establishing the core carbon tracking cap
 
 ## Upgrade Guide
 
+### From v0.2.12 to v0.3.0
+
+<Steps>
+
+1. **Update the Helm repository:**
+   ```bash
+   helm repo update
+   ```
+
+2. **Review new RBAC permissions:** The `ClusterRole` now also grants read access to `endpoints`, `persistentvolumes`, and `persistentvolumeclaims` (for the new orphaned LoadBalancer and PersistentVolume recommendations). Run `helm upgrade` to pick up the new rule — existing releases will not see these recommendation types until the RBAC update is applied.
+
+3. **Optional: enable Wattnet** as an alternative to Electricity Maps by setting `config.electricityProvider: wattnet` plus `secrets.wattnetEmail` / `secrets.wattnetPassword`. See the [Wattnet guide](/guide/wattnet/).
+
+4. **No breaking schema changes** — existing recommendation and metrics tables are compatible; new recommendation types simply start appearing after the next scan.
+
+5. **Upgrade the release:**
+   ```bash
+   helm upgrade greenkube greenkube/greenkube \
+     -f my-values.yaml \
+     -n greenkube
+   ```
+
+6. **Verify the upgrade:**
+   ```bash
+   kubectl get pods -n greenkube
+   kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube
+   # Open http://localhost:8000 → check Settings page for service health
+   ```
+
+</Steps>
+
 ### From v0.2.x to v0.2.12
 
 <Steps>
@@ -577,6 +643,6 @@ GreenKube follows [Semantic Versioning](https://semver.org/):
 
 | Channel | Description | Docker Tag |
 |---------|-------------|-----------|
-| **Stable** | Current tested release | `greenkube/greenkube:0.2.12` |
+| **Stable** | Current tested release | `greenkube/greenkube:0.3.0` |
 | **Latest** | Most recent stable | `greenkube/greenkube:latest` |
 | **Dev** | Development builds (unstable) | `greenkube/greenkube:dev-latest` |

@@ -13,7 +13,7 @@ The recommendation engine runs from the API, the startup scan, and the CLI. It r
 
 **Annual savings projection:** Every recommendation includes estimated annual CO₂e savings (`annual_co2e_savings_grams`) and annual cost savings (`annual_cost_savings_usd`), extrapolated from the observation window.
 
-## 9 Recommendation Types
+## 11 Recommendation Types
 
 ### 🧟 Zombie Pod (`ZOMBIE_POD`)
 
@@ -112,6 +112,26 @@ The recommendation engine runs from the API, the startup scan, and the CLI. It r
 
 ---
 
+### 💾 Orphaned PersistentVolume (`ORPHANED_PERSISTENT_VOLUME`)
+
+**What:** PersistentVolumes whose claim is gone — `Released` phase or a `claimRef` pointing at a deleted PVC. Deleting the volume releases the provisioned storage.
+
+**Detection:** New `PVCollector` lists PVs/PVCs from the Kubernetes API every scan.
+
+**Scope:** cluster
+
+---
+
+### ⚖️ Orphaned LoadBalancer (`ORPHANED_LOAD_BALANCER`)
+
+**What:** `LoadBalancer` Services with no ready backing endpoints — the cloud load balancer keeps billing hourly while routing traffic to nothing.
+
+**Detection:** New `LoadBalancerCollector` lists Services/Endpoints from the Kubernetes API every scan.
+
+**Scope:** cluster
+
+---
+
 ## Recommendation Lifecycle
 
 Each recommendation persists in the database and is reconciled across scans:
@@ -153,7 +173,7 @@ The `/recommendations` page provides:
 - **Active tab** — current recommendations with type filter and annual savings preview
 - **Ignored tab** — ignored recommendations with restore action
 - **Realized Savings tab** — applied recommendations plus cumulative realized savings
-- **Ignore flow** — ignore requires a reason
+- **Ignore flow** — reason is optional
 
 The dashboard currently exposes **ignore** and **restore** flows, but not an Apply button.
 

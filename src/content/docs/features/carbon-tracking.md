@@ -25,7 +25,7 @@ co2e_grams = energy_kwh × grid_intensity_gCO₂e_per_kWh × pue
 
 **Data sources:**
 - **Energy:** Estimated from CPU utilization × node power profile (see [Energy Estimation](/architecture/energy-estimation/))
-- **Grid intensity:** Real-time data from [Electricity Maps API](https://www.electricitymaps.com/) per zone
+- **Grid intensity:** Real-time data from [Electricity Maps API](https://www.electricitymaps.com/) (default) or the free [Wattnet API](https://wattnet.eu) for European zones — selectable via `config.electricityProvider`
 - **PUE (Power Usage Effectiveness):** Provider-specific datacenter efficiency profiles (AWS 1.15, GCP 1.09, OVH 1.37, etc.)
 
 ### Scope 3, Category 1 — Embodied Emissions (Hardware Manufacturing)
@@ -102,6 +102,19 @@ secrets:
 ```
 
 Without a token, GreenKube uses static default intensities per zone from the bundled CSV — still useful for trend analysis, but less accurate for compliance reporting. Get a free token at [electricitymaps.com](https://www.electricitymaps.com/).
+
+As of v0.3.0, you can instead select the free, EU-funded [Wattnet](https://wattnet.eu) provider for 15-minute-resolution grid intensity across 52 European zones:
+
+```yaml
+# Helm values.yaml
+config:
+  electricityProvider: wattnet
+secrets:
+  wattnetEmail: "you@example.com"
+  wattnetPassword: "your-password"
+```
+
+See the [Wattnet guide](/guide/wattnet/) for zone mapping and setup details.
 
 ## Related
 

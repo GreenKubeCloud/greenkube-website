@@ -60,15 +60,15 @@ The node inventory page displays all cluster nodes with:
 
 Actionable optimization suggestions organized by type and lifecycle status:
 
-**Recommendation Types:** Zombie Pod, CPU/Memory Rightsizing, Autoscaling Candidate, Carbon-Aware Scheduling, Idle Namespace, Off-Peak Scaling, Overprovisioned Node, Underutilized Node
+**Recommendation Types:** Zombie Pod, CPU/Memory Rightsizing, Autoscaling Candidate, Carbon-Aware Scheduling, Idle Namespace, Off-Peak Scaling, Overprovisioned Node, Underutilized Node, Orphaned PersistentVolume, Orphaned LoadBalancer
 
 **Tabs:** Active, Ignored, Realized Savings
 
 Each recommendation includes:
 - Priority (high, medium, low)
-- Scope (pod, workload, namespace, node)
+- Scope (pod, workload, namespace, node, cluster)
 - Annual savings projection (CO₂e + cost)
-- Ignore flow with a required reason
+- Ignore flow with an optional reason
 - Restore action from the Ignored tab
 - Applied recommendations summarized in the Realized Savings tab
 
@@ -92,9 +92,9 @@ Visual report builder for CSRD/ESRS E1 exports:
 
 System configuration and health status:
 
-- **Service Health** — Popup-style health check for all data sources (Prometheus, OpenCost, Electricity Maps, Boavizta, Kubernetes, Database) with icons and last-checked timestamps
+- **Service Health** — Popup-style health check for all data sources (Prometheus, OpenCost, Electricity Maps, Wattnet, Boavizta, Kubernetes, Database) with icons and last-checked timestamps. Inactive electricity providers (e.g. Electricity Maps when Wattnet is selected) are excluded from the overall status.
 - **Version** — Current GreenKube version
-- **Configuration** — Active settings form for Prometheus URL, OpenCost URL, cloud provider, and default zone — changes are applied and persisted to a K8s Secret without restart
+- **Configuration** — Active settings form for Prometheus URL, OpenCost URL, cloud provider, default zone, and electricity provider (Electricity Maps or Wattnet) — changes are applied and persisted to a K8s Secret without restart
 - **API Key** — Set or clear the bearer token for API access
 
 ![GreenKube settings page with health checks and runtime configuration](/screenshots/demo-settings.png)

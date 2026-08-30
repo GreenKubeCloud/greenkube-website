@@ -1,6 +1,6 @@
 ---
 title: Recommendations
-description: Understand GreenKube's 9 optimization recommendation types, persisted lifecycle states, ranked top recommendations, and realized savings tracking.
+description: Understand GreenKube's 11 optimization recommendation types, persisted lifecycle states, ranked top recommendations, and realized savings tracking.
 ---
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
@@ -12,9 +12,9 @@ GreenKube analyzes your cluster metrics to generate actionable recommendations t
 The recommendation engine reads stored metrics over a configurable lookback window controlled by `RECOMMENDATION_LOOKBACK_DAYS` (default: `7` days) and applies threshold-based detection algorithms. Results are deduplicated at the **Deployment level** — pods belonging to the same Deployment are grouped so you see one recommendation per workload, not one per replica.
 
 Each recommendation includes:
-- **Type** — one of 9 detection categories
+- **Type** — one of 11 detection categories
 - **Priority** — `high`, `medium`, or `low`
-- **Scope** — `pod`, `workload`, `namespace`, or `node`
+- **Scope** — `pod`, `workload`, `namespace`, `node`, or `cluster`
 - **Projected annual savings** — `potential_savings_co2e_grams` and `potential_savings_cost`
 
 When the API or startup scan runs, metrics from namespaces that no longer exist in Kubernetes are filtered out when the cluster API is reachable. That lets GreenKube reconcile old active recommendations as `stale` instead of regenerating them forever.
@@ -43,6 +43,12 @@ When the API or startup scan runs, metrics from namespaces that no longer exist 
   </Card>
   <Card title="💤 Underutilized Node">
     Flags nodes running at very low CPU and memory utilization — consolidation candidates.
+  </Card>
+  <Card title="💾 Orphaned PersistentVolume">
+    Flags PersistentVolumes whose claim was deleted, so provisioned storage keeps billing while unused.
+  </Card>
+  <Card title="⚖️ Orphaned LoadBalancer">
+    Flags LoadBalancer Services with no ready backing pods, so the cloud load balancer bills hourly for nothing.
   </Card>
 </CardGrid>
 
@@ -149,6 +155,30 @@ When the API or startup scan runs, metrics from namespaces that no longer exist 
 
 ---
 
+### 💾 Orphaned PersistentVolume (`ORPHANED_PERSISTENT_VOLUME`)
+
+**What:** PersistentVolumes whose claim is gone — either `Released` phase (PVC deleted but not reclaimed) or a `claimRef` pointing at a PVC that no longer exists.
+
+**Detection:** A new `PVCollector` lists all PVs and PVCs from the Kubernetes API on every scan.
+
+**Savings:** Prefers the real per-volume storage cost from OpenCost (`OpenCostCollector.collect_pv_costs()`); otherwise falls back to provisioned capacity × `STORAGE_COST_PER_GIB_MONTH` (default `$0.10`/GiB-month). CO2e savings are not projected — energy estimation currently only covers CPU usage.
+
+**Scope:** cluster (the PV name is stored in `pod_name` since PVs have no namespace)
+
+---
+
+### ⚖️ Orphaned LoadBalancer (`ORPHANED_LOAD_BALANCER`)
+
+**What:** Services of type `LoadBalancer` with no ready backing endpoints — the provisioned cloud load balancer keeps billing hourly while routing traffic to nothing.
+
+**Detection:** A new `LoadBalancerCollector` lists Services and Endpoints from the Kubernetes API and flags LoadBalancer Services whose selector matches no pods.
+
+**Savings:** Prefers the real per-Service LoadBalancer cost from OpenCost (`OpenCostCollector.collect_lb_costs()`); otherwise falls back to `LOAD_BALANCER_COST_PER_MONTH` (default `$18.00`/month). CO2e savings are not projected — energy estimation currently only covers CPU usage.
+
+**Scope:** cluster
+
+---
+
 ## Recommendation Lifecycle
 
 Each recommendation is persisted in the database and reconciled across scans.
@@ -174,7 +204,7 @@ On the `/recommendations` page:
 - **Active tab** — current actionable recommendations with type filter and annual savings summary
 - **Ignored tab** — previously ignored recommendations with restore action
 - **Realized Savings tab** — applied recommendations and cumulative realized savings
-- **Ignore flow** — ignore requires a reason; restore is available from the Ignored tab
+- **Ignore flow** — reason is optional; restore is available from the Ignored tab
 
 The current frontend does **not** expose an Apply button yet, even though the API supports applying recommendations.
 
@@ -296,6 +326,8 @@ config:
     minCpuMillicores: 10              # Floor for generated CPU requests
     minMemoryBytes: 16777216          # Floor for generated memory requests
     applyTolerance: 0.25              # Reserved for future auto-apply detection
+    storageCostPerGibMonth: 0.10      # Fallback cost for orphaned PV savings ($/GiB-month)
+    loadBalancerCostPerMonth: 18.0    # Fallback cost for orphaned LoadBalancer savings ($/month)
 ```
 
 Adjust these based on your cluster size, workload patterns, and organizational priorities.

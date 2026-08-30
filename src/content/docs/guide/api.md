@@ -29,10 +29,10 @@ When no API key is configured, the API is open (designed for cluster-internal us
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Liveness check — returns `{"status":"ok","version":"0.2.12"}` |
+| `/health` | GET | Liveness check — returns `{"status":"ok","version":"0.3.0"}` |
 | `/version` | GET | Version info |
 | `/config` | GET | Non-sensitive configuration |
-| `/health/services` | GET | Aggregated health status for all data sources (Prometheus, OpenCost, Electricity Maps, Boavizta, K8s) |
+| `/health/services` | GET | Aggregated health status for all data sources (Prometheus, OpenCost, Electricity Maps, Wattnet, Boavizta, K8s). Non-selected electricity providers are reported as `inactive` and excluded from the overall status. |
 | `/health/services/{name}` | GET | Single service health — add `?force=true` to bypass 30s cache |
 | `/config/services` | POST | Update service URLs/tokens at runtime and persist to K8s Secret |
 

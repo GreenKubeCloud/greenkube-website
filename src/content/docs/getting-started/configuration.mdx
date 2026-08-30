@@ -16,7 +16,7 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | `image.repository` | Docker image repository | `greenkube/greenkube` |
 | `config.logFormat` | Log output format: `json` or `console` | `json` |
 | `config.metricsListMaxRangeDays` | Maximum date range (days) for `GET /api/v1/metrics` | `30` |
-| `image.tag` | Image tag | `0.2.12` |
+| `image.tag` | Image tag | `0.3.0` |
 | `image.pullPolicy` | Image pull policy | `IfNotPresent` |
 
 ### Database
@@ -43,6 +43,7 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | `config.cloudProvider` | Cloud provider: `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem` | `unknown` |
 | `config.defaultZone` | Fallback carbon zone (ISO country code) | `FR` |
 | `config.defaultIntensity` | Default grid intensity (gCO₂e/kWh) when API unavailable | `500.0` |
+| `config.electricityProvider` | Grid intensity data provider: `electricity_maps` or `wattnet` (EU-only, free — see [Wattnet guide](/guide/wattnet/)) | `electricity_maps` |
 | `config.normalizationGranularity` | Intensity lookup granularity: `hour`, `day`, `none` | `hour` |
 | `config.defaults.pue` | Power Usage Effectiveness factor | `1.3` |
 | `config.defaults.instance.vcores` | Default vCPU count for unknown instances | `1` |
@@ -107,6 +108,8 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | `config.recommendations.autoscalingSpikeRatio` | Max/avg ratio for spike detection | `3.0` |
 | `config.recommendations.carbonAwareThreshold` | Intensity ratio for carbon-aware scheduling | `1.5` |
 | `config.recommendations.nodeUtilizationThreshold` | Node utilization threshold | `0.2` |
+| `config.recommendations.storageCostPerGibMonth` | Fallback storage cost for orphaned PV savings when OpenCost has no data ($/GiB-month) | `0.10` |
+| `config.recommendations.loadBalancerCostPerMonth` | Fallback cost for orphaned LoadBalancer savings when OpenCost has no data ($/month) | `18.0` |
 | `config.recommendSystemNamespaces` | Include system namespaces in recommendations | `false` |
 
 ### Secrets
@@ -114,6 +117,8 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `secrets.electricityMapsToken` | Electricity Maps API token | `""` |
+| `secrets.wattnetEmail` | Wattnet account email (only when `config.electricityProvider` is `wattnet`) | `""` |
+| `secrets.wattnetPassword` | Wattnet account password (only when `config.electricityProvider` is `wattnet`) | `""` |
 | `secrets.boaviztaToken` | Boavizta API token | `""` |
 | `secrets.apiKey` | Bearer token for API authentication (empty = no auth) | `""` |
 | `secrets.dbConnectionString` | PostgreSQL connection string (only if not using bundled postgres) | `""` |
@@ -156,6 +161,9 @@ When running outside Helm (Docker, source), use these environment variables:
 | `PROMETHEUS_URL` | Prometheus server URL | Auto-discovery |
 | `OPENCOST_URL` | OpenCost server URL | Auto-discovery |
 | `ELECTRICITY_MAPS_TOKEN` | Electricity Maps API token | — |
+| `ELECTRICITY_PROVIDER` | Grid intensity provider: `electricity_maps` or `wattnet` | `electricity_maps` |
+| `WATTNET_EMAIL` | Wattnet account email (required when `ELECTRICITY_PROVIDER=wattnet`) | — |
+| `WATTNET_PASSWORD` | Wattnet account password (required when `ELECTRICITY_PROVIDER=wattnet`) | — |
 | `BOAVIZTA_TOKEN` | Boavizta API token | — |
 | `CLOUD_PROVIDER` | `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem` | `unknown` |
 | `DEFAULT_ZONE` | Fallback carbon zone | `FR` |
@@ -179,6 +187,9 @@ When running outside Helm (Docker, source), use these environment variables:
 | `DB_POOL_MIN_SIZE` | PostgreSQL min connection pool size | `1` |
 | `DB_POOL_MAX_SIZE` | PostgreSQL max connection pool size | `10` |
 | `DB_STATEMENT_TIMEOUT_MS` | PostgreSQL per-statement timeout (ms) | `30000` |
+| `TRUST_AUTH_PROXY` | Read the authenticated user from `X-Forwarded-User`/`X-Auth-Request-User` headers instead of GreenKube's own auth (for use behind Authentik, Caddy `forward_auth`, etc.) | `false` |
+| `STORAGE_COST_PER_GIB_MONTH` | Fallback cost for orphaned PV recommendations ($/GiB-month) | `0.10` |
+| `LOAD_BALANCER_COST_PER_MONTH` | Fallback cost for orphaned LoadBalancer recommendations ($/month) | `18.0` |
 
 <Aside type="tip">
   GreenKube works without an Electricity Maps token. When no token is provided, the `DEFAULT_INTENSITY` value (default: 500 gCO₂e/kWh) is used for all zones. For accurate, zone-specific carbon data, get a free token at [electricitymaps.com](https://www.electricitymaps.com/).

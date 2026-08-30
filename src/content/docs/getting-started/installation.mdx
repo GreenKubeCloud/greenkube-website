@@ -168,7 +168,7 @@ The Helm chart deploys the following resources:
 | `ConfigMap` | Non-sensitive configuration |
 | `Secret` | API tokens and database credentials |
 | `ServiceAccount` | Identity for pod RBAC |
-| `ClusterRole` | Read access to nodes, pods, namespaces |
+| `ClusterRole` | Read access to nodes, pods, namespaces, endpoints, persistentvolumes, persistentvolumeclaims |
 | `ClusterRoleBinding` | Binds ClusterRole to ServiceAccount |
 | `StatefulSet` | PostgreSQL database (if enabled) |
 | `PersistentVolumeClaim` | Database storage (if persistence enabled) |

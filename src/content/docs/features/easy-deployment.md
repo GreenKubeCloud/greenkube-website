@@ -30,7 +30,7 @@ That's it. GreenKube will:
 | **PostgreSQL StatefulSet** | Persistent metric storage with PVC |
 | **ConfigMap** | All configuration environment variables |
 | **Secret** | Database credentials and API tokens |
-| **ClusterRole + Binding** | Read-only access to pods, nodes, HPAs |
+| **ClusterRole + Binding** | Read-only access to pods, nodes, HPAs, endpoints, PersistentVolumes/Claims |
 | **ServiceAccount** | Dedicated identity for the application |
 | **Services** | API service + PostgreSQL service |
 | **PVC** | Persistent volume for PostgreSQL data |

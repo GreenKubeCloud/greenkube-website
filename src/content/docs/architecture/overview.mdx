@@ -37,12 +37,16 @@ src/greenkube/
 │   └── ...
 ├── collectors/              # Input adapters
 │   ├── base_collector.py    # Abstract base class
+│   ├── base_electricity_provider.py # Provider-agnostic grid intensity interface
 │   ├── prometheus_collector.py
 │   ├── node_collector.py
 │   ├── pod_collector.py
 │   ├── opencost_collector.py
-│   ├── electricity_maps_collector.py
+│   ├── electricity_maps_collector.py # Default electricity provider
+│   ├── wattnet_collector.py # Alternative EU electricity provider
 │   ├── hpa_collector.py     # HPA detection
+│   ├── pv_collector.py      # Orphaned PersistentVolume detection
+│   ├── lb_collector.py      # Orphaned LoadBalancer detection
 │   ├── boavizta_collector.py
 │   └── discovery/           # Service auto-discovery
 ├── core/                    # Business logic (no external deps)
@@ -57,7 +61,7 @@ src/greenkube/
 │   ├── historical_range_processor.py # Day-chunked range queries
 │   ├── embodied_emissions_service.py # Boavizta integration
 │   ├── calculator.py        # Carbon emission calculator
-│   ├── recommender.py              # 9-type optimization analysis
+│   ├── recommender.py              # 11-type optimization analysis
 │   ├── savings_attributor.py       # Prorates annual savings to collection periods
 │   ├── recommendation_realization.py # Links savings to specific recommendations
 │   ├── sustainability_score.py     # 7-dimension 0–100 composite score
@@ -67,7 +71,7 @@ src/greenkube/
 │   ├── aggregator.py               # Metric aggregation helpers
 │   ├── scheduler.py                # Collection + cache refresh scheduling
 │   ├── db.py                       # Database initialization
-│   ├── migrations/                 # Versioned SQL migration scripts (0001–0009)
+│   ├── migrations/                 # Versioned SQL migration scripts
 │   ├── k8s_client.py               # Kubernetes client helper
 │   ├── health.py                   # Service health check probes
 │   └── exceptions.py               # Custom exceptions
@@ -182,6 +186,36 @@ class PrometheusCollector:
         return PrometheusMetric(...)
 ```
 
+### Electricity Provider Pattern
+
+Grid carbon-intensity sources implement a dedicated abstraction, `BaseElectricityProvider` (`collectors/base_electricity_provider.py`), separate from the generic `Collector Pattern` above — both `ElectricityMapsCollector` and `WattnetCollector` implement it:
+
+```python
+# collectors/base_electricity_provider.py (simplified)
+class BaseElectricityProvider(ABC):
+    @abstractmethod
+    async def collect(self, zone: str, target_datetime: datetime | None = None) -> list:
+        """Return carbon intensity history for a zone, shaped like the
+        Electricity Maps payload so any provider can be stored and consumed
+        identically by the rest of the pipeline."""
+        ...
+
+    async def close(self): ...  # release HTTP clients / tokens
+```
+
+The active implementation is selected by the factory based on the `ELECTRICITY_PROVIDER` config (`electricity_maps`, the default, or `wattnet`):
+
+```python
+# core/factory.py (simplified)
+def get_electricity_provider() -> BaseElectricityProvider:
+    provider = get_config().ELECTRICITY_PROVIDER
+    if provider == "wattnet":
+        return WattnetCollector(...)
+    return ElectricityMapsCollector(...)
+```
+
+`DataProcessor` and `MetricAssembler` depend only on the `BaseElectricityProvider` interface, so the rest of the pipeline (zone mapping, carbon calculation, storage) is unaware of which provider is active. See the [Wattnet guide](/guide/wattnet/) for the alternative EU provider.
+
 ## Concurrency Model
 
 GreenKube leverages Python's `asyncio` throughout. The `DataProcessor` runs in **four sequential phases**, delegating to focused collaborators:
@@ -218,7 +252,7 @@ Node collection runs **alone in Phase 1** (not concurrently with Prometheus/Open
 
 ## Testing
 
-750+ unit and integration tests cover all components:
+1250+ unit and integration tests cover all components:
 
 - **pytest** with `pytest-asyncio` for async tests
 - **respx** for HTTP request mocking

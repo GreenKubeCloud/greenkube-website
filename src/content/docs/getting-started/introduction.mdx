@@ -35,7 +35,7 @@ GreenKube addresses both challenges simultaneously by:
     Calculates per-pod energy consumption (Joules) using Prometheus metrics and cloud instance power profiles based on the Cloud Carbon Footprint methodology.
   </Card>
   <Card title="2. Tracking Carbon">
-    Converts energy to CO₂e emissions using real-time grid carbon intensity data from Electricity Maps, with region-specific accuracy.
+    Converts energy to CO₂e emissions using real-time grid carbon intensity data from Electricity Maps or Wattnet, with region-specific accuracy.
   </Card>
   <Card title="3. Optimizing Resources">
     Identifies optimization opportunities — zombie pods, oversized workloads, autoscaling candidates — with estimated savings in both cost and CO₂.
@@ -89,13 +89,15 @@ Where:
 | **Backend** | Python 3.11+, FastAPI, asyncio |
 | **Frontend** | SvelteKit, ECharts, Tailwind CSS |
 | **Data Collection** | Prometheus, OpenCost, Kubernetes API |
-| **Carbon Data** | Electricity Maps API, Boavizta API |
+| **Carbon Data** | Electricity Maps API (default) or Wattnet API (EU-only, free), Boavizta API |
 | **Storage** | PostgreSQL, SQLite, Elasticsearch |
 | **Deployment** | Helm Chart, Docker (multi-arch amd64/arm64) |
-| **CLI** | Typer + Rich || **Settings** | pydantic-settings (env-driven, type-safe config) |
+| **CLI** | Typer + Rich |
+| **Settings** | pydantic-settings (env-driven, type-safe config) |
 | **Logging** | structlog (JSON or console, Loki-ready) |
 | **Type checking** | Pyrefly (static analysis, pre-commit) |
-| **Toolchain** | uv (dependency management, lockfile) || **Security** | OWASP headers, SCRAM-SHA-256, read-only containers, Trivy CI scanning |
+| **Toolchain** | uv (dependency management, lockfile) |
+| **Security** | OWASP headers, SCRAM-SHA-256, read-only containers, Trivy CI scanning |
 
 ## Next Steps
 
