@@ -1,7 +1,7 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://www.greenkube.cloud/sitemap-index.xml
+Sitemap: https://docs.greenkube.cloud/sitemap-index.xml
 
 # LLM / AI crawler guidance
-# Full project description for AI assistants: https://www.greenkube.cloud/llms.txt
+# Full project description for AI assistants: https://docs.greenkube.cloud/llms.txt

@@ -9,12 +9,11 @@ GreenKube is a self-hosted, open-source tool designed for DevOps, SRE, FinOps, a
 
 - **License:** Apache 2.0
 - **Language:** Python 3.11+
-- **Current version:** 0.2.12
 - **Deployment:** Helm chart (single command install)
 - **GitHub:** https://github.com/GreenKubeCloud/GreenKube
 - **Docker Hub:** https://hub.docker.com/r/greenkube/greenkube
 - **Artifact Hub:** https://artifacthub.io/packages/helm/greenkube/greenkube
-- **Documentation:** https://greenkube.cloud/docs/
+- **Documentation:** https://docs.greenkube.cloud/
 - **Helm Repository:** https://GreenKubeCloud.github.io/GreenKube
 
 ## Key Capabilities
@@ -74,12 +73,12 @@ helm install greenkube greenkube/greenkube -n greenkube --create-namespace
 
 ## Documentation Sections
 
-- [Quickstart](https://greenkube.cloud/docs/getting-started/quickstart/)
-- [Installation](https://greenkube.cloud/docs/getting-started/installation/)
-- [Configuration](https://greenkube.cloud/docs/getting-started/configuration/)
-- [Architecture](https://greenkube.cloud/docs/architecture/)
-- [Features: Carbon Tracking](https://greenkube.cloud/docs/features/carbon-tracking/)
-- [Features: Cost Optimization](https://greenkube.cloud/docs/features/cost-optimization/)
-- [Features: Dashboard](https://greenkube.cloud/docs/features/real-time-dashboard/)
-- [Features: Recommendations](https://greenkube.cloud/docs/features/smart-recommendations/)
-- [Changelog / Releases](https://greenkube.cloud/docs/releases/)
+- [Quickstart](https://docs.greenkube.cloud/getting-started/quickstart/)
+- [Installation](https://docs.greenkube.cloud/getting-started/installation/)
+- [Configuration](https://docs.greenkube.cloud/getting-started/configuration/)
+- [Architecture](https://docs.greenkube.cloud/architecture/)
+- [Features: Carbon Tracking](https://docs.greenkube.cloud/features/carbon-tracking/)
+- [Features: Cost Optimization](https://docs.greenkube.cloud/features/cost-optimization/)
+- [Features: Dashboard](https://docs.greenkube.cloud/features/real-time-dashboard/)
+- [Features: Recommendations](https://docs.greenkube.cloud/features/smart-recommendations/)
+- [Changelog / Releases](https://docs.greenkube.cloud/releases/)

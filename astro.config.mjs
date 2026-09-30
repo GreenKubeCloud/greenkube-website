@@ -6,7 +6,7 @@ import tailwind from '@astrojs/tailwind';
 
 // https://astro.build/config
 export default defineConfig({
-	site: 'https://www.greenkube.cloud',
+	site: 'https://docs.greenkube.cloud',
 	integrations: [
 		starlight({
 			title: 'GreenKube',
@@ -25,7 +25,7 @@ export default defineConfig({
 				},
 				{
 					tag: 'meta',
-					attrs: { property: 'og:image', content: 'https://www.greenkube.cloud/og-image.png' },
+					attrs: { property: 'og:image', content: 'https://greenkube.cloud/og-image.png' },
 				},
 				{
 					tag: 'meta',
@@ -41,16 +41,16 @@ export default defineConfig({
 				},
 				{
 					tag: 'meta',
-					attrs: { name: 'twitter:image', content: 'https://www.greenkube.cloud/og-image.png' },
+					attrs: { name: 'twitter:image', content: 'https://greenkube.cloud/og-image.png' },
 				},
 				{
 					tag: 'link',
-					attrs: { rel: 'canonical', href: 'https://www.greenkube.cloud' },
+					attrs: { rel: 'canonical', href: 'https://docs.greenkube.cloud' },
 				},
 				// LLM/AI crawler guidance (llms.txt convention)
 				{
 					tag: 'link',
-					attrs: { rel: 'alternate', type: 'text/plain', href: 'https://www.greenkube.cloud/llms.txt', title: 'LLM-readable project description' },
+					attrs: { rel: 'alternate', type: 'text/plain', href: 'https://docs.greenkube.cloud/llms.txt', title: 'LLM-readable project description' },
 				},
 				{
 					tag: 'script',
@@ -64,10 +64,9 @@ export default defineConfig({
 						applicationSubCategory: 'Monitoring, FinOps, GreenOps, Sustainability',
 						operatingSystem: 'Kubernetes',
 						description: 'Open-source FinGreenOps platform for Kubernetes. Measure CO₂e emissions, energy usage, and cloud costs per pod and namespace. CSRD/ESRS E1 reporting ready. Deploy in minutes with a single Helm command.',
-						url: 'https://www.greenkube.cloud',
+						url: 'https://docs.greenkube.cloud',
 						downloadUrl: 'https://hub.docker.com/r/greenkube/greenkube',
-						releaseNotes: 'https://www.greenkube.cloud/docs/releases/',
-						softwareVersion: '0.3.0',
+						releaseNotes: 'https://docs.greenkube.cloud/releases/',
 						datePublished: '2026-08-30',
 						license: 'https://opensource.org/licenses/Apache-2.0',
 						keywords: 'kubernetes, carbon footprint, CO2, FinOps, GreenOps, CSRD, ESRS, sustainability, cloud cost, prometheus, helm',
