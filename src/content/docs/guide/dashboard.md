@@ -28,8 +28,7 @@ Then open [http://localhost:8000](http://localhost:8000) in your browser.
 The main dashboard provides a high-level overview of your cluster's environmental and financial impact:
 
 **KPI Cards:**
-- **Total CO₂e** — Scope 2 operational carbon emissions
-- **Embodied CO₂e** — Scope 3 category 1 hardware lifecycle emissions
+- **Total CO₂e** — Combined modeled operational and embodied estimate
 - **Total Cost** — Combined cost from OpenCost data
 - **Total Energy** — Energy consumption in kWh
 - **Active Pods** — Number of monitored pods
@@ -46,41 +45,40 @@ The main dashboard provides a high-level overview of your cluster's environmenta
 
 The node inventory page displays all cluster nodes with:
 
-- **CPU/Memory capacity bars** — Visual representation of available resources
+- **CPU/Memory capacity and allocatable values** with comparison bars
 - **Instance type** — Cloud provider instance type (e.g., `m5.xlarge`)
-- **Cloud provider** — Detected cloud provider
-- **Availability zone** — Node zone/region
-- **Carbon zone** — Mapped Electricity Maps zone
-- **Architecture** — CPU architecture (amd64, arm64)
-- **Operating system** — Node OS
+- **Zone and region** — Kubernetes node location labels, when available
+- **Architecture and OS** — Node architecture (for example, `amd64` or `arm64`) and operating system
+- **Hardware profile** — CPU name, TDP, or GPU count when reported by the hardware data source
 
 ![GreenKube nodes page showing node inventory and hardware metadata](/screenshots/demo-nodes.png)
 
 ### 💡 Recommendations
 
-Actionable optimization suggestions organized by type and lifecycle status:
+Optimization suggestions organized by type and lifecycle status:
 
 **Recommendation Types:** Zombie Pod, CPU/Memory Rightsizing, Autoscaling Candidate, Carbon-Aware Scheduling, Idle Namespace, Off-Peak Scaling, Overprovisioned Node, Underutilized Node, Orphaned PersistentVolume, Orphaned LoadBalancer
 
-**Tabs:** Active, Ignored, Realized Savings
+**Tabs:** Active, Ignored, Realized Savings, and Pull Requests
 
 Each recommendation includes:
 - Priority (high, medium, low)
 - Scope (pod, workload, namespace, node, cluster)
-- Annual savings projection (CO₂e + cost)
+- Projected annual savings where supported by the recommendation type
 - Ignore flow with an optional reason
 - Restore action from the Ignored tab
 - Applied recommendations summarized in the Realized Savings tab
+- Eligible workload CPU and memory rightsizing recommendations can be previewed as manifest changes and submitted through the GitOps pull-request workflow when configured.
 
-The current UI does not expose an Apply button yet; applying a recommendation is done through the API.
+The GitOps workflow creates a pull request; it does not directly apply changes to the cluster. The separate API lifecycle endpoint can mark a recommendation as applied for savings tracking.
 
 ![GreenKube recommendations page with active recommendations and annual savings](/screenshots/demo-recommendations.png)
 
 ### 📋 Report
 
-Visual report builder for CSRD/ESRS E1 exports:
+Visual report builder for cost and estimated carbon exports:
 
-- **Time range picker** — relative window (1h → ytd) or custom `start`/`end` dates, or full calendar year (`--years 2024`)
+- **Time range picker** — relative window (1h → ytd), custom `start`/`end` dates, or a full calendar year
 - **Namespace filter** — scope to a specific team/environment
 - **Granularity** — hourly, daily, weekly, monthly, yearly
 - **Preview** — row count and totals before downloading
@@ -94,8 +92,8 @@ System configuration and health status:
 
 - **Service Health** — Popup-style health check for all data sources (Prometheus, OpenCost, Electricity Maps, Wattnet, Boavizta, Kubernetes, Database) with icons and last-checked timestamps. Inactive electricity providers (e.g. Electricity Maps when Wattnet is selected) are excluded from the overall status.
 - **Version** — Current GreenKube version
-- **Configuration** — Active settings form for Prometheus URL, OpenCost URL, cloud provider, default zone, and electricity provider (Electricity Maps or Wattnet) — changes are applied and persisted to a K8s Secret without restart
-- **API Key** — Set or clear the bearer token for API access
+- **Configuration** — Runtime settings for integration URLs (including Prometheus, OpenCost, and Boavizta), cloud provider, default zone, and electricity provider (Electricity Maps or Wattnet). Changes apply at runtime; persistence to a Kubernetes Secret is best-effort and depends on deployment permissions.
+API-key authentication is configured through Helm values or environment variables rather than this dashboard form; see the [Configuration Reference](/getting-started/configuration/).
 
 ![GreenKube settings page with health checks and runtime configuration](/screenshots/demo-settings.png)
 
@@ -111,9 +109,7 @@ Fully responsive layout that works on:
 - Mobile phones
 
 ### Data Export
-Export capabilities are available on most pages:
-- **CSV** — For spreadsheet analysis
-- **JSON** — For programmatic processing
+The **Report** page provides CSV and JSON downloads for the selected time range, namespace, aggregation, and grouping options.
 
-### Real-time Updates
-The dashboard polls the API at regular intervals to display near-real-time data. WebSocket support is available when the connection allows it.
+### Data Refresh
+The dashboard loads data for the selected time window and provides a manual **Refresh** action for dashboard summaries. Values update as collection and summary-refresh jobs run; the web UI does not use a WebSocket stream or continuous client-side polling.

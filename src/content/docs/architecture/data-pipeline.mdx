@@ -86,10 +86,11 @@ Per pod:
 ```
 
 ### HPA Collector
-
 Detects existing Horizontal Pod Autoscalers in the cluster. This data is used by the recommendation engine to avoid suggesting autoscaling for workloads that already have an HPA configured.
 
 ```
+
+The recommendation engine can also read recommendation-mode VPAs and Karpenter NodePools. These sources are enabled by default and skip cleanly when their CRDs are not installed. Separate Kubernetes collectors inspect PersistentVolumes and LoadBalancer Services for cleanup recommendations.
 Per HPA:
 ├── namespace
 ├── target_kind (Deployment, StatefulSet, etc.)
@@ -204,7 +205,6 @@ Combined metrics are batch-inserted into the configured database:
 ```
 PostgreSQL:  COPY or INSERT ... ON CONFLICT
 SQLite:      INSERT OR REPLACE
-Elastic:     Bulk index operation
 ```
 
 ## Historical Analysis (Range Queries)

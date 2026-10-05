@@ -3,15 +3,15 @@ title: Smart Recommendations
 description: Rule-based analysis detects zombie pods, rightsizing opportunities, autoscaling candidates, carbon-aware scheduling, and more — with persisted active, applied, ignored, and stale states.
 ---
 
-GreenKube's recommendation engine analyzes your cluster metrics to produce **actionable optimization suggestions** that reduce both costs and carbon emissions simultaneously.
+GreenKube's recommendation engine analyzes your cluster metrics to produce optimization suggestions. Recommendations are guidance; GreenKube does not automatically make workload changes.
 
 ## How It Works
 
-The recommendation engine runs from the API, the startup scan, and the CLI. It reads historical metrics from the database over a configurable lookback window (`RECOMMENDATION_LOOKBACK_DAYS`, default: 7 days) and applies threshold-based detection algorithms across multiple dimensions.
+The recommendation engine runs from the API and scheduled collection lifecycle. It reads historical metrics from the database over a configurable lookback window (`RECOMMENDATION_LOOKBACK_DAYS`, default: 7 days) and applies threshold-based detection algorithms across multiple dimensions. Optional VPA and Karpenter sources can contribute recommendations when their respective CRDs are available.
 
 **Deployment-level deduplication:** Pods belonging to the same Deployment are grouped together (via pod-name suffix pattern matching) so you receive one recommendation per workload — not one per replica.
 
-**Annual savings projection:** Every recommendation includes estimated annual CO₂e savings (`annual_co2e_savings_grams`) and annual cost savings (`annual_cost_savings_usd`), extrapolated from the observation window.
+**Annual savings projection:** Annual CO₂e and cost savings are projected from the observation window where the recommendation type supports those estimates. They are estimates, not measured outcomes.
 
 ## 11 Recommendation Types
 
@@ -153,7 +153,7 @@ active -> applied
 
 ### Savings Ledger
 
-When a recommendation is marked **applied**, GreenKube records realized annual savings and the `SavingsAttributor` converts them into per-period ledger rows. This drives two Prometheus gauges:
+When a recommendation is marked **applied**, GreenKube records projected savings in its ledger. Post-apply verification can distinguish measured savings from prorated projections. This drives two Prometheus metrics:
 
 - `greenkube_co2e_savings_attributed_grams_total` — cumulative CO₂e savings
 - `greenkube_cost_savings_attributed_dollars_total` — cumulative cost savings
@@ -175,26 +175,9 @@ The `/recommendations` page provides:
 - **Realized Savings tab** — applied recommendations plus cumulative realized savings
 - **Ignore flow** — reason is optional
 
-The dashboard currently exposes **ignore** and **restore** flows, but not an Apply button.
+The dashboard exposes **ignore** and **restore** flows, a realized-savings view, and a pull-request view. Eligible CPU and memory rightsizing recommendations can be previewed and submitted to the configured Git provider as pull requests; GreenKube does not directly apply the manifest to the cluster.
 
-### CLI
-
-```bash
-# View all recommendations (reads from database)
-greenkube recommend
-
-# Filter by namespace
-greenkube recommend --namespace production
-
-# Specify lookback window
-greenkube recommend --last 7d
-
-# Run live collection instead of reading from DB
-greenkube recommend --live
-
-# CI/CD gate: exit 1 if any recommendations exist
-greenkube recommend --fail-on-recommendations
-```
+Recommendations are available from the web dashboard and REST API. The `greenkube` CLI does not have a `recommend` command; see the [CLI reference](/guide/cli/).
 
 ### API
 
@@ -222,7 +205,13 @@ GET /api/v1/recommendations/top?limit=5&metric=co2
 PATCH /api/v1/recommendations/{id}/apply
 PATCH /api/v1/recommendations/{id}/ignore
 DELETE /api/v1/recommendations/{id}/ignore
+
+# Preview a rightsizing manifest change or submit it as a pull request
+POST /api/v1/recommendations/{id}/apply-pr
+GET /api/v1/recommendations/{id}/apply-pr/eligibility
 ```
+
+The pull-request workflow requires Git provider credentials and a repository binding or supported GitOps discovery configuration. Preview with `{"dry_run": true}` before submitting a pull-request operation.
 
 ## Related
 

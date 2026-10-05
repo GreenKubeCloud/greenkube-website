@@ -1,9 +1,9 @@
 ---
 title: Historical Analysis
-description: Report on any time period with flexible grouping and date-range options. Export to CSV or JSON for BI integration and CSRD/ESRS E1 compliance.
+description: Explore historical cost and estimated carbon data by date range, and export CSV or JSON for further analysis.
 ---
 
-GreenKube stores all collected metrics over time, enabling **powerful historical analysis** for trend detection, compliance reporting, and capacity planning.
+GreenKube stores collected metrics over time for trend detection and capacity planning.
 
 ## Time-Series Storage
 
@@ -13,75 +13,45 @@ Every collection cycle captures a complete snapshot of your cluster:
 - Grid carbon intensity at collection time (zone-specific)
 - Cost data from OpenCost
 
-These snapshots are stored in your chosen backend (PostgreSQL or SQLite) and are available for querying at any time. Raw 5-minute metrics are automatically compressed to hourly aggregates after a configurable threshold (default: 24 h), and aggregated data is retained indefinitely by default — supporting multi-year CSRD/ESRS E1 compliance.
+These snapshots are stored in PostgreSQL or SQLite. Raw metrics are compressed to hourly aggregates after a configurable threshold (default: 24 h); raw rows are retained for 7 days by default, while hourly aggregates are retained indefinitely unless you configure a limit.
 
 ## Flexible Time Ranges
 
-Query any time period through the API, CLI, or dashboard:
+Query supported time windows through the API or dashboard:
 
-```bash
-# Last 24 hours
-greenkube report --last 24h
-
-# Last 7 days
-greenkube report --last 7d
-
-# Custom date range (ISO 8601)
-greenkube report --start 2024-01-01 --end 2024-01-31
-
-# Full calendar year
-greenkube report --years 2024
-
-# Multiple years
-greenkube report --years 2023 --years 2024
-
-# Year-to-date
-greenkube report --last ytd
-```
+Use the Report page for a relative or custom date range, or `/api/v1/report/export?format=csv&years=2024` for an annual export.
 
 ## Grouping & Aggregation
 
 Metrics can be grouped at different granularities:
 
-| Option | Use Case |
-|--------|----------|
-| `--hourly` | Detailed analysis, peak detection |
-| `--daily` | Weekly trends, daily reports |
-| `--weekly` | Month-over-month comparison |
-| `--monthly` | Quarterly/annual CSRD reports |
-| `--yearly` | Long-term trend analysis |
+| Granularity | Use Case |
+|-------------|----------|
+| Hourly | Detailed analysis, peak detection |
+| Daily | Weekly trends, daily reports |
+| Weekly | Month-over-month comparison |
+| Monthly | Annual comparisons |
+| Yearly | Long-term trend analysis |
 
-```bash
-# Daily carbon emissions for January 2024
-greenkube report --start 2024-01-01 --end 2024-01-31 --daily
-
-# Monthly aggregation for a full year (CSRD use case)
-greenkube report --years 2024 --monthly --format csv --output 2024-annual.csv
-```
+Set the granularity in the Report page or use the export API's `granularity` parameter.
 
 ## Namespace Grouping
 
 Group results by namespace for per-team cost and carbon allocation:
 
-```bash
-greenkube report --last 30d --monthly --group-by-namespace
-```
+Select a namespace in the Report page or use `aggregate=true&group_by=namespace` on the export API.
 
 ## Export Formats
 
 ### CSV
 Standard CSV output compatible with Excel, Google Sheets, and BI tools:
 
-```bash
-greenkube report --last 7d --format csv --output weekly-report.csv
-```
+Download CSV from the Report page or `/api/v1/report/export?format=csv`.
 
 ### JSON
 Structured JSON for programmatic consumption:
 
-```bash
-greenkube report --last 30d --format json --output monthly-report.json
-```
+Download JSON from the Report page or `/api/v1/report/export?format=json`.
 
 ### API
 Full access via REST API for integration with dashboards and pipelines:
@@ -94,7 +64,7 @@ GET /api/v1/metrics/timeseries?last=30d&granularity=day
 GET /api/v1/metrics/dashboard-timeseries/30d
 
 # Downloadable report
-GET /api/v1/report/export?format=csv&years=2024&granularity=monthly
+GET /api/v1/report/export?format=csv&years=2024&aggregate=true&granularity=monthly
 
 # Per-namespace breakdown
 GET /api/v1/metrics/by-namespace?last=30d
@@ -111,17 +81,8 @@ The web dashboard `/report` page provides a visual interface to:
 
 ## Use Cases
 
-### CSRD/ESRS E1 Compliance Reporting
-Generate annual or multi-year emission reports with:
-- Total kgCO₂e per namespace/workload (Scope 2 operational + Scope 3 embodied)
-- Custom date ranges aligned with fiscal/calendar years
-- Namespace breakdown for business unit allocation
-
-```bash
-# Full 2024 annual report for CSRD submission
-greenkube report --years 2024 --monthly --group-by-namespace \
-  --format csv --output 2024-csrd-report.csv
-```
+### Historical Footprint Estimates
+Compare modeled operational and embodied emissions by workload and namespace across time windows. Document the estimation method, fallbacks, and missing data before using these figures outside the engineering team.
 
 ### Capacity Planning
 Analyze historical trends to:

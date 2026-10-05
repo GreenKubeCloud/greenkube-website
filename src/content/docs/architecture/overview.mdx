@@ -13,7 +13,7 @@ GreenKube is built on **Clean Architecture** and **Hexagonal Architecture** prin
 | Principle | Implementation |
 |-----------|----------------|
 | **Async-First** | All I/O uses Python `asyncio` for non-blocking execution |
-| **Database Agnostic** | Repository pattern abstracts storage (PostgreSQL, SQLite, Elasticsearch) |
+| **Database Agnostic** | Repository pattern abstracts the supported PostgreSQL and SQLite storage backends |
 | **Cloud Agnostic** | Supports AWS, GCP, Azure, OVH, Scaleway via mapping files |
 | **Resilient** | Graceful degradation when data sources are unavailable |
 | **Transparent** | Clear flagging of estimated vs. measured values |
@@ -99,7 +99,6 @@ src/greenkube/
 │   │   ├── timeseries_cache_repository.py
 │   │   └── savings_repository.py    # Savings ledger
 │   ├── sqlite/              # SQLite implementations (same interface)
-│   └── elastic/             # Elasticsearch (optional, not production-ready)
 ├── reporters/               # Report formatting
 ├── exporters/               # Data export (CSV, JSON)
 └── utils/                   # Utilities
@@ -144,7 +143,6 @@ class RecommendationRepository(ABC):
 Implementations per backend:
 - **PostgreSQL** — `PostgresRepository`, `PostgresNodeRepository`, `PostgresRecommendationRepository`
 - **SQLite** — `SQLiteRepository`, `SQLiteNodeRepository`, `SQLiteRecommendationRepository`
-- **Elasticsearch** — `ElasticsearchRepository`, `ElasticsearchNodeRepository`
 
 ### Factory Pattern
 
@@ -157,9 +155,6 @@ def get_repository(config: Config) -> CarbonIntensityRepository:
         return PostgresRepository(config.DB_CONNECTION_STRING)
     elif config.DB_TYPE == "sqlite":
         return SQLiteRepository(config.DB_PATH)
-    elif config.DB_TYPE == "elasticsearch":
-        return ElasticsearchRepository(config.ELASTICSEARCH_HOSTS)
-
 def get_node_repository(config: Config) -> NodeRepository: ...
 def get_recommendation_repository(config: Config) -> RecommendationRepository: ...
 def get_embodied_repository(config: Config) -> EmbodiedRepository: ...

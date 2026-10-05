@@ -1,58 +1,47 @@
 ---
 title: Multi-Resource Monitoring
-description: Track CPU, memory, network I/O, disk I/O, storage, pod restarts, and GPU usage across your entire Kubernetes cluster.
+description: Collect CPU, memory, network, disk, PVC, and restart metrics from Kubernetes workloads.
 ---
 
-GreenKube provides **comprehensive resource monitoring** that goes far beyond basic CPU and memory metrics, giving you full visibility into your cluster's resource consumption.
+GreenKube collects CPU, memory, network, disk, storage, and restart data from the supported Prometheus and Kubernetes sources. **Only CPU usage currently feeds the energy and operational CO₂e model**; the other measurements provide resource context and are available in metrics and reports.
 
 ## Monitored Resources
 
 ### CPU
-- **Usage** — Actual CPU seconds consumed per pod
-- **Requests vs. Limits** — Configuration vs. actual consumption
-- **Throttling** — Detect pods being CPU-throttled
-- **Per-core breakdown** — Utilization across individual cores
+- **Usage** — CPU utilization per pod from Prometheus
+- **Requests** — CPU request values from Kubernetes pod specifications
 
 ### Memory
-- **Working set** — Actual memory in use
-- **RSS** — Resident Set Size
-- **Requests vs. Limits** — Identify over/under-provisioned workloads
-- **OOM risk** — Pods approaching their memory limits
+- **Working set** — Memory use reported by `container_memory_working_set_bytes`
+- **Requests** — Memory request values from Kubernetes pod specifications
 
 ### Network I/O
-- **Bytes transmitted** — Outbound network traffic per pod
-- **Bytes received** — Inbound network traffic per pod
-- **Packet rate** — Packets per second for anomaly detection
-- **Cross-namespace traffic** — East-west traffic patterns
+- **Bytes transmitted and received** — Per-pod network byte rates from Prometheus
 
 ### Disk I/O
-- **Read throughput** — Bytes read per second
-- **Write throughput** — Bytes written per second
-- **IOPS** — I/O operations per second
-- **Latency** — Read/write latency percentiles
+- **Read throughput** — Disk bytes read per second where Prometheus exposes the counter
+- **Write throughput** — Disk bytes written per second where Prometheus exposes the counter
 
 ### Storage
-- **PVC usage** — Persistent Volume Claim utilization
-- **Capacity planning** — Growth trends and forecasting
-- **Orphaned volumes** — PVCs not attached to any pod
+- **PVC request and usage** — Storage requests and used bytes where the required metrics are available
+- **Orphaned PersistentVolumes** — Recommendations for released volumes or volumes whose claim no longer exists
 
 ### Pod Health
-- **Restart count** — Track instability across workloads
-- **Uptime** — Time since last restart
-- **Phase** — Running, Pending, Failed, Succeeded
-- **Container status** — Individual container readiness
+- **Restart count** — Per-pod container restarts reported by Prometheus
 
-> **Note:** GPU data is not collected and used for now. It's planned for future releases.
+> **Note:** GPU use is not currently included in the energy model. Memory, network, disk, and storage metrics are also not converted into energy or CO₂e.
+
 ## Data Sources
 
 GreenKube collects metrics from multiple sources:
 
 | Source | Metrics |
 |---|---|
-| **Prometheus** | CPU, memory, network, disk |
-| **Kubernetes API** | Pod status, restarts, node info, HPAs |
+| **Prometheus** | CPU, memory, network, disk, PVC request/usage, restart counters |
+| **Kubernetes API** | Pod and node metadata, resource requests, HPA, health-verification data, PV and LoadBalancer cleanup inputs |
 | **OpenCost** | Cost allocation data |
-| **Electricity Maps** | Carbon intensity per region |
+| **Electricity Maps or Wattnet** | Grid carbon intensity for supported zones |
+| **Boavizta API** | Hardware data used in embodied-emissions estimates |
 
 ## Collection Pipeline
 
@@ -68,7 +57,7 @@ The collection pipeline runs in phases: node discovery first (sequential), then 
 ## Retention & Aggregation
 
 - **Raw metrics (5-min)** — Retained for 7 days (configurable via `METRICS_RAW_RETENTION_DAYS`)
-- **Hourly aggregates** — Kept indefinitely by default (configurable via `METRICS_AGGREGATED_RETENTION_DAYS`, default `-1` = no limit). Required for multi-year CSRD/ESRS E1 reporting.
+- **Hourly aggregates** — Kept indefinitely by default (configurable via `METRICS_AGGREGATED_RETENTION_DAYS`, default `-1` = no limit) for historical analysis.
 - **Compression** — Raw rows are compressed into hourly aggregates after 24 hours (`METRICS_COMPRESSION_AGE_HOURS`)
 - **Export** — CSV/JSON for any time range via `/api/v1/report/export`
 

@@ -5,6 +5,8 @@ description: GreenKube release history — changelogs, download links, and upgra
 
 import { Aside, Steps } from '@astrojs/starlight/components';
 
+This page preserves historical release notes. For interfaces and configuration supported by the current version, use the linked feature, CLI, API, and configuration guides.
+
 ## Current Release
 
 <div class="release-card">
@@ -18,7 +20,7 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 #### ✨ Added
 
 - **Wattnet electricity provider:** Grid carbon intensity is now provider-agnostic via a new `BaseElectricityProvider` abstraction. A `WattnetCollector` fetches 15-minute carbon footprint data for 52 European zones from the free, EU-funded [Wattnet](https://wattnet.eu) API. Select it with `config.electricityProvider: wattnet` plus `secrets.wattnetEmail` / `secrets.wattnetPassword`. See the [Wattnet guide](/guide/wattnet/).
-- **Wattnet health check & runtime config:** New `wattnet` service in `GET /api/v1/health/services`; credentials can be updated at runtime from the Settings page and are persisted to the Kubernetes Secret.
+- **Wattnet health check & runtime config:** New `wattnet` service in `GET /api/v1/health/services`; credentials can be updated at runtime from the Settings page, with best-effort persistence to the Kubernetes Secret when deployment permissions allow.
 - **Orphaned LoadBalancer recommendation (`ORPHANED_LOAD_BALANCER`):** A new `LoadBalancerCollector` flags `LoadBalancer` Services with no ready backing endpoints — the cloud load balancer keeps billing hourly while routing traffic to nothing. Projected savings prefer real OpenCost data, falling back to the new `config.recommendations.loadBalancerCostPerMonth` (default `$18.00`/month). The Helm chart `ClusterRole` now also grants read access to `endpoints`.
 - **Orphaned PersistentVolume recommendation (`ORPHANED_PERSISTENT_VOLUME`, #244):** A new `PVCollector` flags PersistentVolumes whose claim was deleted (`Released` phase or a dangling `claimRef`). Projected savings prefer real OpenCost data, falling back to the new `config.recommendations.storageCostPerGibMonth` (default `$0.10`/GiB-month). The `ClusterRole` now also grants read access to `persistentvolumes` and `persistentvolumeclaims`.
 - **Recommendations: optional ignore reason (#252):** Ignoring a recommendation from the dashboard no longer requires a reason.
@@ -133,7 +135,7 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 - **Recommendation deduplication by Deployment:** The recommender now groups pods by their parent Deployment (via regex on the standard ReplicaSet pod-name suffix) before generating rightsizing and off-peak recommendations — one consolidated recommendation per workload instead of one per pod replica.
 - **Annualised savings projections:** Each recommendation now exposes projected annual CO₂e savings (`annual_co2e_savings_grams`) and annual cost savings (`annual_cost_savings_usd`), surfaced in the API, frontend, and CLI output.
 - **Savings attribution system:** New `SavingsAttributor` service prorates projected annual CO₂e and cost savings to the actual observation window. Two new Prometheus gauges: `greenkube_co2e_savings_attributed_grams_total` and `greenkube_cost_savings_attributed_dollars_total`. DB migration `0008` applied for both engines.
-- **Report: Yearly and custom date ranges:** `GET /api/v1/report` now accepts `--years` (calendar year) and arbitrary `--start`/`--end` timestamps. Reports can additionally be grouped by namespace via `--group-by-namespace`.
+- **Report: Yearly and custom date ranges:** Report endpoints support calendar years through `years`, custom date ranges through `start` and `end`, and namespace grouping through `group_by=namespace`.
 - **Redesigned frontend report page:** The `/report` page rebuilt with configurable report parameters, date range pickers, and a simplified export flow.
 - **Grafana dashboard v2 (complete rebuild):** Dashboard restructured to 4 sections and 9 panels: *GreenKube Impact Command Center*, *CO₂e by Namespace*, *Regional Node Cleanliness*, and *Top Emitters & Spenders*. All PromQL expressions corrected for proper aggregation; namespace/cluster variables wired to every panel.
 - **New Prometheus metrics:** Recommendation counts by status, attributed savings gauges, node activity flag (`is_active`).
@@ -238,7 +240,7 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 #### 🐛 Fixed
 
 - **Aggregate queries spanning raw + hourly tables:** `aggregate_summary` and `aggregate_timeseries` now correctly query both `combined_metrics` and `hourly_metrics`, preventing gaps between live and archived data.
-- **Infinite aggregated retention by default:** `METRICS_AGGREGATED_RETENTION_DAYS` defaults to `-1` (infinite) for CSRD/ESRS E1 compliance. Set a positive integer to enforce a rolling window.
+- **Infinite aggregated retention by default:** `METRICS_AGGREGATED_RETENTION_DAYS` defaults to `-1` (infinite). Set a positive integer to enforce a rolling window.
 - **Frontend npm audit (HIGH):** Updated `svelte`, `vite`, `rollup`, `picomatch`, `devalue`, and `@sveltejs/kit` to resolve all HIGH-severity advisories.
 
 #### 📦 Downloads
@@ -561,9 +563,7 @@ The first public release of GreenKube, establishing the core carbon tracking cap
    helm repo update
    ```
 
-2. **No schema migrations:** v0.2.11 adds no new DB migrations — upgrade is a
-   drop-in replacement. The startup recommendation scan runs automatically on
-   first boot to populate the new `greenkube_top_recommendations` gauge.
+2. **No schema migrations:** v0.2.11 adds no new DB migrations — upgrade is a drop-in replacement. The startup recommendation scan runs automatically on first boot to populate the new `greenkube_top_recommendations` gauge.
 
 3. **Upgrade the release:**
    ```bash

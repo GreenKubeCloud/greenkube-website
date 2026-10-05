@@ -6,7 +6,7 @@ description: How GreenKube estimates energy consumption using cloud instance pow
 import { Aside } from '@astrojs/starlight/components';
 import EnergyEstimationDiagram from '../../../components/diagrams/EnergyEstimationDiagram.astro';
 
-GreenKube estimates per-pod energy consumption using a methodology based on the [Cloud Carbon Footprint (CCF)](https://www.cloudcarbonfootprint.org/) project, adapted for real-time Kubernetes workload monitoring.
+GreenKube estimates per-pod energy consumption from periodically collected Kubernetes metrics using a methodology based on the [Cloud Carbon Footprint (CCF)](https://www.cloudcarbonfootprint.org/) project.
 
 <Aside type="caution">
   **Current scope:** Energy and CO₂e estimation is currently based on **CPU usage only**. Memory, network I/O, disk I/O, and GPU are collected as metrics but are **not yet factored into the energy model**. GPU workloads are not supported. These dimensions are planned for a future release.
@@ -93,7 +93,7 @@ The carbon intensity of electricity varies by:
 - **Time of day** (renewable energy availability)
 - **Season** (heating/cooling demand)
 
-GreenKube uses the **Electricity Maps API** for real-time intensity data by default. Since v0.3.0, the free EU-funded **[Wattnet](https://wattnet.eu)** API can be selected instead (`config.electricityProvider: wattnet`) for 15-minute-resolution data across 52 European zones — see the [Wattnet guide](/guide/wattnet/). When neither provider's API is reachable, GreenKube follows a two-step fallback:
+GreenKube uses the **Electricity Maps API** for grid-intensity data by default and caches it on the configured collection schedule. The free EU-funded **[Wattnet](https://wattnet.eu)** API is also available as an alternative (`config.electricityProvider: wattnet`) for 15-minute-resolution data across 52 European zones — see the [Wattnet guide](/guide/wattnet/). When neither provider's API is reachable, GreenKube follows a two-step fallback:
 
 1. **Per-zone default** — A built-in table of average grid intensities per zone (e.g., France ≈ 85 gCO₂e/kWh, Germany ≈ 385 gCO₂e/kWh)
 2. **Global default** — If no per-zone default exists, the configurable global fallback is used (default: 500 gCO₂e/kWh)

@@ -50,6 +50,15 @@ scrape_configs:
       - targets: ['greenkube-api.greenkube.svc.cluster.local:8000']
 ```
 
+If API-key authentication is enabled, configure Prometheus with the same bearer token from a mounted secret file rather than embedding the key in the scrape configuration:
+
+```yaml
+# Add under the GreenKube scrape job in prometheus.yml
+authorization:
+  type: Bearer
+  credentials_file: /etc/prometheus/secrets/greenkube-api-key
+```
+
 ### Exposed Prometheus Metrics
 
 GreenKube exposes the following gauges:
@@ -93,11 +102,11 @@ GreenKube exposes the following gauges:
 | Metric | Description |
 |--------|-------------|
 | `greenkube_carbon_intensity_score` | Energy-weighted average grid intensity |
-| `greenkube_carbon_intensity_zone` | Real-time grid intensity per Electricity Maps zone |
+| `greenkube_carbon_intensity_zone` | Grid intensity per zone from the selected provider or configured fallback |
 
 ## Grafana Dashboard (v2)
 
-The dashboard was rebuilt in v0.2.10 and extended in v0.2.11 with the **Actionable Recommendations** row.
+The dashboard includes an **Actionable Recommendations** row.
 
 ### Import the Dashboard
 
@@ -133,7 +142,7 @@ Strategic overview of cluster sustainability and savings.
 - **Impact Ledger** — Timeline of attributed CO₂e and cost savings from applied recommendations
 - **Action Priorities** — Bar chart: top recommendation types by count
 
-#### 2. Actionable Recommendations *(added in v0.2.11)*
+#### 2. Actionable Recommendations
 Highest-impact active recommendations ranked by projected annual savings.
 
 - **Top Actionable Recommendations** — Horizontal bar cards showing rank, type, target resource, and projected annual CO₂e + cost savings. Toggle ranking metric between CO₂e and Cost via the `$recommendation_metric` variable; adjust the number of displayed items via `$recommendation_limit`.
@@ -166,7 +175,7 @@ Pod-level detail for targeted optimization.
 | `$recommendation_metric` | Ranking metric for Actionable Recommendations: CO₂e or Cost |
 | `$recommendation_limit` | Number of recommendations to show: 3, 5, or 10 |
 
-All panels respect `$cluster` and `$namespace` consistently. The `$node` and `$region` variables were removed in v0.2.11.
+All panels respect `$cluster` and `$namespace` consistently.
 
 ### PromQL Notes
 

@@ -3,17 +3,17 @@ title: Multi-Cloud Support
 description: Built-in profiles for AWS, GCP, Azure, OVH, and Scaleway with automatic region-to-carbon-zone mapping.
 ---
 
-GreenKube supports **all major cloud providers** out of the box, with automatic detection and region-specific carbon intensity mapping.
+GreenKube includes instance-power and region-to-carbon-zone data for AWS, GCP, Azure, OVHcloud, and Scaleway, plus configurable support for on-premises clusters. Detection and mapping coverage depends on the node metadata and the built-in mapping tables; unresolved zones use the configured fallback.
 
 ## Supported Providers
 
 | Provider | Regions | Auto-Detection |
 |---|---|---|
-| **Amazon Web Services** | All regions (us-east-1, eu-west-1, etc.) | ✅ Via node labels |
-| **Google Cloud Platform** | All regions (us-central1, europe-west1, etc.) | ✅ Via node labels |
-| **Microsoft Azure** | All regions (eastus, westeurope, etc.) | ✅ Via node labels |
-| **OVH Cloud** | All regions (GRA, SBG, BHS, etc.) | ✅ Via node metadata |
-| **Scaleway** | All regions (fr-par, nl-ams, pl-waw) | ✅ Via node metadata |
+| **Amazon Web Services** | Built-in mappings for supported regions | From node labels |
+| **Google Cloud Platform** | Built-in mappings for supported regions | From node labels |
+| **Microsoft Azure** | Built-in mappings for supported regions | From node labels |
+| **OVHcloud** | Provider-specific power estimates and zone mappings | From node metadata |
+| **Scaleway** | Provider-specific power estimates and zone mappings | From node metadata |
 | **On-premises** | Manual configuration | Via config |
 
 ## How It Works
@@ -24,14 +24,8 @@ GreenKube reads Kubernetes node labels to identify the cloud provider:
 - `topology.kubernetes.io/region` → Region identifier
 - Provider-specific labels as fallback
 
-### 2. Instance Profiles
-Each cloud provider instance type has a profile containing:
-- **CPU model** and core count
-- **TDP** (Thermal Design Power) in watts
-- **RAM** capacity
-- **GPU** (if applicable)
-
-These profiles are used for power estimation when Prometheus metrics aren't granular enough.
+### 2. Instance Power Profiles
+Power estimates use a profile with minimum and maximum watts per vCPU and the instance's vCPU count. They are not hardware power measurements; see [Energy Estimation](/architecture/energy-estimation/) for the model and its assumptions.
 
 ### 3. Region → Carbon Zone Mapping
 Each cloud region is mapped to an electricity grid zone:
@@ -45,7 +39,7 @@ OVH GRA           → FR              (France)
 Scaleway fr-par   → FR              (France)
 ```
 
-This mapping is crucial for accurate carbon tracking — a workload in `eu-west-1` (Ireland, ~300 gCO₂/kWh) has a very different footprint than one in `eu-north-1` (Sweden, ~20 gCO₂/kWh).
+These are examples from the built-in mapping tables; grid intensity changes over time and is sourced separately. Unmapped regions fall back to `config.defaultZone` when set, or to the configured global intensity.
 
 ## On-Premises or Unknown Providers
 
@@ -64,15 +58,17 @@ GreenKube uses the SPECpower linear model for power estimation regardless of pro
 
 ## PUE (Power Usage Effectiveness)
 
-GreenKube accounts for data center overhead using PUE ratios:
+GreenKube uses a provider-level PUE factor in its modeled operational-emissions calculation:
 
 | Provider | Typical PUE |
 |---|---|
-| AWS | 1.135 |
-| GCP | 1.10 |
+| AWS | 1.15 |
+| GCP | 1.09 |
 | Azure | 1.18 |
-| OVH | 1.15 |
-| On-premises (avg) | 1.5–2.0 |
+| OVHcloud | 1.26 |
+| Scaleway | 1.37 |
+
+For on-premises nodes, configure a PUE appropriate to your environment. The generic default profile uses PUE `1.3`.
 
 ```
 Total Power = IT Power × PUE

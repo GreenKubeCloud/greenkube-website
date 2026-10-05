@@ -1,9 +1,9 @@
 ---
-title: Real-time Dashboard
-description: A modern SvelteKit dashboard providing interactive charts, per-pod metrics, node inventory, and optimization recommendations.
+title: Dashboard
+description: A SvelteKit dashboard for periodically refreshed carbon and cost summaries, namespace and top-pod charts, node inventory, and optimization recommendations.
 ---
 
-GreenKube ships with a **modern SvelteKit dashboard** that provides a complete overview of your Kubernetes cluster's energy consumption, carbon emissions, and cost metrics — all in real time.
+GreenKube ships with a **SvelteKit dashboard** for viewing estimated workload energy and carbon, OpenCost allocations, cluster inventory, and recommendations. Data reflects collection and summary-refresh cycles; it is not a real-time telemetry stream.
 
 ## Overview
 
@@ -12,29 +12,23 @@ The dashboard is served directly from the GreenKube container alongside the REST
 ## Key Capabilities
 
 ### Cluster Overview
-- **Energy consumption** (Watts) per node and per namespace
-- **Carbon emissions** (gCO₂e) with breakdown by workload
-- **Cost estimates** from OpenCost integration
-- **Sustainability score** — composite 0–100 rating across 7 dimensions
-- **Recommendation summary** with estimated savings
+- **Energy** and estimated CO₂e totals for the selected time window
+- **Cost allocations** from OpenCost
+- **Namespace breakdown** and a ranked top-pods chart
+- **Recommendation summary** and savings information where estimates are available
 
 ### Per-Pod Metrics
-Drill down into individual pods to see:
-- CPU and memory utilization vs. requests/limits
-- Network I/O (bytes sent/received)
-- Disk I/O and storage usage
-- Pod restart count and uptime
+The home page includes a top-pods chart. Detailed per-pod resource and carbon metrics are available from the REST API and report exports, including CPU and memory use, network and disk counters, requests, and restart counts.
 
 ### Node Inventory
 A complete view of your cluster nodes including:
-- Hardware specs (CPU model, cores, RAM, TDP)
-- Cloud provider and region
-- Carbon zone mapping
-- Current power draw (estimated)
+- Instance type, CPU and memory capacity/allocatable values
+- Architecture, operating system, zone, and region
+- Hardware-profile details such as CPU name, TDP, or GPU count when available
 
 ### Report Builder
 The `/report` page lets you:
-- Configure time range (1 h → 1 y), namespace filter, and aggregation (hourly/daily/weekly/monthly/yearly)
+- Configure a relative, custom, or calendar-year range, a namespace filter, and aggregation (hourly/daily/weekly/monthly/yearly)
 - Preview totals (CO₂e, embodied CO₂e, energy, cost) before downloading
 - Export to CSV or JSON directly from the browser — no CLI or `kubectl exec` required
 
@@ -45,17 +39,16 @@ The `/report` page lets you:
 - **Runtime configuration:** Override Prometheus URL, OpenCost URL, Electricity Maps token, and Boavizta URL directly from the browser
 
 ### Interactive Charts
-- Time-series charts with configurable time ranges
-- Stacked area charts for namespace comparison
-- Trend analysis with daily/weekly/monthly grouping
-- Export chart data as CSV or JSON
+- Time-series charts respond to the selected dashboard window
+- Namespace and top-pod charts provide additional breakdowns
+- The Report page is the dashboard's CSV and JSON export interface
 
 ## Architecture
 
 The dashboard is a **SvelteKit SPA** (Single Page Application) that communicates with the GreenKube FastAPI backend:
 
 ```
-Browser → SvelteKit SPA → FastAPI REST API → PostgreSQL/SQLite/ES
+Browser → SvelteKit SPA → FastAPI REST API → PostgreSQL or SQLite
 ```
 
 All static assets are bundled and served by the same container, ensuring **zero additional infrastructure** is required.

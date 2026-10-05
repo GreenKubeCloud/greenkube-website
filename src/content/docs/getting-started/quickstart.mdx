@@ -116,26 +116,24 @@ kubectl delete pod greenkube-demo
 
    Get a free token at [electricitymaps.com](https://www.electricitymaps.com/).
 
-5. **Run your first report**
+5. **Export your first report**
 
    ```bash
-   GREENKUBE_POD=$(kubectl get pods -n greenkube \
-     -l app.kubernetes.io/name=greenkube,app.kubernetes.io/component=app \
-     -o jsonpath='{.items[0].metadata.name}')
-
-   kubectl exec -it $GREENKUBE_POD -n greenkube -- greenkube report --daily
-   kubectl exec -it $GREENKUBE_POD -n greenkube -- greenkube recommend
+   curl -O -J "http://localhost:8000/api/v1/report/export?format=csv&last=24h"
    ```
+
+   Keep the dashboard port-forward open in another terminal. You can also
+   export from the dashboard's **Report** page.
 
 </Steps>
 
 ## What You'll See
 
-- **Dashboard** — KPI cards showing total CO₂ emissions (Scope 2 + Scope 3), costs, energy consumption, sustainability score (0–100), and active pods. Time-series charts and namespace breakdown.
+- **Dashboard** — KPI cards for estimated operational and embodied CO₂e, cost, energy, and monitored workloads, with time-series charts and namespace breakdown.
 - **Nodes** — Cluster node inventory with CPU/memory capacity, hardware profiles, cloud provider info, and utilization.
-- **Recommendations** — Actionable suggestions with Active, Ignored, and Realized Savings views. Projected annual CO₂e and cost savings per recommendation, plus ignore/restore flows.
-- **Report** — Time-range picker, namespace filter, granularity options, and direct CSV/JSON download for CSRD/ESRS E1 reporting.
-- **Settings** — Service health overview (Prometheus, OpenCost, Electricity Maps or Wattnet, Boavizta), runtime config updates, K8s Secret persistence.
+- **Recommendations** — Suggestions with active, ignored, applied-savings, and pull-request views. The dashboard supports ignore/restore actions and eligible GitOps pull-request workflows.
+- **Report** — Time-range picker, namespace filter, granularity options, and CSV/JSON export for further analysis.
+- **Settings** — Service health overview (Prometheus, OpenCost, Electricity Maps or Wattnet, Boavizta), runtime config updates, and best-effort Kubernetes Secret persistence where available.
 
 ## Next Steps
 

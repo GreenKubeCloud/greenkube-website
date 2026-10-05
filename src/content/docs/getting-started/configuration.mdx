@@ -23,7 +23,7 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `config.db.type` | Storage backend: `postgres`, `sqlite`, `elasticsearch` | `postgres` |
+| `config.db.type` | Storage backend: `postgres` or `sqlite` | `postgres` |
 | `config.db.path` | SQLite file path (if type is `sqlite`) | `/data/greenkube_data.db` |
 | `config.db.schema` | PostgreSQL schema | `public` |
 
@@ -41,7 +41,7 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | Parameter | Description | Default |
 |-----------|-------------|---------|
 | `config.cloudProvider` | Cloud provider: `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem` | `unknown` |
-| `config.defaultZone` | Fallback carbon zone (ISO country code) | `FR` |
+| `config.defaultZone` | Optional fallback Electricity Maps zone; empty enables node-label discovery | `""` |
 | `config.defaultIntensity` | Default grid intensity (gCO₂e/kWh) when API unavailable | `500.0` |
 | `config.electricityProvider` | Grid intensity data provider: `electricity_maps` or `wattnet` (EU-only, free — see [Wattnet guide](/guide/wattnet/)) | `electricity_maps` |
 | `config.normalizationGranularity` | Intensity lookup granularity: `hour`, `day`, `none` | `hour` |
@@ -82,16 +82,19 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | `config.api.host` | API listen address | `0.0.0.0` |
 | `config.api.port` | API listen port | `8000` |
 | `config.corsOrigins` | Allowed CORS origins (comma-separated) | `*` |
-| `config.apiRateLimit` | Rate limit for API endpoints (slowapi format) | `60/minute` |
+| `config.apiRateLimit` | Per-client, per-route API rate limit (e.g. `60/minute`) | `60/minute` |
+| `config.environment` | Runtime environment; production requires API authentication | `development` |
+| `config.apiAuthMode` | Authentication mode; `api_key` is the supported mode | `api_key` |
+| `config.rootPath` | URL prefix when the API is served behind a reverse proxy subpath | `""` |
 
 ### Monitoring
 
 | Parameter | Description | Default |
 |-----------|-------------|---------|
-| `monitoring.serviceMonitor.enabled` | Create a ServiceMonitor for Prometheus Operator | `true` |
+| `monitoring.serviceMonitor.enabled` | Create a ServiceMonitor for Prometheus Operator | `false` |
 | `monitoring.serviceMonitor.namespace` | Namespace for the ServiceMonitor (must match Prometheus selector) | `monitoring` |
 | `monitoring.serviceMonitor.interval` | Scrape interval | `30s` |
-| `monitoring.networkPolicy.enabled` | Create a NetworkPolicy allowing Prometheus to reach GreenKube | `true` |
+| `monitoring.networkPolicy.enabled` | Create a NetworkPolicy allowing Prometheus to reach GreenKube | `false` |
 | `monitoring.networkPolicy.prometheusNamespace` | Namespace where Prometheus runs | `monitoring` |
 
 ### Recommendations
@@ -110,7 +113,18 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | `config.recommendations.nodeUtilizationThreshold` | Node utilization threshold | `0.2` |
 | `config.recommendations.storageCostPerGibMonth` | Fallback storage cost for orphaned PV savings when OpenCost has no data ($/GiB-month) | `0.10` |
 | `config.recommendations.loadBalancerCostPerMonth` | Fallback cost for orphaned LoadBalancer savings when OpenCost has no data ($/month) | `18.0` |
-| `config.recommendSystemNamespaces` | Include system namespaces in recommendations | `false` |
+| `config.recommendations.recommendSystemNamespaces` | Include system namespaces in recommendations | `false` |
+| `config.recommendations.vpaEnabled` | Read recommendation-mode VPAs; skip if the VPA CRD is absent | `true` |
+| `config.recommendations.karpenterEnabled` | Read Karpenter NodePools; skip if Karpenter CRDs are absent | `true` |
+| `config.recommendations.sourcePriority` | Recommendation source precedence, highest first | `vpa,karpenter,greenkube` |
+| `config.recommendations.ttlDays` | Days before an unapplied recommendation expires | `14` |
+| `config.recommendations.verification.windowHours` | Post-apply verification window | `72` |
+| `config.recommendations.verification.minSavingsRatio` | Minimum measured savings as a fraction of the projection | `0.5` |
+| `config.recommendations.verification.usageHeadroom` | Maximum p95 usage relative to the proposed request | `1.1` |
+| `config.recommendations.verification.lifecycleInterval` | Apply-detection, verification, and expiry job interval | `5m` |
+| `config.recommendations.git.provider` | Git provider for recommendation pull requests (`github`, `gitlab`, or `gitea`) | `github` |
+| `config.recommendations.git.apiBaseUrl` | Optional API URL override for a self-hosted Git provider | `""` |
+| `config.recommendations.git.defaultBranch` | Fallback base branch for generated pull requests | `main` |
 
 ### Secrets
 
@@ -120,11 +134,14 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | `secrets.wattnetEmail` | Wattnet account email (only when `config.electricityProvider` is `wattnet`) | `""` |
 | `secrets.wattnetPassword` | Wattnet account password (only when `config.electricityProvider` is `wattnet`) | `""` |
 | `secrets.boaviztaToken` | Boavizta API token | `""` |
+| `secrets.gitToken` | Git personal access token for recommendation pull requests; empty disables PR automation | `""` |
 | `secrets.apiKey` | Bearer token for API authentication (empty = no auth) | `""` |
 | `secrets.dbConnectionString` | PostgreSQL connection string (only if not using bundled postgres) | `""` |
 | `secrets.prometheus.username` | Prometheus basic auth username | `""` |
 | `secrets.prometheus.password` | Prometheus basic auth password | `""` |
 | `secrets.prometheus.bearerToken` | Prometheus bearer token | `""` |
+
+An empty API key permits open access in development. Set `secrets.apiKey` for protected API requests; production deployments require a non-empty key when `config.apiAuthMode` is `api_key`.
 
 ### PostgreSQL (Bundled)
 
@@ -137,7 +154,7 @@ GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all
 | `postgres.auth.password` | Database password (auto-generated if empty) | `""` |
 | `postgres.auth.database` | Database name | `greenkube` |
 | `postgres.persistence.enabled` | Enable persistent storage | `true` |
-| `postgres.persistence.size` | Storage size | `1Gi` |
+| `postgres.persistence.size` | Storage size | `10Gi` |
 
 ### Resources
 
@@ -154,19 +171,18 @@ When running outside Helm (Docker, source), use these environment variables:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `DB_TYPE` | `postgres`, `sqlite`, `elasticsearch` | `postgres` |
+| `DB_TYPE` | `postgres` or `sqlite` | `postgres` |
 | `DB_CONNECTION_STRING` | PostgreSQL connection URL | — |
-| `DB_PATH` | SQLite file path | `/data/greenkube_data.db` |
-| `ELASTICSEARCH_HOSTS` | Elasticsearch endpoint(s) | — |
+| `DB_PATH` | SQLite file path | `greenkube_data.db` |
 | `PROMETHEUS_URL` | Prometheus server URL | Auto-discovery |
-| `OPENCOST_URL` | OpenCost server URL | Auto-discovery |
+| `OPENCOST_API_URL` | OpenCost server URL | Auto-discovery |
 | `ELECTRICITY_MAPS_TOKEN` | Electricity Maps API token | — |
 | `ELECTRICITY_PROVIDER` | Grid intensity provider: `electricity_maps` or `wattnet` | `electricity_maps` |
 | `WATTNET_EMAIL` | Wattnet account email (required when `ELECTRICITY_PROVIDER=wattnet`) | — |
 | `WATTNET_PASSWORD` | Wattnet account password (required when `ELECTRICITY_PROVIDER=wattnet`) | — |
 | `BOAVIZTA_TOKEN` | Boavizta API token | — |
 | `CLOUD_PROVIDER` | `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem` | `unknown` |
-| `DEFAULT_ZONE` | Fallback carbon zone | `FR` |
+| `DEFAULT_ZONE` | Fallback carbon zone; `unknown` lets GreenKube use node metadata | `unknown` |
 | `DEFAULT_INTENSITY` | Fallback grid intensity (gCO₂e/kWh) | `500.0` |
 | `DEFAULT_EMBODIED_EMISSIONS_KG` | Fallback embodied emissions when Boavizta has no data | `100.0` |
 | `DEFAULT_HARDWARE_LIFESPAN_YEARS` | Cloud hardware lifespan assumption | `4` |
@@ -178,16 +194,36 @@ When running outside Helm (Docker, source), use these environment variables:
 | `LOG_FORMAT` | Log output format: `json` (structured, Loki-ready) or `console` (human-readable) | `json` |
 | `METRICS_LIST_MAX_RANGE_DAYS` | Maximum date range (days) allowed for `GET /api/v1/metrics` raw listing; requests wider than this return HTTP 400 | `30` |
 | `GREENKUBE_API_KEY` | Bearer token for API authentication (empty = no auth) | — |
-| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | `*` |
-| `RIGHTSIZING_CPU_THRESHOLD` | CPU rightsizing threshold | `0.5` |
+| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | `""` |
+| `API_AUTH_MODE` | API authentication mode; `api_key` is currently supported | `api_key` |
+| `API_RATE_LIMIT` | Per-client, per-route API rate limit (e.g. `60/minute`) | `60/minute` |
+| `ENVIRONMENT` | Runtime environment; production requires API authentication | `development` |
+| `ROOT_PATH` | URL prefix when served behind a reverse proxy subpath | `""` |
+| `TRUSTED_PROXY_IPS` | Comma-separated trusted proxy IPs/CIDRs for forwarded client addresses | `""` |
+| `RIGHTSIZING_CPU_THRESHOLD` | CPU rightsizing threshold | `0.3` |
+| `RIGHTSIZING_MEMORY_THRESHOLD` | Memory rightsizing threshold | `0.3` |
+| `RIGHTSIZING_HEADROOM` | Safety multiplier for proposed resource requests | `1.2` |
 | `ZOMBIE_COST_THRESHOLD` | Zombie detection cost ($) | `0.01` |
+| `ZOMBIE_ENERGY_THRESHOLD` | Zombie detection energy threshold (J) | `1000` |
+| `RECOMMENDATION_LOOKBACK_DAYS` | Metrics window used for recommendations | `7` |
 | `METRICS_RAW_RETENTION_DAYS` | Days to keep 5-min raw metrics | `7` |
 | `METRICS_AGGREGATED_RETENTION_DAYS` | Days to keep hourly aggregates (-1 = infinite) | `-1` |
 | `METRICS_COMPRESSION_AGE_HOURS` | Age after which raw metrics are compressed | `24` |
 | `DB_POOL_MIN_SIZE` | PostgreSQL min connection pool size | `1` |
 | `DB_POOL_MAX_SIZE` | PostgreSQL max connection pool size | `10` |
 | `DB_STATEMENT_TIMEOUT_MS` | PostgreSQL per-statement timeout (ms) | `30000` |
-| `TRUST_AUTH_PROXY` | Read the authenticated user from `X-Forwarded-User`/`X-Auth-Request-User` headers instead of GreenKube's own auth (for use behind Authentik, Caddy `forward_auth`, etc.) | `false` |
+| `RECOMMENDATION_VPA_ENABLED` | Enable the VPA recommendation source; it skips when the CRD is absent | `true` |
+| `RECOMMENDATION_KARPENTER_ENABLED` | Enable Karpenter NodePool recommendations; they skip when CRDs are absent | `true` |
+| `RECOMMENDATION_SOURCE_PRIORITY` | Source precedence for conflicting recommendations | `vpa,karpenter,greenkube` |
+| `RECOMMENDATION_TTL_DAYS` | Days before an unapplied recommendation expires | `14` |
+| `VERIFICATION_WINDOW_HOURS` | Post-apply verification window | `72` |
+| `VERIFICATION_MIN_SAVINGS_RATIO` | Minimum measured savings ratio to pass verification | `0.5` |
+| `VERIFICATION_USAGE_HEADROOM` | p95 usage headroom used by the verification health gate | `1.1` |
+| `RECOMMENDATION_LIFECYCLE_INTERVAL` | Apply-detection, verification, and expiry job interval | `5m` |
+| `GIT_PROVIDER` | Recommendation pull request provider: `github`, `gitlab`, or `gitea` | `github` |
+| `GIT_API_BASE_URL` | Optional API URL override for a self-hosted Git provider | — |
+| `GIT_DEFAULT_BRANCH` | Fallback base branch for pull requests | `main` |
+| `GIT_TOKEN` | Git personal access token; empty disables PR automation | — |
 | `STORAGE_COST_PER_GIB_MONTH` | Fallback cost for orphaned PV recommendations ($/GiB-month) | `0.10` |
 | `LOAD_BALANCER_COST_PER_MONTH` | Fallback cost for orphaned LoadBalancer recommendations ($/month) | `18.0` |
 

@@ -31,8 +31,8 @@ GreenKube combines **FinOps** (cost optimization) with **GreenOps** (carbon redu
   <a href="/features/real-time-dashboard/" class="feature-card-link">
     <div class="feature-card">
       <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-      <h3>Real-time Dashboard</h3>
-      <p>Modern SvelteKit dashboard with interactive charts, per-pod metrics, node inventory, and optimization recommendations — all served from a single container.</p>
+      <h3>Dashboard</h3>
+      <p>SvelteKit dashboard with periodically refreshed carbon and cost summaries, namespace and top-pod charts, node inventory, and optimization recommendations — all served from a single container.</p>
       <span class="card-arrow">Learn more →</span>
     </div>
   </a>
@@ -40,7 +40,7 @@ GreenKube combines **FinOps** (cost optimization) with **GreenOps** (carbon redu
     <div class="feature-card">
       <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
       <h3>Carbon Tracking</h3>
-      <p>Converts energy consumption to CO₂e emissions using real-time grid carbon intensity data from Electricity Maps, giving your team clear carbon visibility across all workloads.</p>
+      <p>Estimates CPU-based workload energy and CO₂e using available grid-intensity data and documented fallbacks; estimates are not a complete organizational inventory.</p>
       <span class="card-arrow">Learn more →</span>
     </div>
   </a>
@@ -79,7 +79,7 @@ GreenKube combines **FinOps** (cost optimization) with **GreenOps** (carbon redu
     <div class="feature-card compact">
       <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div>
       <h3>Smart Recommendations</h3>
-      <p>AI-powered analysis detects zombie pods, rightsizing opportunities, autoscaling candidates, and carbon-aware scheduling.</p>
+      <p>Workload analysis identifies idle pods, rightsizing opportunities, autoscaling candidates, and carbon-aware scheduling options.</p>
       <span class="card-arrow">Learn more →</span>
     </div>
   </a>
@@ -87,7 +87,7 @@ GreenKube combines **FinOps** (cost optimization) with **GreenOps** (carbon redu
     <div class="feature-card compact">
       <div class="feature-icon"><img src="/postgres-logo.png" alt="Storage" class="feature-logo" /></div>
       <h3>Flexible Storage</h3>
-      <p>Supports PostgreSQL (production), SQLite (development), and Elasticsearch (scale) — choose the backend that fits your needs.</p>
+      <p>Supports PostgreSQL for persistent deployments and SQLite for development or standalone use.</p>
       <span class="card-arrow">Learn more →</span>
     </div>
   </a>
@@ -95,7 +95,7 @@ GreenKube combines **FinOps** (cost optimization) with **GreenOps** (carbon redu
     <div class="feature-card compact">
       <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></div>
       <h3>Multi-Cloud Support</h3>
-      <p>Built-in profiles for AWS, GCP, Azure, OVH, and Scaleway with automatic region-to-carbon-zone mapping.</p>
+      <p>Built-in profiles and region-to-carbon-zone mappings for AWS, GCP, Azure, OVHcloud, and Scaleway, with coverage varying by region.</p>
       <span class="card-arrow">Learn more →</span>
     </div>
   </a>
@@ -111,7 +111,7 @@ GreenKube combines **FinOps** (cost optimization) with **GreenOps** (carbon redu
     <div class="feature-card compact">
       <div class="feature-icon"><img src="/fastapi-logo.svg" alt="REST API" class="feature-logo" /></div>
       <h3>REST API</h3>
-      <p>Full-featured FastAPI backend with OpenAPI docs, CORS support, and comprehensive endpoints for all metrics.</p>
+      <p>FastAPI API with OpenAPI documentation for metrics, recommendations, configuration, and reports.</p>
       <span class="card-arrow">Learn more →</span>
     </div>
   </a>
@@ -175,7 +175,7 @@ kubectl port-forward pod/greenkube-demo 9000:9000
 
 Then open [http://localhost:9000](http://localhost:9000) — you'll see **30 days** of realistic data for a fictional **GreenOptic** company — **22 pods** across **5 namespaces** with carbon emissions, costs, recommendations, and a pre-populated savings ledger tied to applied demo recommendations.
 
-<LinkCard title="Learn more about Demo Mode →" href="/getting-started/quickstart/#demo-mode" />
+<LinkCard title="Learn more about Demo Mode →" href="/getting-started/quickstart/#try-the-demo-first-no-cluster-required" />
 
 ---
 
@@ -203,10 +203,6 @@ GreenKube is an open-source, community-driven project. We welcome contributions 
 
 <div class="stats-grid">
   <div class="stat-card">
-    <div class="stat-value">v0.3.0</div>
-    <div class="stat-label">Latest Version</div>
-  </div>
-  <div class="stat-card">
     <div class="stat-value">5</div>
     <div class="stat-label">Cloud Providers</div>
   </div>
@@ -215,16 +211,12 @@ GreenKube is an open-source, community-driven project. We welcome contributions 
     <div class="stat-label">Unit Tests</div>
   </div>
   <div class="stat-card">
-    <div class="stat-value">3</div>
-    <div class="stat-label">Storage Backends</div>
+    <div class="stat-value">2</div>
+    <div class="stat-label">Supported Storage Backends</div>
   </div>
   <div class="stat-card">
     <div class="stat-value">Apache 2.0</div>
     <div class="stat-label">License</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-value">∞</div>
-    <div class="stat-label">kgCO₂ Saved</div>
   </div>
 </div>
 

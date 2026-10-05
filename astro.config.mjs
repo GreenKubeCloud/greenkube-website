@@ -21,7 +21,7 @@ export default defineConfig({
 			head: [
 				{
 					tag: 'meta',
-					attrs: { name: 'keywords', content: 'kubernetes carbon footprint, kubernetes CO2, FinOps, GreenOps, FinGreenOps, sustainability, CSRD, ESRS E1, cloud carbon monitoring, cloud cost optimization, open source, helm chart, prometheus, kubernetes monitoring, green kubernetes, carbon aware scheduling' },
+					attrs: { name: 'keywords', content: 'kubernetes carbon footprint, kubernetes CO2, FinOps, GreenOps, FinGreenOps, sustainability, cloud carbon monitoring, cloud cost optimization, open source, helm chart, prometheus, kubernetes monitoring, green kubernetes, carbon aware scheduling' },
 				},
 				{
 					tag: 'meta',
@@ -43,10 +43,6 @@ export default defineConfig({
 					tag: 'meta',
 					attrs: { name: 'twitter:image', content: 'https://greenkube.cloud/og-image.png' },
 				},
-				{
-					tag: 'link',
-					attrs: { rel: 'canonical', href: 'https://docs.greenkube.cloud' },
-				},
 				// LLM/AI crawler guidance (llms.txt convention)
 				{
 					tag: 'link',
@@ -63,19 +59,19 @@ export default defineConfig({
 						applicationCategory: 'DeveloperApplication',
 						applicationSubCategory: 'Monitoring, FinOps, GreenOps, Sustainability',
 						operatingSystem: 'Kubernetes',
-						description: 'Open-source FinGreenOps platform for Kubernetes. Measure CO₂e emissions, energy usage, and cloud costs per pod and namespace. CSRD/ESRS E1 reporting ready. Deploy in minutes with a single Helm command.',
+								description: 'Open-source FinGreenOps platform for Kubernetes. Estimate workload energy and CO₂e alongside cloud costs, and explore optimization opportunities. Deploy with Helm.',
 						url: 'https://docs.greenkube.cloud',
 						downloadUrl: 'https://hub.docker.com/r/greenkube/greenkube',
 						releaseNotes: 'https://docs.greenkube.cloud/releases/',
 						datePublished: '2026-08-30',
 						license: 'https://opensource.org/licenses/Apache-2.0',
-						keywords: 'kubernetes, carbon footprint, CO2, FinOps, GreenOps, CSRD, ESRS, sustainability, cloud cost, prometheus, helm',
+								keywords: 'kubernetes, carbon footprint, CO2, FinOps, GreenOps, sustainability, cloud cost, prometheus, helm',
 						featureList: [
-							'Real-time CO₂e and energy monitoring per pod and namespace',
-							'Cloud cost tracking via OpenCost integration',
+							'Near-real-time, CPU-based energy and CO₂e estimates per pod and namespace',
+							'Cloud cost allocation data via OpenCost integration',
 							'Sustainability Score (0–100) across 7 dimensions',
-							'Smart recommendations: zombie pods, rightsizing, autoscaling, orphaned volumes/load balancers',
-							'CSRD/ESRS E1 compliance reporting',
+							'Smart recommendations: zombie pods, rightsizing, autoscaling, orphaned volumes/load balancers, and carbon-aware scheduling candidates',
+									'Historical cost and estimated carbon exports',
 							'Multi-cloud support: AWS, GCP, Azure, OVH, Scaleway',
 							'Grafana dashboard and Prometheus metrics',
 							'Single Helm chart deployment',
@@ -112,7 +108,7 @@ export default defineConfig({
 				{
 					label: 'Features',
 					items: [
-						{ label: 'Real-time Dashboard', slug: 'features/real-time-dashboard' },
+						{ label: 'Dashboard', slug: 'features/real-time-dashboard' },
 						{ label: 'Carbon Tracking', slug: 'features/carbon-tracking' },
 						{ label: 'Cost Optimization', slug: 'features/cost-optimization' },
 						{ label: 'Easy Deployment', slug: 'features/easy-deployment' },

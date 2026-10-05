@@ -2,11 +2,11 @@
 
 [![Built with Astro Starlight](https://astro.badg.es/v2/built-with-starlight/tiny.svg)](https://starlight.astro.build)
 
-This is the source for the **[greenkube.cloud](https://greenkube.cloud)** documentation website, built with [Astro Starlight](https://starlight.astro.build).
+This is the source for the **[docs.greenkube.cloud](https://docs.greenkube.cloud)** documentation website, built with [Astro Starlight](https://starlight.astro.build).
 
 ## 🌿 About GreenKube
 
-GreenKube is an open-source **FinGreenOps platform** for Kubernetes. It measures, reports (CSRD/ESRS E1), and optimises carbon emissions and cloud costs — giving engineering teams full visibility into the environmental and financial impact of their infrastructure.
+GreenKube is an open-source **FinGreenOps platform** for Kubernetes. It estimates CPU-based workload energy use and associated carbon emissions, reports cost allocations, and suggests optimization opportunities — giving engineering teams visibility into the environmental and financial impact of their infrastructure. These are estimates, not a complete organizational emissions inventory or compliance report.
 
 ## 🚀 Project Structure
 

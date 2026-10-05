@@ -1,25 +1,27 @@
 ---
 title: Flexible Storage
-description: Supports PostgreSQL, SQLite, and Elasticsearch — choose the backend that fits your needs.
+description: Choose PostgreSQL for persistent deployments or SQLite for development and standalone use.
 ---
 
-GreenKube is **storage-agnostic** by design. The application core never depends on a specific storage implementation, letting you choose the backend that best fits your use case.
+GreenKube supports PostgreSQL and SQLite through shared repository interfaces. Select the backend in Helm values or with the corresponding environment variables.
 
 ## Supported Backends
 
-### PostgreSQL (Recommended for Production)
-- Full SQL support with time-series optimized queries
-- Included in the Helm chart as a StatefulSet
-- Persistent storage with configurable PVC
-- Supports connection pooling and replicas
+### PostgreSQL (Recommended)
+- Supported production backend
+- Bundled in the Helm chart as a StatefulSet, or use an external PostgreSQL database
+- Persistent storage and configurable connection pooling
 
 ```yaml
 # values.yaml
-greenkube:
-  dbType: "postgresql"
-postgresql:
+config:
+  db:
+    type: postgres
+postgres:
   enabled: true
-  storage: "10Gi"
+  persistence:
+    enabled: true
+    size: 10Gi
 ```
 
 ### SQLite (Development & Standalone)
@@ -29,48 +31,10 @@ postgresql:
 - **SCD2 node snapshots** — Slowly Changing Dimensions Type 2 tracking stores only changed node rows (`instance_type`, `vcpu`, `memory_gb`, `region`, `provider`, `zone`), avoiding write amplification on stable clusters
 
 ```yaml
-greenkube:
-  dbType: "sqlite"
-  sqlitePath: "/data/greenkube.db"
-```
-
-## Repository Pattern
-
-The storage agnosticism is achieved through the **Repository Pattern**:
-
-```
-┌──────────────────┐
-│   Business Logic │  ← Calls repository.save_metric()
-│   (Core)         │     Never knows about SQL/NoSQL
-└────────┬─────────┘
-         │ interface
-┌────────┴─────────┐
-│   Repository     │  ← Abstract interface
-│   Interface      │
-└────────┬─────────┘
-    ┌────┼────┐
-    ▼    ▼    ▼
-  PG  SQLite  ES     ← Concrete implementations
-```
-
-This means:
-- Switching backends requires **only a configuration change**
-- The business logic is **fully tested** without any real database
-- New backends can be added without touching the core
-
-## Factory Pattern
-
-Backend instantiation is handled by `core/factory.py`:
-
-```python
-# Simplified example
-def create_repository(config: Config) -> MetricRepository:
-    if config.db_type == "postgresql":
-        return PostgreSQLRepository(config.db_url)
-    elif config.db_type == "sqlite":
-        return SQLiteRepository(config.sqlite_path)
-    elif config.db_type == "elasticsearch":
-        return ElasticsearchRepository(config.es_url)
+config:
+  db:
+    type: sqlite
+    path: /data/greenkube_data.db
 ```
 
 ## Data Retention & Compression
@@ -83,7 +47,7 @@ GreenKube uses a configurable multi-tier retention strategy:
 | Hourly aggregates | Infinite | `METRICS_AGGREGATED_RETENTION_DAYS` (-1 = infinite) |
 | Compression threshold | 24 h | `METRICS_COMPRESSION_AGE_HOURS` |
 
-Raw metrics are automatically compressed to hourly aggregates after the threshold, keeping storage compact without losing historical visibility. Infinite aggregated retention is the default to support multi-year CSRD/ESRS E1 compliance.
+Raw metrics are automatically compressed to hourly aggregates after the threshold, keeping storage compact without losing historical visibility. Aggregates are retained indefinitely by default unless a limit is configured.
 
 ## Related
 

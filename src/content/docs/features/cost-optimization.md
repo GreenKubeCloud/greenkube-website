@@ -3,35 +3,27 @@ title: Cost Optimization
 description: Identify zombie pods, oversized workloads, and autoscaling opportunities with estimated savings in both cost and carbon.
 ---
 
-GreenKube combines **FinOps** and **GreenOps** into a single platform, helping you cut both cloud costs and carbon emissions simultaneously.
+GreenKube combines **FinOps** and **GreenOps** to help teams find workload optimization opportunities. Recommendations are guidance based on collected metrics; GreenKube does not apply changes automatically.
 
 ## Smart Detection
 
 GreenKube automatically analyzes your cluster to detect optimization opportunities:
 
 ### 🧟 Zombie Pods
-Pods that consume resources but do little to no actual work:
-- Near-zero CPU utilization over extended periods
-- No meaningful network traffic
-- Running but not serving requests
+Pods with cost above the configured threshold and energy consumption below the configured threshold.
 
 ### 📏 Rightsizing Opportunities
-Workloads where resource requests/limits are significantly mismatched with actual usage:
-- **Over-provisioned:** Requests far exceed actual usage → wasting money and energy
-- **Under-provisioned:** Actual usage near or above limits → risk of OOM kills and throttling
+Workloads where CPU or memory requests are substantially higher than observed use. The native analyzer suggests reductions; it does not diagnose workloads for increases as a rightsizing recommendation.
 
 ### ⚖️ Autoscaling Candidates
-Workloads that would benefit from Horizontal Pod Autoscaling (HPA):
-- High variance in resource usage over time
-- Periodic traffic patterns
-- Currently running at fixed replica count
+Workloads with variable CPU usage that have no existing HPA. GreenKube suggests considering autoscaling; it does not create or configure an HPA.
 
 ### 🌍 Carbon-Aware Scheduling
-Suggestions to shift non-urgent workloads to times or regions with lower carbon intensity.
+Recommendations identify workloads observed during higher-carbon periods as candidates for time-shifting. GreenKube does not move or reschedule workloads.
 
 ## Savings Estimation
 
-Each recommendation includes an estimated annual impact:
+Where the recommendation type supports it, GreenKube annualizes projected cost and/or CO₂e savings from the observation window. These are projections, not measured results; cleanup recommendations may only include a cost estimate.
 
 | Metric | Description |
 |--------|-------------|
@@ -41,7 +33,7 @@ Each recommendation includes an estimated annual impact:
 
 ## Recommendation Lifecycle & Savings Tracking
 
-Once you act on a recommendation, you can mark it as **applied** via the API. GreenKube then records realized savings and attributes them to actual collection periods through the savings ledger, driving Prometheus gauges:
+When you mark a recommendation as **applied** through the API, GreenKube records projected savings in its ledger. Post-apply verification can distinguish measured savings from prorated projections. The ledger drives Prometheus metrics including:
 
 - `greenkube_co2e_savings_attributed_grams_total`
 - `greenkube_cost_savings_attributed_dollars_total`
@@ -51,38 +43,22 @@ These appear in the Grafana **Impact Command Center** and on the dashboard summa
 ## How to Use
 
 ### Via Dashboard
-Navigate to the `/recommendations` page to see current active recommendations, ignored recommendations, realized savings, and estimated annual savings. The current UI exposes ignore and restore actions; applying a recommendation is currently done through the API.
-
-### Via CLI
-```bash
-greenkube recommend
-# CI/CD gate: exit 1 if recommendations found
-greenkube recommend --fail-on-recommendations
-```
+Navigate to the `/recommendations` page to see active and ignored recommendations and savings. The dashboard supports GitOps pull-request previews and creation for eligible rightsizing recommendations. Marking a recommendation applied is available through the API.
 
 ### Via API
 ```bash
-GET /api/v1/recommendations/active
-GET /api/v1/recommendations/applied
-GET /api/v1/recommendations/savings
-PATCH /api/v1/recommendations/{id}/apply
-DELETE /api/v1/recommendations/{id}/ignore
+curl "http://localhost:8000/api/v1/recommendations/active?refresh=true"
+curl -X PATCH "http://localhost:8000/api/v1/recommendations/42/apply"
 ```
 
-### Via API
-```bash
-curl http://localhost:8000/api/v1/recommendations
-```
+VPA and Karpenter are optional recommendation sources. Their Kubernetes CRDs are detected at runtime; absent CRDs are skipped. See the [Recommendations Guide](/guide/recommendations/) for details.
 
 ## Integration with OpenCost
 
-GreenKube integrates with [OpenCost](https://www.opencost.io/) to provide accurate cost data:
-- Actual cloud pricing (on-demand, spot, reserved)
-- Per-pod cost allocation
-- Namespace-level cost breakdown
+GreenKube reads cost allocation data from [OpenCost](https://www.opencost.io/), including pod-level data where available. Coverage and pricing depend on OpenCost's configuration and the data it exposes.
 
 ## Related
 
 - [Recommendations Guide](/guide/recommendations/) — Detailed usage
-- [Smart Recommendations Feature](/features/smart-recommendations/) — AI analysis details
+- [Smart Recommendations Feature](/features/smart-recommendations/) — Recommendation methods and thresholds
 - [Dashboard](/features/real-time-dashboard/) — Visual recommendation overview

@@ -15,13 +15,14 @@ http://localhost:8000/api/v1
 
 ## Authentication
 
-The API supports **optional bearer-token authentication** via the `GREENKUBE_API_KEY` environment variable. When set, all API requests must include the token in the `Authorization` header:
+The API supports bearer-token authentication via `GREENKUBE_API_KEY` (Helm value: `secrets.apiKey`). When configured, send `Authorization: Bearer ${GREENKUBE_API_KEY}` on protected API requests. In development, an empty key leaves protected routes open; production requires a non-empty key.
 
 ```bash
-curl -H "Authorization: Bearer YOUR_API_KEY" http://localhost:8000/api/v1/metrics
+GREENKUBE_API_KEY="your-api-key"
+curl -H "Authorization: Bearer ${GREENKUBE_API_KEY}" http://localhost:8000/api/v1/metrics
 ```
 
-When no API key is configured, the API is open (designed for cluster-internal use).
+The health, Swagger UI, and OpenAPI schema endpoints remain public. Do not expose an unauthenticated development instance to untrusted networks.
 
 ## Endpoints
 
@@ -29,12 +30,14 @@ When no API key is configured, the API is open (designed for cluster-internal us
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/health` | GET | Liveness check — returns `{"status":"ok","version":"0.3.0"}` |
+| `/health` | GET | Liveness check |
 | `/version` | GET | Version info |
 | `/config` | GET | Non-sensitive configuration |
 | `/health/services` | GET | Aggregated health status for all data sources (Prometheus, OpenCost, Electricity Maps, Wattnet, Boavizta, K8s). Non-selected electricity providers are reported as `inactive` and excluded from the overall status. |
 | `/health/services/{name}` | GET | Single service health — add `?force=true` to bypass 30s cache |
-| `/config/services` | POST | Update service URLs/tokens at runtime and persist to K8s Secret |
+| `/config/services` | POST | Apply service URL/token updates in memory; best-effort persistence to a Kubernetes Secret |
+| `/namespaces` | GET | List namespaces with collected metrics |
+| `/nodes` | GET | List cluster nodes |
 
 ### Metrics
 
@@ -59,7 +62,7 @@ curl "http://localhost:8000/api/v1/metrics?namespace=production&last=24h"
 
 ```json
 {
-  "metrics": [
+  "items": [
     {
       "pod_name": "api-deployment-7b5f8c9d6-x2k4p",
       "namespace": "production",
@@ -77,7 +80,10 @@ curl "http://localhost:8000/api/v1/metrics?namespace=production&last=24h"
       "estimation_reasons": []
     }
   ],
-  "total": 42
+  "total": 42,
+  "offset": 0,
+  "limit": 1000,
+  "next_cursor": null
 }
 ```
 
@@ -86,6 +92,7 @@ curl "http://localhost:8000/api/v1/metrics?namespace=production&last=24h"
 | Endpoint | Method | Description |
 |----------|--------|-------------|
 | `/report/summary` | GET | Preview: row count, totals before downloading |
+| `/report/years` | GET | List calendar years available in stored metrics |
 | `/report/export` | GET | Downloadable file (CSV or JSON) with correct `Content-Disposition` headers |
 
 **Report parameters:**
@@ -93,27 +100,34 @@ curl "http://localhost:8000/api/v1/metrics?namespace=production&last=24h"
 - `last` — relative window (e.g. `7d`, `ytd`)
 - `start` / `end` — ISO 8601 date range
 - `years` — calendar year, e.g. `?years=2024&years=2025`
-- `granularity` — `hourly`, `daily`, `weekly`, `monthly`, `yearly`
+- `aggregate` — set to `true` to aggregate exported rows
+- `granularity` — when aggregating: `hourly`, `daily`, `weekly`, `monthly`, `yearly`
 - `namespace` — filter by namespace
-- `group_by_namespace` — return namespace breakdown
+- `group_by` — when aggregating: `pod` or `namespace`
 
 ```bash
-# CSRD annual report
-curl -O -J "http://localhost:8000/api/v1/report/export?format=csv&years=2024&granularity=monthly"
+# Annual estimated cost and carbon export
+curl -O -J "http://localhost:8000/api/v1/report/export?format=csv&years=2024&aggregate=true&granularity=monthly"
 ```
 
 ### Recommendations
 
 | Endpoint | Method | Description |
 |----------|--------|-------------|
-| `/recommendations` | GET | Generate live recommendations (runs the recommender engine) |
+| `/recommendations` | GET | Read active recommendations; generates records when none exist. `?refresh=true` schedules a refresh |
 | `/recommendations/active` | GET | Persisted active recommendations — add `?refresh=true` to re-run engine |
 | `/recommendations/top` | GET | Top-N ranked active recommendations by projected annual savings — `?limit=5&metric=co2` (or `cost`), `?refresh=true` |
-| `/recommendations/ignored` | GET | All permanently ignored recommendations |
+| `/recommendations/ignored` | GET | Recommendations currently marked ignored |
 | `/recommendations/applied` | GET | Applied recommendations ordered by most recent application |
 | `/recommendations/history` | GET | Historical records with optional time filtering |
 | `/recommendations/savings` | GET | Aggregate savings by recommendation type |
-| `/recommendations/{id}/apply` | PATCH | Mark applied with optional realized savings |
+| `/recommendations/{id}` | GET | Recommendation detail with evidence and assessment |
+| `/recommendations/{id}/events` | GET | Recommendation lifecycle audit trail |
+| `/recommendations/{id}/apply-pr` | POST | Preview a rightsizing patch or enqueue a Git pull request |
+| `/recommendations/{id}/pull-requests` | GET | Pull-request attempts for a recommendation |
+| `/recommendations/{id}/apply-pr/eligibility` | GET | Check GitOps pull-request eligibility |
+| `/automation/status` | GET | Git PR automation readiness |
+| `/recommendations/{id}/apply` | PATCH | Mark applied with optional actual resource values |
 | `/recommendations/{id}/ignore` | PATCH | Permanently ignore a recommendation |
 | `/recommendations/{id}/ignore` | DELETE | Restore an ignored recommendation to active |
 
@@ -156,38 +170,13 @@ This triggers a savings ledger entry and updates the `greenkube_co2e_savings_att
 curl -X DELETE "http://localhost:8000/api/v1/recommendations/42/ignore"
 ```
 
-### Sustainability Score
-
-| Endpoint | Method | Description |
-|----------|--------|-------------|
-| `/sustainability` | GET | Compute and return the 7-dimension 0–100 score |
-
-```bash
-curl "http://localhost:8000/api/v1/sustainability"
-```
-
-```json
-{
-  "overall_score": 72.4,
-  "dimension_scores": {
-    "resource_efficiency": 68.0,
-    "carbon_efficiency": 81.0,
-    "waste_elimination": 92.0,
-    "node_efficiency": 65.0,
-    "scaling_practices": 70.0,
-    "carbon_aware_scheduling": 55.0,
-    "stability": 95.0
-  }
-}
-```
-
 ### Prometheus Metrics
 
 | Endpoint | Format | Description |
 |----------|--------|-------------|
 | `/prometheus/metrics` | Prometheus text | Scraped by Prometheus |
 
-See the [Grafana guide](/guide/grafana/) for the full list of exposed gauges.
+The sustainability score is exposed through Prometheus metrics; see the [Grafana guide](/guide/grafana/).
 
 ## Error Handling
 

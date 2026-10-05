@@ -5,17 +5,17 @@ description: Understand GreenKube's 11 optimization recommendation types, persis
 
 import { Card, CardGrid } from '@astrojs/starlight/components';
 
-GreenKube analyzes your cluster metrics to generate actionable recommendations that reduce both **costs** and **carbon emissions**.
+GreenKube analyzes cluster metrics and Kubernetes resources to surface optimization opportunities. Recommendations are guidance; GreenKube does not directly change workloads or delete resources.
 
 ## Recommendation Engine
 
-The recommendation engine reads stored metrics over a configurable lookback window controlled by `RECOMMENDATION_LOOKBACK_DAYS` (default: `7` days) and applies threshold-based detection algorithms. Results are deduplicated at the **Deployment level** — pods belonging to the same Deployment are grouped so you see one recommendation per workload, not one per replica.
+The recommendation engine reads stored metrics over a configurable lookback window controlled by `RECOMMENDATION_LOOKBACK_DAYS` (default: `7` days) and applies threshold-based detection algorithms. Workload-scoped recommendations such as rightsizing are deduplicated at the **Deployment level**, so replicas are grouped where that analyzer supports it. Optional VPA and Karpenter sources can contribute recommendations when enabled and their CRDs are installed.
 
 Each recommendation includes:
 - **Type** — one of 11 detection categories
 - **Priority** — `high`, `medium`, or `low`
 - **Scope** — `pod`, `workload`, `namespace`, `node`, or `cluster`
-- **Projected annual savings** — `potential_savings_co2e_grams` and `potential_savings_cost`
+- **Projected annual savings** — estimates where supported by the recommendation type; these are not measured outcomes
 
 When the API or startup scan runs, metrics from namespaces that no longer exist in Kubernetes are filtered out when the cluster API is reachable. That lets GreenKube reconcile old active recommendations as `stale` instead of regenerating them forever.
 
@@ -188,15 +188,19 @@ active -> applied
   |
   +-> ignored -> active
   |
-  +-> stale
+  +-> stale / expired
+  |
+  +-> pr_open
 ```
 
 | Status | Meaning |
 |--------|---------|
 | `active` | Current valid recommendation, shown in active lists, top recommendations, Prometheus active gauges, Grafana cards, and the frontend Active tab |
-| `applied` | Recommendation explicitly implemented through the API; excluded from active lists and included in realized savings |
-| `ignored` | Recommendation intentionally hidden with an audit reason; preserved for review and can be restored |
+| `applied` | Marked as implemented through the API or workflow; excluded from active lists and included in savings tracking |
+| `ignored` | Recommendation intentionally hidden with an optional audit reason; preserved for review and can be restored |
 | `stale` | Previously active recommendation that no longer appears in the latest generated set |
+| `expired` | Recommendation that passed its configured lifetime without being applied |
+| `pr_open` | A Git pull request for the recommendation has been opened; it is not yet verified as applied |
 
 ### Managing Lifecycle in the Dashboard
 
@@ -204,9 +208,10 @@ On the `/recommendations` page:
 - **Active tab** — current actionable recommendations with type filter and annual savings summary
 - **Ignored tab** — previously ignored recommendations with restore action
 - **Realized Savings tab** — applied recommendations and cumulative realized savings
+- **Pull Requests tab** — pending and open pull requests created by the GitOps workflow
 - **Ignore flow** — reason is optional; restore is available from the Ignored tab
 
-The current frontend does **not** expose an Apply button yet, even though the API supports applying recommendations.
+Eligible workload CPU and memory rightsizing recommendations can be previewed and submitted through the GitOps pull-request workflow when a supported provider and repository binding are configured. This creates a pull request; it does not directly update the cluster.
 
 ### Managing Lifecycle via API
 
@@ -214,7 +219,7 @@ The current frontend does **not** expose an Apply button yet, even though the AP
 # Mark a recommendation as applied
 PATCH /api/v1/recommendations/{id}/apply
 
-# Permanently ignore with a reason
+# Ignore with an optional reason
 PATCH /api/v1/recommendations/{id}/ignore
 
 # Restore an ignored recommendation
@@ -235,7 +240,7 @@ GET /api/v1/recommendations/savings
 
 ## Savings Ledger
 
-When a recommendation is marked **applied**, GreenKube estimates realized annual savings on the recommendation row, then the `SavingsAttributor` converts those annual values into per-period ledger rows. Over time this accumulates into:
+When a recommendation is marked **applied**, GreenKube records its savings projection and starts post-apply verification. The `SavingsAttributor` places prorated projections in the per-period ledger; verification can record measured savings separately after enough post-apply data is collected.
 
 - `greenkube_co2e_savings_attributed_grams_total` — cumulative CO₂e savings (Prometheus gauge)
 - `greenkube_cost_savings_attributed_dollars_total` — cumulative cost savings (Prometheus gauge)
@@ -266,24 +271,7 @@ This API powers:
 
 ## Using Recommendations
 
-### CLI
-
-```bash
-# Get all recommendations (reads from database)
-greenkube recommend
-
-# Filter by namespace
-greenkube recommend -n production
-
-# Longer lookback window
-greenkube recommend --last 7d
-
-# Live collection (re-runs the full collection pipeline)
-greenkube recommend --live
-
-# CI/CD gate: exit 1 if any recommendations exist
-greenkube recommend --fail-on-recommendations
-```
+Recommendations are available from the web dashboard and REST API. The `greenkube` CLI does not expose a `recommend` command; see the [CLI reference](/guide/cli/).
 
 ### API
 
@@ -302,6 +290,16 @@ GET /api/v1/recommendations/top
 
 # History
 GET /api/v1/recommendations/history
+```
+
+The GitOps pull-request endpoints are available for supported rightsizing recommendations when Git provider configuration and repository discovery are set up:
+
+```bash
+# Preview a manifest diff without changing Git
+POST /api/v1/recommendations/{id}/apply-pr
+# Check eligibility and list resulting PR attempts
+GET /api/v1/recommendations/{id}/apply-pr/eligibility
+GET /api/v1/recommendations/{id}/pull-requests
 ```
 
 ## Tuning Thresholds
@@ -325,7 +323,7 @@ config:
     offPeakMinIdleHours: 4            # 4h idle to suggest off-peak scaling
     minCpuMillicores: 10              # Floor for generated CPU requests
     minMemoryBytes: 16777216          # Floor for generated memory requests
-    applyTolerance: 0.25              # Reserved for future auto-apply detection
+    applyTolerance: 0.25              # Tolerance used when detecting applied resource changes
     storageCostPerGibMonth: 0.10      # Fallback cost for orphaned PV savings ($/GiB-month)
     loadBalancerCostPerMonth: 18.0    # Fallback cost for orphaned LoadBalancer savings ($/month)
 ```

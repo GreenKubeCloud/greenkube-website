@@ -35,8 +35,8 @@ That's it. GreenKube will:
 | **Services** | API service + PostgreSQL service |
 | **PVC** | Persistent volume for PostgreSQL data |
 | **Post-Install Hook** | Database schema initialization |
-| **ServiceMonitor** | Automatic Prometheus scraping (kube-prometheus-stack) |
-| **NetworkPolicy** | Allows Prometheus to reach GreenKube API |
+| **ServiceMonitor** | Optional Prometheus Operator scraping resource (`monitoring.serviceMonitor.enabled`) |
+| **NetworkPolicy** | Optional policy allowing Prometheus to reach the GreenKube API (`monitoring.networkPolicy.enabled`) |
 
 ### Auto-Discovery
 
@@ -57,14 +57,14 @@ GreenKube automatically detects:
 
 ## Security
 
-As of v0.2.8, the Helm chart ships with comprehensive security hardening enabled by default:
+The Helm chart includes security hardening by default:
 
 - **Non-root containers** — `runAsNonRoot: true`, `runAsUser/Group: 10001`
 - **Read-only root filesystem** — `readOnlyRootFilesystem: true` on all containers; `/tmp` directories served by bounded `emptyDir` volumes
 - **Dropped capabilities** — `capabilities.drop: [ALL]`, `allowPrivilegeEscalation: false`
 - **Seccomp** — `seccompProfile.type: RuntimeDefault` on every container
 - **SCRAM-SHA-256** — PostgreSQL enforces the stronger SCRAM-SHA-256 password protocol
-- **Least-privilege RBAC** — ClusterRole grants only the minimum required permissions (no `secrets` access)
+- **Least-privilege RBAC** — the ClusterRole avoids Secret access; a namespaced Role grants the app `get`/`patch` access only to its GreenKube Secret for best-effort runtime configuration persistence
 - **API security headers** — 7 OWASP-recommended HTTP response headers on every response
 - **Automated CVE scanning** — Weekly Trivy scans (image, IaC, deps) with results in GitHub Security
 
@@ -89,7 +89,7 @@ postgresql:
   enabled: true
   persistence:
     enabled: true
-    size: 5Gi
+    size: 10Gi
 ```
 
 Every parameter can also be set via environment variables (12-Factor App compliant).

@@ -1,41 +1,42 @@
 # GreenKube
 
 > GreenKube is an open-source FinGreenOps platform for Kubernetes.
-> It measures, reports (CSRD/ESRS E1 compliant), and optimizes the carbon footprint and cloud costs of Kubernetes workloads.
+> It estimates workload energy use and associated carbon emissions and costs, then suggests Kubernetes optimization opportunities.
 
 ## What is GreenKube?
 
-GreenKube is a self-hosted, open-source tool designed for DevOps, SRE, FinOps, and sustainability teams. It provides real-time visibility into the energy consumption, CO₂e emissions, and cloud costs of every pod and namespace in a Kubernetes cluster. It combines FinOps (cost optimization) with GreenOps (carbon reduction) into a single platform with actionnable recommendations — without requiring expensive SaaS subscriptions.
+GreenKube is a self-hosted, open-source tool for DevOps, SRE, FinOps, and sustainability teams. It estimates CPU-based workload energy use and associated CO₂e, reports cost allocations from OpenCost, and provides optimization recommendations. Carbon and cost values are estimates subject to data coverage and model assumptions; they are not a complete organizational inventory or compliance report.
 
 - **License:** Apache 2.0
-- **Language:** Python 3.11+
+- **Language:** Python 3.13+
 - **Deployment:** Helm chart (single command install)
 - **GitHub:** https://github.com/GreenKubeCloud/GreenKube
 - **Docker Hub:** https://hub.docker.com/r/greenkube/greenkube
 - **Artifact Hub:** https://artifacthub.io/packages/helm/greenkube/greenkube
 - **Documentation:** https://docs.greenkube.cloud/
+- **Documentation:** https://docs.greenkube.cloud/
 - **Helm Repository:** https://GreenKubeCloud.github.io/GreenKube
 
 ## Key Capabilities
 
-- **Carbon Tracking:** Converts CPU energy consumption to CO₂e using real-time grid carbon intensity (via Electricity Maps API). Supports AWS, GCP, Azure, OVH, Scaleway, and on-premises clusters.
+- **Carbon Tracking:** Converts CPU-based modeled energy consumption to CO₂e using Electricity Maps or Wattnet grid-intensity data. Wattnet is available as an alternative for supported European zones.
 - **Energy Estimation:** Pod-level energy consumption (Joules) based on CPU usage and cloud instance power profiles.
-- **Cost Monitoring:** Integrates with OpenCost for accurate cost-per-pod and cost-per-namespace breakdown.
+- **Cost Monitoring:** Integrates with OpenCost for cost allocations by pod and namespace when cost data is available.
 - **Sustainability Score:** Composite 0–100 cluster health score across 7 dimensions: resource efficiency, carbon efficiency, waste, node efficiency, scaling, carbon-aware scheduling, and stability.
-- **Smart Recommendations:** Detects zombie pods, oversized workloads, autoscaling candidates, and carbon-aware scheduling opportunities with estimated savings.
-- **Historical Reporting:** Daily, monthly, yearly analysis. Export to CSV or JSON. CSRD/ESRS E1 ready.
-- **Real-time Dashboard:** Built-in SvelteKit SPA with ECharts, per-pod metrics table, node inventory, and recommendations.
+- **Smart Recommendations:** Includes native workload recommendations plus optional VPA and Karpenter sources; source CRDs are skipped cleanly when absent.
+- **Historical Reporting:** Compare time windows and export estimated metrics to CSV or JSON.
+- **Dashboard:** Built-in SvelteKit SPA with periodically refreshed summaries, time-series and namespace/top-pod charts, node inventory, and recommendations.
 - **REST API:** FastAPI backend with OpenAPI docs at `/api/v1/docs`.
 - **Prometheus Integration:** Exposes Prometheus gauges (`greenkube_pod_co2e_grams`, `greenkube_pod_energy_joules`, `greenkube_pod_cost_dollars`, `greenkube_sustainability_score`, etc.).
 - **Grafana Dashboard:** Pre-built JSON dashboard, import in one click.
-- **Flexible Storage:** PostgreSQL (production), SQLite (dev/standalone), Elasticsearch (scale).
+- **Flexible Storage:** PostgreSQL or SQLite.
 - **Auto-Discovery:** Automatically discovers in-cluster Prometheus and OpenCost — zero manual configuration in most cases.
 
 ## Who is it for?
 
 - **DevOps / SRE** teams wanting carbon and cost visibility on their Kubernetes clusters
 - **FinOps** practitioners looking for a free, open-source alternative to commercial tools
-- **Sustainability / ESG** teams needing CSRD/ESRS E1 Scope 2 reporting for IT infrastructure
+- **Sustainability** teams exploring workload-level carbon estimates with documented assumptions
 - **CTOs and Engineering Managers** at tech SMEs wanting to reduce cloud spending and carbon emissions simultaneously
 - **Platform Engineers** building internal developer platforms with sustainability observability
 
@@ -50,35 +51,22 @@ helm install greenkube greenkube/greenkube -n greenkube --create-namespace
 ## Screenshots
 
 - Dashboard: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-dashboard.png
-- Per-pod metrics table: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-metrics.png
 - Node inventory: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-nodes.png
 - Optimization recommendations: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-recommendations.png
 - Report builder & export: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-report.png
 - Settings & service health: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-settings.png
-
-## Comparison with Alternatives
-
-| Feature | GreenKube | Kepler | Scaphandre | Cloud Carbon Footprint |
-|---|---|---|---|---|
-| Kubernetes native | ✅ | ✅ | ✅ | ✅ |
-| Pod-level CO₂e | ✅ | ✅ | ✅ | ❌ |
-| Cost integration (OpenCost) | ✅ | ❌ | ❌ | ❌ |
-| Built-in dashboard | ✅ | ❌ | ❌ | ✅ |
-| CSRD/ESRS reporting | ✅ | ❌ | ❌ | ❌ |
-| Recommendations engine | ✅ | ❌ | ❌ | ❌ |
-| Sustainability Score | ✅ | ❌ | ❌ | ❌ |
-| Single Helm install | ✅ | ✅ | ❌ | ❌ |
-| Open source | ✅ | ✅ | ✅ | ✅ |
-| Self-hosted | ✅ | ✅ | ✅ | ✅ |
 
 ## Documentation Sections
 
 - [Quickstart](https://docs.greenkube.cloud/getting-started/quickstart/)
 - [Installation](https://docs.greenkube.cloud/getting-started/installation/)
 - [Configuration](https://docs.greenkube.cloud/getting-started/configuration/)
-- [Architecture](https://docs.greenkube.cloud/architecture/)
+- [Architecture](https://docs.greenkube.cloud/architecture/overview/)
 - [Features: Carbon Tracking](https://docs.greenkube.cloud/features/carbon-tracking/)
 - [Features: Cost Optimization](https://docs.greenkube.cloud/features/cost-optimization/)
 - [Features: Dashboard](https://docs.greenkube.cloud/features/real-time-dashboard/)
 - [Features: Recommendations](https://docs.greenkube.cloud/features/smart-recommendations/)
+- [CLI Reference](https://docs.greenkube.cloud/guide/cli/)
+- [REST API Reference](https://docs.greenkube.cloud/guide/api/)
+- [Wattnet Guide](https://docs.greenkube.cloud/guide/wattnet/)
 - [Changelog / Releases](https://docs.greenkube.cloud/releases/)

@@ -1,6 +1,6 @@
 ---
 title: Storage Backends
-description: GreenKube supports PostgreSQL, SQLite, and Elasticsearch as storage backends. Learn how each works and when to use it.
+description: GreenKube supports PostgreSQL and SQLite as storage backends. Learn how each works and when to use it.
 ---
 
 import { Tabs, TabItem, Aside } from '@astrojs/starlight/components';
@@ -12,14 +12,12 @@ GreenKube's repository pattern allows you to choose the storage backend that bes
 
 ## Backend Comparison
 
-| Feature | PostgreSQL | SQLite | Elasticsearch |
-|---------|-----------|--------|---------------|
-| **Use Case** | Production | Development / Demo | Large-scale analytics (not production-ready) |
-| **Persistence** | ✅ StatefulSet | ⚠️ Lost on pod restart* | ✅ External cluster |
-| **Performance** | High | Moderate | Very High |
-| **Setup** | Helm chart included | Zero config | External cluster needed |
-| **Scalability** | Good (single node) | Limited | Excellent (sharded) |
-| **Driver** | `asyncpg` (native async) | `aiosqlite` (async wrapper) | `elasticsearch` (async) |
+| Feature | PostgreSQL | SQLite |
+|---------|-----------|--------|
+| **Use Case** | Production | Development / standalone |
+| **Persistence** | Bundled StatefulSet or external database | File; use a PVC for persistence in Kubernetes |
+| **Setup** | Bundled in the Helm chart or external | No separate database service |
+| **Driver** | `asyncpg` (native async) | `aiosqlite` (async wrapper) |
 
 *SQLite can persist data with a PersistentVolumeClaim.
 
@@ -58,7 +56,7 @@ secrets:
 - Automatic schema creation and migration
 - Connection pooling via `asyncpg`
 - Transactional integrity
-- Bundled PostgreSQL **18** StatefulSet via Helm (upgraded from 17 in v0.2.8 with SCRAM-SHA-256)
+- Bundled PostgreSQL **18** StatefulSet via Helm with SCRAM-SHA-256 authentication
 - Support for external PostgreSQL instances
 
 </TabItem>
@@ -88,37 +86,6 @@ config:
 <Aside type="caution">
   Without persistence, SQLite data is lost when the pod restarts. Always enable persistence for non-ephemeral deployments.
 </Aside>
-
-</TabItem>
-<TabItem label="Elasticsearch">
-
-### Elasticsearch (Scale)
-
-Optimized for large clusters with millions of metrics.
-
-```yaml
-# values.yaml
-config:
-  db:
-    type: elasticsearch
-
-elasticsearch:
-  hosts: http://elasticsearch-master:9200
-  indexName: carbon_intensity
-  verifyCerts: true
-
-secrets:
-  elasticsearch:
-    user: elastic
-    password: your_password
-```
-
-**Features:**
-- Time-series optimized indices
-- Distributed storage with sharding
-- Advanced aggregation queries
-- Native Kibana integration for visualization
-- Date-based index partitioning
 
 </TabItem>
 </Tabs>
@@ -215,7 +182,7 @@ Stores recommendation snapshots for historical tracking:
 
 ## Schema Migrations
 
-All backends support **automatic schema evolution**:
+PostgreSQL and SQLite support **automatic schema evolution**:
 - New columns are added with `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`
 - Tables are created on first run
 - Migrations run on application startup
