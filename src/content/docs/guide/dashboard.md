@@ -5,7 +5,7 @@ description: The GreenKube web UI - a savings-first Overview, ranked recommendat
 
 The GreenKube UI is a single-page application served by the API at `/`. Every page reads the API with your session; no page starts a scan or writes anything on load. Status is always written as a word (`Measured`, `Projected`, `Action needed`, `Failing`), never shown by colour alone. Try it without installing anything at [demo.greenkube.cloud](https://demo.greenkube.cloud).
 
-![GreenKube recommendations](/screenshots/demo-recommendations.png)
+![GreenKube Overview: measured allocated savings, savings pending verification, the projected opportunity, changes in flight and what to do next (demo data)](/screenshots/demo-dashboard.png)
 
 ## Pages
 
@@ -20,6 +20,24 @@ The GreenKube UI is a single-page application served by the API at `/`. Every pa
 | **Footprint** (`/footprint`) | Cost, energy and CO₂e per workload, namespace and node, with Nodes and Report sections |
 | **Automation** (`/automation`) | GitOps discovery, workload binding coverage and manual resolution |
 | **Settings** (`/settings`) | Account and API keys |
+
+### Recommendations
+
+![GreenKube Recommendations: ranked recommendations with filters, potential CO₂e and cost savings, and each card's evidence, risk, confidence and expected value (demo data)](/screenshots/demo-recommendations.png)
+
+### Changes
+
+![GreenKube Changes board: every change from plan to pull request, merge, sync, rollout and measured outcome (demo data)](/screenshots/demo-automation.png)
+
+The change page shows the applied change, its measurement and the released capacity:
+
+![GreenKube Change page: a measured change with its allocated saving, 90% interval and released capacity (demo data)](/screenshots/demo-change.png)
+
+### Footprint
+
+![GreenKube Footprint, Nodes section: node inventory with CPU and memory capacity (demo data)](/screenshots/demo-nodes.png)
+
+![GreenKube Footprint, Report section: configure, preview and export the cost, energy and CO₂e report as CSV or JSON (demo data)](/screenshots/demo-report.png)
 
 ## Projected, allocated and realized are never summed
 

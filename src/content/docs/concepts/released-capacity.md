@@ -43,6 +43,8 @@ Every decided measurement also carries a **capacity verdict**, measured from the
 
 A replica count that moved for another reason (an HPA scaling out or in) is reported separately as a replica change and never booked as a release. The capacity verdict is decided even when the cost verdict is `inconclusive`, for example on a cluster without OpenCost and without an autoscaler. It is returned by `GET /api/v2/changes/{id}/measurements` and shown on the change page.
 
+![A measured change in the GreenKube UI: the allocated saving with its 90% interval, and a separate Released capacity (measured) panel showing 0.35 CPU cores released (demo data)](/screenshots/demo-change.png)
+
 ## From released capacity to the bill
 
 How much released capacity becomes removed node-hours is estimated by the **realization factor**, derived per node pool from the cluster's autoscalers (Karpenter consolidation policy, Cluster Autoscaler, disruption budgets and blockers). See [Impact Model: realization factor](/methodology/impact-model/#realization-factor).
