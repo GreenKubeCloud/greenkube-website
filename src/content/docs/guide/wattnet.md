@@ -85,7 +85,7 @@ After each hourly intensity collection, GreenKube also recomputes the combined m
   curl "http://localhost:8000/api/v1/health/services/wattnet"
   ```
 
-- Credentials can also be updated at runtime from the **Settings** page in the web dashboard (persisted to the Kubernetes Secret), without restarting the pod.
+- Data sources are configuration as code: set the credentials in values (or `secrets.existingSecret`) and run `helm upgrade`. They are not edited from the dashboard.
 
 ## Zone Mapping
 
@@ -104,6 +104,6 @@ Wattnet covers 52 zones across Austria, Belgium, Bosnia and Herzegovina, Bulgari
 
 ## Related
 
-- [Carbon Tracking](/features/carbon-tracking/) — How emissions are estimated
-- [Energy Estimation Methodology](/architecture/energy-estimation/) — Full power/carbon model
+- [Impact Model](/methodology/impact-model/) — How energy and CO₂e are allocated and projected
+- [Savings Measurement](/methodology/savings-measurement/) — How CO₂e savings are measured
 - [Configuration Reference](/getting-started/configuration/) — All environment variables and Helm values

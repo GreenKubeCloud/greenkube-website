@@ -5,15 +5,78 @@ description: GreenKube release history — changelogs, download links, and upgra
 
 import { Aside, Steps } from '@astrojs/starlight/components';
 
-This page preserves historical release notes. For interfaces and configuration supported by the current version, use the linked feature, CLI, API, and configuration guides.
+This page preserves release notes. Notes of older versions describe the behaviour of those versions; for the current behaviour, use the [Concepts](/concepts/loop/), [Configuration](/getting-started/configuration/) and [API](/guide/api/) pages. The complete history is in the [changelog](https://github.com/GreenKubeCloud/GreenKube/blob/main/CHANGELOG.md).
+
+## Next Release (unreleased)
+
+<div class="release-card">
+
+### v0.4 — The optimization loop
+
+<span class="release-tag">Upcoming</span>
+
+GreenKube becomes an optimization loop: aggregate recommendations, deliver them as GitOps pull requests, prove the savings. This documentation describes this version. Read [Upgrading](/operations/upgrading/) before moving from 0.3.x.
+
+#### Highlights
+
+- **One install, automation always on.** One topology (API, controller, isolated renderer, PostgreSQL), no profile and no feature flag. Delivery activates when the Git credentials Secret exists; `automation.policy.pauseDelivery` is the one off switch. Guided setup checklist.
+- **Sources and consensus.** A Source SDK and new connectors: Goldilocks, Robusta KRR, Kubecost 2.x/3.x, Fairwinds Polaris, GKE recommender, Azure Advisor, Karpenter NodePool advice and a push API with a public signal schema. A consensus engine merges every vote; contested advice is never auto-approved.
+- **Impact Model.** Reservation-aware allocation of cost, energy, operational and embodied CO₂e, a cost fallback chain with bundled price catalogs, a per-pool realization factor, and released capacity in cores and GiB.
+- **Pull requests.** Request decreases and increases, limits, native sidecars, init containers and Argo Rollouts; deletion of orphaned LoadBalancers and PersistentVolumes; remote Helm charts (HTTP and OCI) for Argo CD and Flux; GitHub App, GitLab and Gitea; delivery modes `direct`, `patch` and `ci`; optional auto-approval; manual mode without GitOps.
+- **Change measurement.** Every applied change is recorded with a frozen 7-day baseline and measured once against a load-adjusted counterfactual, with a 90% confidence interval, a noise floor, confounder checks, health gates and a drift monitor.
+- **Savings ledger.** Append-only and hash-chained, with projected, measured allocated and user-declared methods never summed, and CSV and FOCUS-aligned exports.
+- **Operations.** Accounts, sessions, SSO (proxy or OpenID Connect) and scoped API keys; scheduled PostgreSQL backups; installation identity per cluster; operations, loop and ledger alerts; high availability with PodDisruptionBudgets.
+
+#### Removed
+
+- The install profiles, `values-production.yaml`, the migration Job and SQLite in the Helm chart (SQLite stays for `greenkube demo`).
+- Runtime data-source configuration from the UI (`POST /api/v1/config/services` answers `410 Gone`): data sources are configuration as code.
+- `UNDERUTILIZED_NODE` recommendations, batch-relative ranking, and the `apply-pr` routes (use the plans API).
+
+</div>
+
+---
 
 ## Current Release
 
 <div class="release-card">
 
-### 🚀 v0.3.0 — Wattnet electricity provider, orphaned volume & load balancer recommendations
+### 🚀 v0.3.1 — GitOps plan workflow, apply detection and verification
 
 <span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
+
+**Release Date:** October 25, 2026
+
+#### ✨ Added
+
+- **GitOps plan workflow:** recommendations resolve to server-side Argo CD and Flux bindings and render-validated raw-manifest, Kustomize and a fail-closed subset of Helm plans; users approve an exact preview digest.
+- **Isolated renderer service** for Helm and Kustomize, with immutable provider archive snapshots from GitHub, GitLab and Gitea.
+- **Automation policy gates:** risk, confidence, samples and coverage, open-PR budget, cooldown and change freeze.
+- **Sync and apply gating, apply detection and verification**, with signed provider webhooks and PR polling.
+- **Measured savings ledger** rows, VPA and Karpenter connectors, evidence, risk, confidence and multi-criteria ranking on every recommendation.
+
+#### 🗑️ Removed
+
+- The experimental Elasticsearch storage backend, and the `greenkube report` and `greenkube recommend` CLI commands.
+
+#### 📦 Downloads
+
+| Asset | Link |
+|-------|------|
+| Docker Image | `docker pull greenkube/greenkube:0.3.1` |
+| Source Code | [GitHub Release v0.3.1](https://github.com/GreenKubeCloud/GreenKube/releases/tag/v0.3.1) |
+
+</div>
+
+---
+
+## Previous Releases
+
+<div class="release-card">
+
+### 🚀 v0.3.0 — Wattnet electricity provider, orphaned volume & load balancer recommendations
+
+<span class="release-tag">Previous</span>
 
 **Release Date:** August 30, 2026
 
@@ -489,6 +552,8 @@ The first public release of GreenKube, establishing the core carbon tracking cap
 ---
 
 ## Upgrade Guide
+
+To upgrade from 0.3.x to 0.4, follow [Upgrading](/operations/upgrading/): back up the database first. The steps below are kept for older versions.
 
 ### From v0.2.12 to v0.3.0
 
