@@ -5,7 +5,7 @@ description: How to contribute to GreenKube — code, documentation, bug reports
 
 import { Card, CardGrid, Aside } from '@astrojs/starlight/components';
 
-GreenKube is an open-source, community-driven project. We welcome contributions from everyone!
+GreenKube is an open-source, community-driven project. We welcome contributions from everyone, especially new [recommendation sources](/sources/overview/#writing-your-own-source) and support for more GitOps layouts.
 
 ## Ways to Contribute
 
@@ -28,7 +28,7 @@ GreenKube is an open-source, community-driven project. We welcome contributions 
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.13+
 - Node.js 20+ (for frontend development)
 - Git
 
@@ -153,29 +153,13 @@ perf: optimize batch database inserts
 - [ ] Documentation is updated (if applicable)
 - [ ] Commit messages follow conventional commits
 
-## Adding New Features
+## Where to Start
 
-### New Collector
+- **A new recommendation source.** Implement a `Source` (discover, health, collect) that emits signals, package it under the `greenkube.sources` entry point group, and run the contract test suite. See [Sources overview](/sources/overview/#writing-your-own-source) and the [example package](https://github.com/GreenKubeCloud/GreenKube/tree/main/examples/greenkube-source-example).
+- **A new GitOps layout.** Unsupported layouts fail closed with a typed reason; the [GitOps delivery](/concepts/gitops-delivery/#supported-layouts) page lists what is supported today.
+- **The end-to-end loop.** `make e2e` runs the whole loop on Minikube with a sample app, Argo CD, Flux and Gitea ([Quick Start](/getting-started/quickstart/)).
 
-1. Create `src/greenkube/collectors/my_collector.py`
-2. Implement async `collect()` method
-3. Register in `core/factory.py`
-4. Update `DataProcessor` to call the collector
-5. Add unit tests in `tests/collectors/`
-
-### New Storage Backend
-
-1. Implement abstract classes from `storage/base_repository.py`
-2. Register in `core/factory.py` backend mapping
-3. Add schema migration logic
-4. Add unit tests in `tests/storage/`
-
-### New Cloud Provider
-
-1. Add region mappings to `utils/region_mapping.py`
-2. Add instance power profiles to `energy/instance_profiles.py`
-3. Add PUE values to `core/config.py`
-4. Update tests
+The repository's [CONTRIBUTING.md](https://github.com/GreenKubeCloud/GreenKube/blob/main/CONTRIBUTING.md) is the reference for the development workflow.
 
 ## Community
 

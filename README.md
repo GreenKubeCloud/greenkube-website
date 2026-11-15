@@ -6,7 +6,7 @@ This is the source for the **[docs.greenkube.cloud](https://docs.greenkube.cloud
 
 ## 🌿 About GreenKube
 
-GreenKube is an open-source **FinGreenOps platform** for Kubernetes. It estimates CPU-based workload energy use and associated carbon emissions, reports cost allocations, and suggests optimization opportunities — giving engineering teams visibility into the environmental and financial impact of their infrastructure. These are estimates, not a complete organizational emissions inventory or compliance report.
+GreenKube is an open-source **optimization loop for Kubernetes clusters run with GitOps**: it aggregates recommendations from many sources, opens one reviewable pull request for Argo CD or Flux, verifies the sync, and measures realized savings (money, CO₂e and released capacity) against a counterfactual in an append-only ledger.
 
 ## 🚀 Project Structure
 
@@ -15,7 +15,7 @@ GreenKube is an open-source **FinGreenOps platform** for Kubernetes. It estimate
 ├── public/                  # Static assets (favicon, logo)
 ├── src/
 │   ├── assets/              # Images used in docs
-│   ├── components/          # Custom Astro components (Header, Footer, diagrams)
+│   ├── components/          # Custom Astro components (Header, Footer)
 │   ├── content/
 │   │   └── docs/            # All documentation pages (.md / .mdx)
 │   ├── styles/

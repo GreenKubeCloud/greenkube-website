@@ -1,115 +1,41 @@
 ---
-title: Dashboard Guide
-description: Learn how to use the GreenKube web dashboard to monitor carbon emissions, costs, and resource usage across your Kubernetes cluster.
+title: Web UI
+description: The GreenKube web UI - a savings-first Overview, ranked recommendations, the changes board from plan to measured outcome, the ledger, sources, the setup checklist and the footprint.
 ---
 
-import { Aside } from '@astrojs/starlight/components';
+The GreenKube UI is a single-page application served by the API at `/`. Every page reads the API with your session; no page starts a scan or writes anything on load. Status is always written as a word (`Measured`, `Projected`, `Action needed`, `Failing`), never shown by colour alone. Try it without installing anything at [demo.greenkube.cloud](https://demo.greenkube.cloud).
 
-GreenKube includes a modern web dashboard built with **SvelteKit** and **ECharts**, served directly by the FastAPI backend. No additional deployment required — it ships inside the same container.
+![GreenKube recommendations](/screenshots/demo-recommendations.png)
 
-## Accessing the Dashboard
+## Pages
 
-After deploying GreenKube, access the dashboard via port-forward:
+| Page | Purpose |
+|---|---|
+| **Overview** (`/`) | Savings first: measured allocated savings with the realization factor, savings pending verification, the projected opportunity, changes in flight, and the top recommendations |
+| **Recommendations** (`/recommendations`) | The ranked list with filters and plan preview. Each detail page shows the proposal, expected value, delivery eligibility with blockers and fixes, projected impact by component, released capacity, consensus across sources, evidence, pull requests, measurement and lifecycle timeline |
+| **Changes** (`/changes`) | One board from approved plan to measured outcome: Plan → PR open → Merged → Synced → Applied → Measuring → Outcome. Rows that need a human are flagged (sync failed, pull request failed, regressed) |
+| **Ledger** (`/ledger`) | Savings totals per method and every applied change with its measurement, confidence interval, original projection and split across recommendations |
+| **Sources** (`/sources`) | Every recommendation source: status, last run, counts, measured track record and recent runs |
+| **Setup** (`/setup`) | The setup checklist: the four capabilities (discovery, delivery, sync tracking, measurement), each check with its fix, and the repositories found by discovery |
+| **Footprint** (`/footprint`) | Cost, energy and CO₂e per workload, namespace and node, with Nodes and Report sections |
+| **Automation** (`/automation`) | GitOps discovery, workload binding coverage and manual resolution |
+| **Settings** (`/settings`) | Account and API keys |
 
-```bash
-kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube
-```
+## Projected, allocated and realized are never summed
 
-Then open [http://localhost:8000](http://localhost:8000) in your browser.
+Every page uses one vocabulary and shows each kind of saving in its own panel, with its method as a label:
 
-<Aside type="tip">
-  For production access, configure an **Ingress** resource or set the service type to **LoadBalancer** in your Helm values.
-</Aside>
+- **Measured allocated savings**: what the changed workloads stop being charged, measured after the change and accrued in the ledger.
+- **Realization factor**: the expected share of an allocated saving that reaches the bill, labelled as an expectation.
+- **Realized (billed) savings**: shown only when savings measured on the bill exist. The word "Realized" is reserved for them; a measurement outcome reads **Saving measured** or **No saving measured**.
+- **Pending verification** (`Projected`): the yearly projection of applied changes not measured yet.
+- **Opportunity** (`Projected`): the projected yearly savings of open recommendations. Reliability recommendations add resources on purpose and are counted apart, never as savings.
+- **User declared** (Ledger only): savings declared on manual applies, never counted as measured.
 
-## Dashboard Pages
+## Roles
 
-### 📊 Dashboard (Home)
+Pages show only the actions the signed-in user may perform. Opening a pull request, ignoring, restoring and resolving a binding need the `write` scope; approving a plan needs `approve`. A short **Read-only access** note says why actions are missing, and the server enforces the same scopes.
 
-The main dashboard provides a high-level overview of your cluster's environmental and financial impact:
+## Pull-request deep links
 
-**KPI Cards:**
-- **Total CO₂e** — Combined modeled operational and embodied estimate
-- **Total Cost** — Combined cost from OpenCost data
-- **Total Energy** — Energy consumption in kWh
-- **Active Pods** — Number of monitored pods
-- **Sustainability Score** — 0–100 composite score across 7 dimensions
-
-**Charts:**
-- **Time-series chart** — CO₂ emissions and cost trends over time (ECharts)
-- **Namespace breakdown** — Pie chart showing emission distribution by namespace
-- **Top pods** — Bar chart of highest-emitting and most expensive pods
-
-![GreenKube dashboard home page with KPI cards, trends, and top emitters](/screenshots/demo-dashboard.png)
-
-### ️ Nodes
-
-The node inventory page displays all cluster nodes with:
-
-- **CPU/Memory capacity and allocatable values** with comparison bars
-- **Instance type** — Cloud provider instance type (e.g., `m5.xlarge`)
-- **Zone and region** — Kubernetes node location labels, when available
-- **Architecture and OS** — Node architecture (for example, `amd64` or `arm64`) and operating system
-- **Hardware profile** — CPU name, TDP, or GPU count when reported by the hardware data source
-
-![GreenKube nodes page showing node inventory and hardware metadata](/screenshots/demo-nodes.png)
-
-### 💡 Recommendations
-
-Optimization suggestions organized by type and lifecycle status:
-
-**Recommendation Types:** Zombie Pod, CPU/Memory Rightsizing, Autoscaling Candidate, Carbon-Aware Scheduling, Idle Namespace, Off-Peak Scaling, Overprovisioned Node, Underutilized Node, Orphaned PersistentVolume, Orphaned LoadBalancer
-
-**Tabs:** Active, Ignored, Realized Savings, and Pull Requests
-
-Each recommendation includes:
-- Priority (high, medium, low)
-- Scope (pod, workload, namespace, node, cluster)
-- Projected annual savings where supported by the recommendation type
-- Ignore flow with an optional reason
-- Restore action from the Ignored tab
-- Applied recommendations summarized in the Realized Savings tab
-- Eligible workload CPU and memory rightsizing recommendations can be previewed as manifest changes and submitted through the GitOps pull-request workflow when configured.
-
-The GitOps workflow creates a pull request; it does not directly apply changes to the cluster. The separate API lifecycle endpoint can mark a recommendation as applied for savings tracking.
-
-![GreenKube recommendations page with active recommendations and annual savings](/screenshots/demo-recommendations.png)
-
-### 📋 Report
-
-Visual report builder for cost and estimated carbon exports:
-
-- **Time range picker** — relative window (1h → ytd), custom `start`/`end` dates, or a full calendar year
-- **Namespace filter** — scope to a specific team/environment
-- **Granularity** — hourly, daily, weekly, monthly, yearly
-- **Preview** — row count and totals before downloading
-- **Export** — direct browser download to CSV or JSON
-
-![GreenKube report page with export parameters and preview](/screenshots/demo-report.png)
-
-### ⚙️ Settings
-
-System configuration and health status:
-
-- **Service Health** — Popup-style health check for all data sources (Prometheus, OpenCost, Electricity Maps, Wattnet, Boavizta, Kubernetes, Database) with icons and last-checked timestamps. Inactive electricity providers (e.g. Electricity Maps when Wattnet is selected) are excluded from the overall status.
-- **Version** — Current GreenKube version
-- **Configuration** — Runtime settings for integration URLs (including Prometheus, OpenCost, and Boavizta), cloud provider, default zone, and electricity provider (Electricity Maps or Wattnet). Changes apply at runtime; persistence to a Kubernetes Secret is best-effort and depends on deployment permissions.
-API-key authentication is configured through Helm values or environment variables rather than this dashboard form; see the [Configuration Reference](/getting-started/configuration/).
-
-![GreenKube settings page with health checks and runtime configuration](/screenshots/demo-settings.png)
-
-## Dashboard Features
-
-### Theme Support
-The dashboard supports both **light** and **dark** modes, detected automatically from your system preferences.
-
-### Responsive Design
-Fully responsive layout that works on:
-- Desktop monitors
-- Tablets
-- Mobile phones
-
-### Data Export
-The **Report** page provides CSV and JSON downloads for the selected time range, namespace, aggregation, and grouping options.
-
-### Data Refresh
-The dashboard loads data for the selected time window and provides a manual **Refresh** action for dashboard summaries. Values update as collection and summary-refresh jobs run; the web UI does not use a WebSocket stream or continuous client-side polling.
+With `config.externalUrl` set, pull requests link back to the recommendation (`/recommendations/{id}`), the change (`/changes/{plan_id}`) and its ledger entry (`/ledger?change=…`).

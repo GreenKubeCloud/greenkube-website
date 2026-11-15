@@ -8,7 +8,7 @@ const shouldRenderSearch =
 
 const navLinks = [
 	{ label: 'About Us', href: '/getting-started/introduction/' },
-	{ label: 'Documentation', href: '/guide/dashboard/' },
+	{ label: 'Documentation', href: '/concepts/loop/' },
 	{ label: 'Installation', href: '/getting-started/installation/' },
 	{ label: 'Contact', href: '/contact/' },
 ];
@@ -19,8 +19,8 @@ function isActive(href: string): boolean {
 	if (href === '/getting-started/introduction/') {
 		return currentPath === href;
 	}
-	if (href === '/guide/dashboard/') {
-		return currentPath.startsWith('/guide/') || currentPath.startsWith('/architecture/') || currentPath.startsWith('/getting-started/configuration/') || currentPath.startsWith('/getting-started/quickstart/');
+	if (href === '/concepts/loop/') {
+		return ['/concepts/', '/sources/', '/methodology/', '/operations/', '/guide/', '/architecture/', '/getting-started/configuration/', '/getting-started/quickstart/'].some((prefix) => currentPath.startsWith(prefix));
 	}
 	if (href === '/getting-started/installation/') {
 		return currentPath === href;

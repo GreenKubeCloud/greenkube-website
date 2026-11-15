@@ -1,72 +1,62 @@
 # GreenKube
 
-> GreenKube is an open-source FinGreenOps platform for Kubernetes.
-> It estimates workload energy use and associated carbon emissions and costs, then suggests Kubernetes optimization opportunities.
+> GreenKube is an open-source optimization loop for Kubernetes clusters run with GitOps.
+> Every recommendation. One pull request. Proven savings.
 
 ## What is GreenKube?
 
-GreenKube is a self-hosted, open-source tool for DevOps, SRE, FinOps, and sustainability teams. It estimates CPU-based workload energy use and associated CO₂e, reports cost allocations from OpenCost, and provides optimization recommendations. Carbon and cost values are estimates subject to data coverage and model assumptions; they are not a complete organizational inventory or compliance report.
+GreenKube collects Kubernetes optimization recommendations from many sources, cross-analyses their value and risk, delivers the best ones as reviewable pull requests to the GitOps repository (Argo CD or Flux), verifies that the change was synced and is live, and measures what each change actually saved against a counterfactual: in money, in CO₂e, and in released capacity (CPU cores and memory freed, projected and measured, never converted to money). Outcomes are recorded in an append-only, hash-chained savings ledger. It runs in the cluster it optimizes, on-premises and on clouds.
 
 - **License:** Apache 2.0
-- **Language:** Python 3.13+
-- **Deployment:** Helm chart (single command install)
+- **Deployment:** one Helm chart (API, controller, isolated renderer, PostgreSQL); no profile, no feature flag
 - **GitHub:** https://github.com/GreenKubeCloud/GreenKube
 - **Docker Hub:** https://hub.docker.com/r/greenkube/greenkube
 - **Artifact Hub:** https://artifacthub.io/packages/helm/greenkube/greenkube
 - **Documentation:** https://docs.greenkube.cloud/
-- **Documentation:** https://docs.greenkube.cloud/
+- **Live demo:** https://demo.greenkube.cloud
 - **Helm Repository:** https://GreenKubeCloud.github.io/GreenKube
 
-## Key Capabilities
+## Principles
 
-- **Carbon Tracking:** Converts CPU-based modeled energy consumption to CO₂e using Electricity Maps or Wattnet grid-intensity data. Wattnet is available as an alternative for supported European zones.
-- **Energy Estimation:** Pod-level energy consumption (Joules) based on CPU usage and cloud instance power profiles.
-- **Cost Monitoring:** Integrates with OpenCost for cost allocations by pod and namespace when cost data is available.
-- **Sustainability Score:** Composite 0–100 cluster health score across 7 dimensions: resource efficiency, carbon efficiency, waste, node efficiency, scaling, carbon-aware scheduling, and stability.
-- **Smart Recommendations:** Includes native workload recommendations plus optional VPA and Karpenter sources; source CRDs are skipped cleanly when absent.
-- **Historical Reporting:** Compare time windows and export estimated metrics to CSV or JSON.
-- **Dashboard:** Built-in SvelteKit SPA with periodically refreshed summaries, time-series and namespace/top-pod charts, node inventory, and recommendations.
-- **REST API:** FastAPI backend with OpenAPI docs at `/api/v1/docs`.
-- **Prometheus Integration:** Exposes Prometheus gauges (`greenkube_pod_co2e_grams`, `greenkube_pod_energy_joules`, `greenkube_pod_cost_dollars`, `greenkube_sustainability_score`, etc.).
-- **Grafana Dashboard:** Pre-built JSON dashboard, import in one click.
-- **Flexible Storage:** PostgreSQL or SQLite.
-- **Auto-Discovery:** Automatically discovers in-cluster Prometheus and OpenCost — zero manual configuration in most cases.
+- Git is the only write path: no admission webhooks, no in-place mutation.
+- Projected savings are never shown as realized; projected, measured allocated and realized (billed) savings are never summed.
+- Fail closed and explain why.
+- Neutral by design: GreenKube's own analyzers are one source among others.
 
-## Who is it for?
+## The loop
 
-- **DevOps / SRE** teams wanting carbon and cost visibility on their Kubernetes clusters
-- **FinOps** practitioners looking for a free, open-source alternative to commercial tools
-- **Sustainability** teams exploring workload-level carbon estimates with documented assumptions
-- **CTOs and Engineering Managers** at tech SMEs wanting to reduce cloud spending and carbon emissions simultaneously
-- **Platform Engineers** building internal developer platforms with sustainability observability
+1. Aggregate: GreenKube analyzers, VPA and Goldilocks, Robusta KRR, Kubecost, Fairwinds Polaris, GKE recommender, Azure Advisor, Karpenter NodePools, and a push API with a public signal schema.
+2. Cross-analyse: consensus across sources, evidence, projected impact (Impact Model), risk, confidence, expected value, delivery eligibility.
+3. Deliver: plan rendered in an isolated sandbox, approved by digest, pull request on GitHub, GitLab or Gitea (raw YAML, Kustomize, Helm including remote charts).
+4. Verify: Argo CD or Flux sync tracking and apply detection.
+5. Measure: 7-day baseline, load-adjusted counterfactual, 90% confidence interval with a noise floor, confounder checks, health gates, drift monitor.
+6. Record: append-only, hash-chained ledger with CSV and FOCUS-aligned exports.
 
 ## Quick Start
 
 ```bash
-helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube
-helm repo update
+docker run --rm -p 9000:9000 greenkube/greenkube demo --no-browser --port 9000
+helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm repo update
 helm install greenkube greenkube/greenkube -n greenkube --create-namespace
 ```
 
-## Screenshots
-
-- Dashboard: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-dashboard.png
-- Node inventory: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-nodes.png
-- Optimization recommendations: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-recommendations.png
-- Report builder & export: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-report.png
-- Settings & service health: https://raw.githubusercontent.com/GreenKubeCloud/GreenKube/refs/heads/main/assets/demo-settings.png
-
 ## Documentation Sections
 
-- [Quickstart](https://docs.greenkube.cloud/getting-started/quickstart/)
+- [Introduction](https://docs.greenkube.cloud/getting-started/introduction/)
+- [Quick Start](https://docs.greenkube.cloud/getting-started/quickstart/)
 - [Installation](https://docs.greenkube.cloud/getting-started/installation/)
 - [Configuration](https://docs.greenkube.cloud/getting-started/configuration/)
-- [Architecture](https://docs.greenkube.cloud/architecture/overview/)
-- [Features: Carbon Tracking](https://docs.greenkube.cloud/features/carbon-tracking/)
-- [Features: Cost Optimization](https://docs.greenkube.cloud/features/cost-optimization/)
-- [Features: Dashboard](https://docs.greenkube.cloud/features/real-time-dashboard/)
-- [Features: Recommendations](https://docs.greenkube.cloud/features/smart-recommendations/)
-- [CLI Reference](https://docs.greenkube.cloud/guide/cli/)
-- [REST API Reference](https://docs.greenkube.cloud/guide/api/)
-- [Wattnet Guide](https://docs.greenkube.cloud/guide/wattnet/)
-- [Changelog / Releases](https://docs.greenkube.cloud/releases/)
+- [The Optimization Loop](https://docs.greenkube.cloud/concepts/loop/)
+- [Recommendations](https://docs.greenkube.cloud/concepts/recommendations/)
+- [GitOps Delivery](https://docs.greenkube.cloud/concepts/gitops-delivery/)
+- [Measurements and Ledger](https://docs.greenkube.cloud/concepts/measurements-and-ledger/)
+- [Released Capacity](https://docs.greenkube.cloud/concepts/released-capacity/)
+- [Sources](https://docs.greenkube.cloud/sources/overview/)
+- [Savings Measurement Methodology](https://docs.greenkube.cloud/methodology/savings-measurement/)
+- [Impact Model](https://docs.greenkube.cloud/methodology/impact-model/)
+- [Limitations](https://docs.greenkube.cloud/methodology/limitations/)
+- [Backup and Restore](https://docs.greenkube.cloud/operations/backup-restore/)
+- [Alerts and SLOs](https://docs.greenkube.cloud/operations/alerts/)
+- [Upgrading](https://docs.greenkube.cloud/operations/upgrading/)
+- [API Reference](https://docs.greenkube.cloud/guide/api/)
+- [Releases](https://docs.greenkube.cloud/releases/)

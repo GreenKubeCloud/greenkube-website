@@ -1,232 +1,189 @@
 ---
-title: Configuration Reference
-description: Complete reference for all GreenKube configuration options, environment variables, and Helm values.
+title: Configuration
+description: The GreenKube Helm values most often changed, grouped by stage of the loop, with the settings that control evidence, measurement, the ledger, sources, the Impact Model and GitOps delivery.
 ---
 
 import { Aside } from '@astrojs/starlight/components';
 
-GreenKube follows the [12-Factor App](https://12factor.net/) methodology — all configuration is driven by environment variables. When deployed via Helm, these are set through `values.yaml`.
+GreenKube is configured through Helm values; most map to an environment variable read by the API and the controller. This page lists the values most often changed. The complete reference, with every key and its environment variable, is [docs/configuration.md](https://github.com/GreenKubeCloud/GreenKube/blob/main/docs/configuration.md) in the repository.
 
-## Helm Values Reference
+```bash
+helm upgrade greenkube greenkube/greenkube -n greenkube -f my-values.yaml
+```
 
-### Image
+The chart ships a `values.schema.json`, so invalid types and ranges are rejected before anything is applied. Data sources (Prometheus, OpenCost, carbon intensity providers) are **configuration as code**: they are set in values, not changed at runtime from the UI.
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `image.repository` | Docker image repository | `greenkube/greenkube` |
-| `config.logFormat` | Log output format: `json` or `console` | `json` |
-| `config.metricsListMaxRangeDays` | Maximum date range (days) for `GET /api/v1/metrics` | `30` |
-| `image.tag` | Image tag | `0.3.0` |
-| `image.pullPolicy` | Image pull policy | `IfNotPresent` |
+## General
 
-### Database
+| Key | Default | Description |
+|---|---|---|
+| `config.clusterName` | `""` | Cluster name used as a label in Prometheus metrics and as the key of GitOps bindings and the savings ledger. |
+| `config.cloudProvider` | `unknown` | `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem`, `unknown`. |
+| `config.defaultZone` | `""` | Fallback Electricity Maps zone code for nodes whose zone cannot be mapped (`FR`, `DE`, `US-CAL-CISO`). |
+| `config.defaultIntensity` | `500.0` | Global fallback grid intensity in gCO₂e/kWh. |
+| `config.electricityProvider` | `electricity_maps` | Grid intensity provider: `electricity_maps` or `wattnet` (EU only, see [Wattnet](/guide/wattnet/)). |
+| `config.externalUrl` | `""` | Public URL of the UI, used for deep links in pull requests and commit statuses. |
+| `config.apiAuthMode` | `session` | `session` (accounts and scoped API keys), `api_key`, `proxy` or `oidc`. |
+| `config.trustedProxyIps` | `""` | Reverse proxies whose forwarded headers are trusted (needed for `Secure` cookies behind a TLS-terminating Ingress). |
+| `config.logFormat` | `json` | `json` or `console`. |
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `config.db.type` | Storage backend: `postgres` or `sqlite` | `postgres` |
-| `config.db.path` | SQLite file path (if type is `sqlite`) | `/data/greenkube_data.db` |
-| `config.db.schema` | PostgreSQL schema | `public` |
+### On-premises clusters
 
-### Persistence (SQLite)
+Cloud providers expose zone labels on nodes. On-premises, label nodes with their Electricity Maps zone and set the provider:
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `config.persistence.enabled` | Enable persistent storage for SQLite | `false` |
-| `config.persistence.storageClassName` | Storage class name (empty = default) | `""` |
-| `config.persistence.accessMode` | PVC access mode | `ReadWriteOnce` |
-| `config.persistence.size` | PVC storage size | `1Gi` |
+```bash
+kubectl label nodes --all topology.kubernetes.io/zone=FR
+```
 
-### Carbon & Energy
+```yaml
+config:
+  cloudProvider: on-prem
+  defaultZone: FR
+impact:
+  pricing:
+    cpuCoreHour: 0.03     # your own rates, used for projections
+    ramGiBHour: 0.004
+```
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `config.cloudProvider` | Cloud provider: `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem` | `unknown` |
-| `config.defaultZone` | Optional fallback Electricity Maps zone; empty enables node-label discovery | `""` |
-| `config.defaultIntensity` | Default grid intensity (gCO₂e/kWh) when API unavailable | `500.0` |
-| `config.electricityProvider` | Grid intensity data provider: `electricity_maps` or `wattnet` (EU-only, free — see [Wattnet guide](/guide/wattnet/)) | `electricity_maps` |
-| `config.normalizationGranularity` | Intensity lookup granularity: `hour`, `day`, `none` | `hour` |
-| `config.defaults.pue` | Power Usage Effectiveness factor | `1.3` |
-| `config.defaults.instance.vcores` | Default vCPU count for unknown instances | `1` |
-| `config.defaults.instance.minWatts` | Default min watts per vCPU | `1.0` |
-| `config.defaults.instance.maxWatts` | Default max watts per vCPU | `10.0` |
+Configured rates price projections but are never trusted for measurement: install OpenCost to verify cost savings on-premises.
 
-### Prometheus
+## Collection and evidence
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `config.prometheus.url` | Prometheus URL (empty = auto-discovery) | `""` |
-| `config.prometheus.verifyCerts` | Verify TLS certificates | `true` |
-| `config.prometheus.queryRangeStep` | Range query step interval | `5m` |
-| `config.prometheus.queryRangeMaxSamples` | Max data points per range query | `10000` |
-| `config.prometheus.nodeInstanceLabel` | Node label for instance type | `label_node_kubernetes_io_instance_type` |
+| Key | Default | Description |
+|---|---|---|
+| `config.prometheus.url`, `config.opencost.url` | `""` | Empty attempts in-cluster discovery. |
+| `config.prometheus.queryRangeStep` | `5m` | One sample per step. |
+| `config.prometheus.scrapeInterval` | — | Set it to your real scrape interval: below 2 scrapes in the rate window every window is a hole. |
+| `config.collection.maxBackfill` | `24h` | How far back a fresh install, or a controller back from an outage, catches up. |
+| `config.collection.allowClusterUidChange` | `false` | Allow one start on a database recorded for another cluster ([restore into a new cluster](/operations/backup-restore/#restoring-into-a-new-or-rebuilt-cluster)). Set it back to `false` afterwards. |
+| `config.metricsRawRetentionDays` | `7` | Raw samples, then compressed into hourly rows. |
+| `config.metricsAggregatedRetentionDays` | `-1` | Hourly aggregates; `-1` keeps them indefinitely. The ledger and measurements are never pruned. |
 
-### OpenCost
+## Recommendations
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `config.opencost.url` | OpenCost URL (empty = auto-discovery) | `""` |
-| `config.opencost.verifyCerts` | Verify TLS certificates | `true` |
+| Key | Default | Description |
+|---|---|---|
+| `config.recommendations.minSamples` | `36` | Evidence required by every sample gate: recommendation confidence, plan policy, verification. |
+| `config.recommendations.minDecreaseCoverageDays` | `7` | Observed days required before a request decrease is recommended. Increases need no minimum. |
+| `config.recommendations.lookbackDays` | `14` | Lookback of recommendation scans (two weekly cycles). |
+| `config.recommendations.scanInterval` | `1h` | Interval between scheduled scans (`1m` to `24h`). |
+| `config.recommendations.rightsizingHeadroom` | `1.2` | Multiplier applied to the sizing percentile (p95 for decreases, p99 for increases). |
+| `config.recommendations.rightsizingIncreaseThreshold` | `0.9` | Recommend a request increase when p99 usage exceeds this share of the request. |
+| `config.recommendations.limitsPolicy` | `keep` | Limits advice: `keep`, `remove_cpu` or `memory_equals_request`. |
+| `config.recommendations.consensusPolicy` | `safest` | How several sources are combined: `safest` (least aggressive value), `median`, `weighted`. |
+| `config.recommendations.rankingProfile` | `balanced` | `balanced`, `cost_first`, `carbon_first`, `low_risk` or `quick_wins`. |
+| `config.recommendations.deletionMinUnusedDays` | `7` | Days a LoadBalancer or PersistentVolume must look unused before a deletion is recommended. |
+| `config.recommendations.ttlDays` | `14` | Recommendation expiry. |
 
-### Node Analysis
+## Measurement and ledger
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `config.nodeAnalysisInterval` | Interval for node analysis | `5m` |
-| `config.nodeDataMaxAgeDays` | Max age for historical node data | `30` |
+| Key | Default | Description |
+|---|---|---|
+| `config.recommendations.changeMeasurement.enabled` | `true` | Record applied changes with a baseline snapshot and measure them against a counterfactual. |
+| `config.recommendations.changeMeasurement.preWindowDays` | `7` | Baseline window, ending at the merge. At least 7 days so every hour of the week is matched; 14 days enables hour-of-week slots. |
+| `config.recommendations.changeMeasurement.postWindowDays` | `7` | Post-change window. A verdict needs 5 complete days of aligned hours. |
+| `config.recommendations.changeMeasurement.warmupHours` | `1` | Hours after rollout completion excluded from the post-window. |
+| `config.recommendations.changeMeasurement.minCoverage` | `0.8` | Minimum share of post-window hours matched with a baseline hour. |
+| `config.recommendations.changeMeasurement.epsilonRatio` | `0.02` | Noise floor: `realized` only when the interval's lower bound is above 2% of the counterfactual. |
+| `config.recommendations.changeMeasurement.priorWeekCv` | `0.05` | Week-to-week variation assumed when the baseline holds fewer than two weeks. |
+| `config.recommendations.changeMeasurement.driftThreshold` / `driftSustainedDays` | `0.5` / `3` | Drift monitor: a realized change that loses half its saving for 3 days becomes `regressed`. |
+| `config.recommendations.changeMeasurement.accelerated` | `false` | Demo and quickstart only. Measurements are labelled `representative: false` and never accrue. |
+| `config.recommendations.verification.windowHours` | `72` | Health-gate window after the rollout. |
+| `config.recommendations.applyTolerance` | `0.25` | Relative deviation still counted as applied by apply detection. |
+| `config.ledger.chainVerifyInterval` | `1h` | Interval of the ledger catch-up and hash-chain verification (`1m` to `24h`). |
 
-### API Server
+See [Savings measurement](/methodology/savings-measurement/) for what these windows mean statistically.
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `config.api.enabled` | Enable the API server | `true` |
-| `config.api.host` | API listen address | `0.0.0.0` |
-| `config.api.port` | API listen port | `8000` |
-| `config.corsOrigins` | Allowed CORS origins (comma-separated) | `*` |
-| `config.apiRateLimit` | Per-client, per-route API rate limit (e.g. `60/minute`) | `60/minute` |
-| `config.environment` | Runtime environment; production requires API authentication | `development` |
-| `config.apiAuthMode` | Authentication mode; `api_key` is the supported mode | `api_key` |
-| `config.rootPath` | URL prefix when the API is served behind a reverse proxy subpath | `""` |
+## Impact Model
 
-### Monitoring
+| Key | Default | Description |
+|---|---|---|
+| `impact.pricing.cpuCoreHour` / `ramGiBHour` | unset (OpenCost default rates) | Prices for nodes without observed costs or a catalog price. Set both on-premises. |
+| `impact.pricing.currency` | `USD` | ISO 4217 code of projected costs; set it to OpenCost's currency. |
+| `impact.carbonPricePerTonne` | `100` | Shadow carbon price used in the ranking value. `0` ranks on cost alone. |
+| `impact.autoscalerHint` | `""` | `none`, `cluster_autoscaler` or `karpenter`, when detection cannot see the autoscaler. |
+| `impact.realizationFactor` | unset | Override of the share of released capacity expected to become removed node-hours. |
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `monitoring.serviceMonitor.enabled` | Create a ServiceMonitor for Prometheus Operator | `false` |
-| `monitoring.serviceMonitor.namespace` | Namespace for the ServiceMonitor (must match Prometheus selector) | `monitoring` |
-| `monitoring.serviceMonitor.interval` | Scrape interval | `30s` |
-| `monitoring.networkPolicy.enabled` | Create a NetworkPolicy allowing Prometheus to reach GreenKube | `false` |
-| `monitoring.networkPolicy.prometheusNamespace` | Namespace where Prometheus runs | `monitoring` |
+## Sources
 
-### Recommendations
+```yaml
+sources:
+  pluginsEnabled: true
+  settings:
+    greenkube.carbon_aware: { enabled: false }   # turn one native analyzer off
+    vpa: { enabled: auto }                       # auto: run when the VPA CRD exists
+    kubecost: { url: "http://kubecost-cost-analyzer.kubecost:9090", cluster_id: "prod-eu" }
+    push: { max_age_hours: 72 }
+  krr:
+    job:
+      enabled: false        # run KRR as a CronJob that pushes its report
+  polaris:
+    job:
+      enabled: false        # run Polaris as a CronJob that pushes its audit
+```
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `config.recommendations.lookbackDays` | Days of data for analysis | `7` |
-| `config.recommendations.rightsizingCpuThreshold` | CPU usage ratio triggering rightsizing | `0.3` |
-| `config.recommendations.rightsizingMemoryThreshold` | Memory usage ratio triggering rightsizing | `0.3` |
-| `config.recommendations.rightsizingHeadroom` | Safety headroom multiplier | `1.2` |
-| `config.recommendations.zombieCostThreshold` | Cost threshold for zombie detection ($) | `0.01` |
-| `config.recommendations.zombieEnergyThreshold` | Energy threshold for zombie detection (J) | `1000` |
-| `config.recommendations.autoscalingCvThreshold` | CV threshold for autoscaling suggestion | `0.7` |
-| `config.recommendations.autoscalingSpikeRatio` | Max/avg ratio for spike detection | `3.0` |
-| `config.recommendations.carbonAwareThreshold` | Intensity ratio for carbon-aware scheduling | `1.5` |
-| `config.recommendations.nodeUtilizationThreshold` | Node utilization threshold | `0.2` |
-| `config.recommendations.storageCostPerGibMonth` | Fallback storage cost for orphaned PV savings when OpenCost has no data ($/GiB-month) | `0.10` |
-| `config.recommendations.loadBalancerCostPerMonth` | Fallback cost for orphaned LoadBalancer savings when OpenCost has no data ($/month) | `18.0` |
-| `config.recommendations.recommendSystemNamespaces` | Include system namespaces in recommendations | `false` |
-| `config.recommendations.vpaEnabled` | Read recommendation-mode VPAs; skip if the VPA CRD is absent | `true` |
-| `config.recommendations.karpenterEnabled` | Read Karpenter NodePools; skip if Karpenter CRDs are absent | `true` |
-| `config.recommendations.sourcePriority` | Recommendation source precedence, highest first | `vpa,karpenter,greenkube` |
-| `config.recommendations.ttlDays` | Days before an unapplied recommendation expires | `14` |
-| `config.recommendations.verification.windowHours` | Post-apply verification window | `72` |
-| `config.recommendations.verification.minSavingsRatio` | Minimum measured savings as a fraction of the projection | `0.5` |
-| `config.recommendations.verification.usageHeadroom` | Maximum p95 usage relative to the proposed request | `1.1` |
-| `config.recommendations.verification.lifecycleInterval` | Apply-detection, verification, and expiry job interval | `5m` |
-| `config.recommendations.git.provider` | Git provider for recommendation pull requests (`github`, `gitlab`, or `gitea`) | `github` |
-| `config.recommendations.git.apiBaseUrl` | Optional API URL override for a self-hosted Git provider | `""` |
-| `config.recommendations.git.defaultBranch` | Fallback base branch for generated pull requests | `main` |
+Each source page lists its settings: [Sources overview](/sources/overview/).
 
-### Secrets
+## GitOps delivery
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `secrets.electricityMapsToken` | Electricity Maps API token | `""` |
-| `secrets.wattnetEmail` | Wattnet account email (only when `config.electricityProvider` is `wattnet`) | `""` |
-| `secrets.wattnetPassword` | Wattnet account password (only when `config.electricityProvider` is `wattnet`) | `""` |
-| `secrets.boaviztaToken` | Boavizta API token | `""` |
-| `secrets.gitToken` | Git personal access token for recommendation pull requests; empty disables PR automation | `""` |
-| `secrets.apiKey` | Bearer token for API authentication (empty = no auth) | `""` |
-| `secrets.dbConnectionString` | PostgreSQL connection string (only if not using bundled postgres) | `""` |
-| `secrets.prometheus.username` | Prometheus basic auth username | `""` |
-| `secrets.prometheus.password` | Prometheus basic auth password | `""` |
-| `secrets.prometheus.bearerToken` | Prometheus bearer token | `""` |
+| Key | Default | Description |
+|---|---|---|
+| `automation.credentialsSecret` | `greenkube-git-credentials` | Secret read for inferred providers: key `token`, or `appId` + `privateKey` for a GitHub App. |
+| `automation.repositoryAllowlist` | `["@discovered"]` | Repositories PRs may target. |
+| `automation.policy.pauseDelivery` | `false` | **The one off switch**: no PR is opened, while discovery, previews and measurement keep running. |
+| `automation.delivery.mode` | `direct` | `direct` (GreenKube opens the PR), `patch` (you apply a downloaded patch) or `ci` (your CI opens it). |
+| `automation.autoApprove.enabled` | `false` | Approve eligible previews without the extra click (still a reviewed pull request). |
+| `automation.providers` | `[]` | Explicit Git providers (GitHub, GitLab, Gitea). |
+| `automation.webhooks.enabled` | `false` | Signed provider webhooks; polling otherwise. |
+| `automation.syncTimeoutSeconds` | `1800` | Time before a merged but unsynced plan becomes `sync_failed`. |
+| `automation.helm.remoteCharts.enabled` | `true` | Pre-fetch, digest-verify and render remote Helm charts (HTTP or OCI). |
 
-An empty API key permits open access in development. Set `secrets.apiKey` for protected API requests; production deployments require a non-empty key when `config.apiAuthMode` is `api_key`.
+```yaml
+automation:
+  policy:
+    maxRiskLevel: medium
+    minConfidence: 0.6
+    minCoverage: 0.5
+    maxOpenPullRequestsPerWorkload: 1
+    cooldownMinutes: 60
+    changeFreezeLabels: []
+    changeFreezeWindows: []
+    missingEvidence: fail     # fail closed when live gate evidence is missing
+  pullRequests:
+    draft: false
+    labels: []
+    reviewers: []
+    teamReviewers: []
+```
 
-### PostgreSQL (Bundled)
+## Monitoring
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `postgres.enabled` | Deploy bundled PostgreSQL | `true` |
-| `postgres.image.repository` | PostgreSQL image | `postgres` |
-| `postgres.image.tag` | PostgreSQL version | `18-alpine` |
-| `postgres.auth.username` | Database username | `greenkube` |
-| `postgres.auth.password` | Database password (auto-generated if empty) | `""` |
-| `postgres.auth.database` | Database name | `greenkube` |
-| `postgres.persistence.enabled` | Enable persistent storage | `true` |
-| `postgres.persistence.size` | Storage size | `10Gi` |
+```yaml
+monitoring:
+  serviceMonitor:
+    enabled: true
+  prometheusRule:
+    enabled: true
+    operations:
+      enabled: true
+      kubeStateMetrics: true
+      backupMaxAgeHours: 36
+```
 
-### Resources
+See [Alerts and SLOs](/operations/alerts/).
 
-| Parameter | Description | Default |
-|-----------|-------------|---------|
-| `resources.requests.cpu` | CPU request | `100m` |
-| `resources.requests.memory` | Memory request | `128Mi` |
-| `resources.limits.cpu` | CPU limit | `500m` |
-| `resources.limits.memory` | Memory limit | `512Mi` |
+## Backups
 
-## Environment Variables
+```yaml
+postgres:
+  backup:
+    enabled: true
+    schedule: '17 3 * * *'
+    keep: 7
+```
 
-When running outside Helm (Docker, source), use these environment variables:
+See [Backup and restore](/operations/backup-restore/).
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| `DB_TYPE` | `postgres` or `sqlite` | `postgres` |
-| `DB_CONNECTION_STRING` | PostgreSQL connection URL | — |
-| `DB_PATH` | SQLite file path | `greenkube_data.db` |
-| `PROMETHEUS_URL` | Prometheus server URL | Auto-discovery |
-| `OPENCOST_API_URL` | OpenCost server URL | Auto-discovery |
-| `ELECTRICITY_MAPS_TOKEN` | Electricity Maps API token | — |
-| `ELECTRICITY_PROVIDER` | Grid intensity provider: `electricity_maps` or `wattnet` | `electricity_maps` |
-| `WATTNET_EMAIL` | Wattnet account email (required when `ELECTRICITY_PROVIDER=wattnet`) | — |
-| `WATTNET_PASSWORD` | Wattnet account password (required when `ELECTRICITY_PROVIDER=wattnet`) | — |
-| `BOAVIZTA_TOKEN` | Boavizta API token | — |
-| `CLOUD_PROVIDER` | `aws`, `gcp`, `azure`, `ovh`, `scaleway`, `on-prem` | `unknown` |
-| `DEFAULT_ZONE` | Fallback carbon zone; `unknown` lets GreenKube use node metadata | `unknown` |
-| `DEFAULT_INTENSITY` | Fallback grid intensity (gCO₂e/kWh) | `500.0` |
-| `DEFAULT_EMBODIED_EMISSIONS_KG` | Fallback embodied emissions when Boavizta has no data | `100.0` |
-| `DEFAULT_HARDWARE_LIFESPAN_YEARS` | Cloud hardware lifespan assumption | `4` |
-| `LOG_LEVEL` | Logging level | `INFO` |
-| `NORMALIZATION_GRANULARITY` | `hour`, `day`, `none` | `hour` |
-| `PROMETHEUS_QUERY_RANGE_STEP` | Range query step | `5m` |
-| `API_HOST` | API listen address | `0.0.0.0` |
-| `API_PORT` | API listen port | `8000` |
-| `LOG_FORMAT` | Log output format: `json` (structured, Loki-ready) or `console` (human-readable) | `json` |
-| `METRICS_LIST_MAX_RANGE_DAYS` | Maximum date range (days) allowed for `GET /api/v1/metrics` raw listing; requests wider than this return HTTP 400 | `30` |
-| `GREENKUBE_API_KEY` | Bearer token for API authentication (empty = no auth) | — |
-| `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | `""` |
-| `API_AUTH_MODE` | API authentication mode; `api_key` is currently supported | `api_key` |
-| `API_RATE_LIMIT` | Per-client, per-route API rate limit (e.g. `60/minute`) | `60/minute` |
-| `ENVIRONMENT` | Runtime environment; production requires API authentication | `development` |
-| `ROOT_PATH` | URL prefix when served behind a reverse proxy subpath | `""` |
-| `TRUSTED_PROXY_IPS` | Comma-separated trusted proxy IPs/CIDRs for forwarded client addresses | `""` |
-| `RIGHTSIZING_CPU_THRESHOLD` | CPU rightsizing threshold | `0.3` |
-| `RIGHTSIZING_MEMORY_THRESHOLD` | Memory rightsizing threshold | `0.3` |
-| `RIGHTSIZING_HEADROOM` | Safety multiplier for proposed resource requests | `1.2` |
-| `ZOMBIE_COST_THRESHOLD` | Zombie detection cost ($) | `0.01` |
-| `ZOMBIE_ENERGY_THRESHOLD` | Zombie detection energy threshold (J) | `1000` |
-| `RECOMMENDATION_LOOKBACK_DAYS` | Metrics window used for recommendations | `7` |
-| `METRICS_RAW_RETENTION_DAYS` | Days to keep 5-min raw metrics | `7` |
-| `METRICS_AGGREGATED_RETENTION_DAYS` | Days to keep hourly aggregates (-1 = infinite) | `-1` |
-| `METRICS_COMPRESSION_AGE_HOURS` | Age after which raw metrics are compressed | `24` |
-| `DB_POOL_MIN_SIZE` | PostgreSQL min connection pool size | `1` |
-| `DB_POOL_MAX_SIZE` | PostgreSQL max connection pool size | `10` |
-| `DB_STATEMENT_TIMEOUT_MS` | PostgreSQL per-statement timeout (ms) | `30000` |
-| `RECOMMENDATION_VPA_ENABLED` | Enable the VPA recommendation source; it skips when the CRD is absent | `true` |
-| `RECOMMENDATION_KARPENTER_ENABLED` | Enable Karpenter NodePool recommendations; they skip when CRDs are absent | `true` |
-| `RECOMMENDATION_SOURCE_PRIORITY` | Source precedence for conflicting recommendations | `vpa,karpenter,greenkube` |
-| `RECOMMENDATION_TTL_DAYS` | Days before an unapplied recommendation expires | `14` |
-| `VERIFICATION_WINDOW_HOURS` | Post-apply verification window | `72` |
-| `VERIFICATION_MIN_SAVINGS_RATIO` | Minimum measured savings ratio to pass verification | `0.5` |
-| `VERIFICATION_USAGE_HEADROOM` | p95 usage headroom used by the verification health gate | `1.1` |
-| `RECOMMENDATION_LIFECYCLE_INTERVAL` | Apply-detection, verification, and expiry job interval | `5m` |
-| `GIT_PROVIDER` | Recommendation pull request provider: `github`, `gitlab`, or `gitea` | `github` |
-| `GIT_API_BASE_URL` | Optional API URL override for a self-hosted Git provider | — |
-| `GIT_DEFAULT_BRANCH` | Fallback base branch for pull requests | `main` |
-| `GIT_TOKEN` | Git personal access token; empty disables PR automation | — |
-| `STORAGE_COST_PER_GIB_MONTH` | Fallback cost for orphaned PV recommendations ($/GiB-month) | `0.10` |
-| `LOAD_BALANCER_COST_PER_MONTH` | Fallback cost for orphaned LoadBalancer recommendations ($/month) | `18.0` |
-
-<Aside type="tip">
-  GreenKube works without an Electricity Maps token. When no token is provided, the `DEFAULT_INTENSITY` value (default: 500 gCO₂e/kWh) is used for all zones. For accurate, zone-specific carbon data, get a free token at [electricitymaps.com](https://www.electricitymaps.com/).
+<Aside type="note" title="Removed and deprecated settings">
+  There is no profile and no `automation.enabled` flag any more, and the chart no longer offers SQLite. 0.3.x keys that still exist are accepted for one minor release and mapped to their replacements; see [Upgrading](/operations/upgrading/).
 </Aside>

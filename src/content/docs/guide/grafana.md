@@ -1,204 +1,62 @@
 ---
-title: Grafana & Prometheus Integration
-description: Set up Prometheus scraping and import the pre-built GreenKube Grafana dashboard (v2) for comprehensive FinGreenOps monitoring.
+title: Prometheus & Grafana
+description: Scrape GreenKube's metrics with the Prometheus Operator and import the GreenKube Savings & Footprint Grafana dashboard.
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components';
+GreenKube works with Prometheus in both directions:
 
-GreenKube exposes Prometheus metrics at `/prometheus/metrics` and ships with a **pre-built Grafana dashboard (v2)** for comprehensive FinGreenOps monitoring.
+| Direction | What it does | Required? |
+|---|---|---|
+| GreenKube → Prometheus | GreenKube queries your Prometheus for CPU, memory, restarts and load drivers: the evidence behind recommendations and measurements | Strongly recommended |
+| Prometheus → GreenKube | Prometheus scrapes GreenKube's `/prometheus/metrics` for dashboards and alerts | Optional |
 
-## Dashboard Preview
+## Scraping GreenKube
 
-See the shipped Grafana dashboard before installing anything:
-
-![GreenKube Impact Command Center — sustainability score radar, footprint mix, impact ledger, and action priorities](/screenshots/grafana-dashboard-top-panel.png)
-
-![Top actionable recommendations — ranked recommendation cards by projected annual CO₂e or cost savings](/screenshots/grafana-dashboard-top-reco.png)
-
-![CO₂e and cost by namespace — pie charts breaking down operational and embodied emissions](/screenshots/grafana-dashboard-by-namespace.png)
-
-![Regional node cleanliness — geomap colored by electricity-zone carbon intensity](/screenshots/grafana-dashboard-node-map.png)
-
-## Prometheus Integration
-
-### Automatic Setup (kube-prometheus-stack)
-
-If you use the **kube-prometheus-stack** (Prometheus Operator), enable the `ServiceMonitor` in your `values.yaml`:
+With the Prometheus Operator (kube-prometheus-stack):
 
 ```yaml
 monitoring:
   serviceMonitor:
-    enabled: true            # Creates a ServiceMonitor resource
-    namespace: monitoring    # Must match your Prometheus serviceMonitorNamespaceSelector
+    enabled: true
+    namespace: ""        # empty: the release namespace, next to the scrape token Secret
     interval: 30s
-  networkPolicy:
-    enabled: true            # Allows Prometheus to reach the GreenKube API port
-    prometheusNamespace: monitoring
+  prometheusRule:
+    enabled: true        # alerts, see Alerts & SLOs
 ```
 
-### Manual Prometheus Setup
+The ServiceMonitors scrape the API and the controller with bearer-token authentication, using the generated `metrics:read` scrape token `GREENKUBE_METRICS_TOKEN`. Prometheus Operator reads that Secret in the ServiceMonitor's own namespace; when you set `monitoring.serviceMonitor.namespace` elsewhere, the chart keeps a copy there. Make sure Prometheus selects the namespace.
 
-If you're not using the Prometheus Operator, add a scrape config manually:
+Without the Operator, add a scrape job for `greenkube-api.greenkube.svc.cluster.local:8000` at `/prometheus/metrics` with a bearer token holding a `metrics:read` API key.
 
-```yaml
-# Add to your prometheus.yml
-scrape_configs:
-  - job_name: 'greenkube'
-    scrape_interval: 30s
-    metrics_path: /prometheus/metrics
-    static_configs:
-      - targets: ['greenkube-api.greenkube.svc.cluster.local:8000']
-```
+## Metric families
 
-If API-key authentication is enabled, configure Prometheus with the same bearer token from a mounted secret file rather than embedding the key in the scrape configuration:
+| Family | Examples |
+|---|---|
+| Footprint | Cost, energy and CO₂e per cluster, namespace, pod and node; grid intensity per zone |
+| Recommendations and savings | Recommendation counts and projected savings by type, measured versus projected ratio |
+| Control loop | Optimization runs, scan duration, source failures, verification outcomes, loop last-success timestamps, leader |
+| Collection | Watermark lag, coverage, gap windows, degraded windows, cluster identity mismatch |
+| GitOps | Discovery freshness, binding coverage, plan duration, queue age, PR lifecycle, provider rate limits |
+| Ledger | Chain verification status and failures, write errors |
 
-```yaml
-# Add under the GreenKube scrape job in prometheus.yml
-authorization:
-  type: Bearer
-  credentials_file: /etc/prometheus/secrets/greenkube-api-key
-```
+Control-loop metrics use bounded labels only. Prometheus is for alerting and trends; the persisted runs, measurements and the savings ledger remain the source of truth.
 
-### Exposed Prometheus Metrics
+## Grafana dashboard
 
-GreenKube exposes the following gauges:
+The **GreenKube — Savings & Footprint** dashboard is in the repository at `dashboards/greenkube-grafana.json` and published on [Grafana.com](https://grafana.com/grafana/dashboards/25377-greenkube-fingreenops-dashboard/) (id 25377).
 
-#### Pod-Level Metrics (labels: `cluster`, `namespace`, `pod`, `node`, `region`)
+![GreenKube Grafana dashboard](/screenshots/grafana-dashboard-top-panel.png)
 
-| Metric | Description |
-|--------|-------------|
-| `greenkube_pod_co2e_grams` | GHG Scope 2 emissions per pod (operational) |
-| `greenkube_pod_embodied_co2e_grams` | GHG Scope 3 emissions per pod (hardware manufacturing) |
-| `greenkube_pod_energy_joules` | Energy consumption per pod |
-| `greenkube_pod_cost_dollars` | Cost allocation per pod |
-| `greenkube_pod_cpu_usage_millicores` | CPU utilization per pod |
-| `greenkube_pod_memory_usage_bytes` | Memory usage per pod |
-| `greenkube_pod_restart_count` | Container restart count per pod |
+**Import:** Dashboards → Import → upload the JSON (or enter id 25377) → select your Prometheus datasource. When importing through the API, use `/api/dashboards/import` (not `/api/dashboards/db`): only the import endpoint resolves the `${DS_PROMETHEUS}` variable.
 
-#### Cluster-Wide Metrics (label: `cluster`)
+The top row uses the [Business Charts](https://grafana.com/grafana/plugins/volkovlabs-echarts-panel/) panel plugin (v7.2.2 or later); install it before importing.
 
-| Metric | Description |
-|--------|-------------|
-| `greenkube_cluster_co2e_grams_total` | Total Scope 2 CO₂e for the cluster |
-| `greenkube_cluster_embodied_co2e_grams_total` | Total Scope 3 CO₂e for the cluster |
-| `greenkube_cluster_cost_dollars_total` | Total cost |
-| `greenkube_cluster_energy_joules_total` | Total energy |
-| `greenkube_cluster_pod_count` | Total pod count |
-| `greenkube_cluster_namespace_count` | Total namespace count |
-| `greenkube_sustainability_score` | Composite 0–100 sustainability score |
-| `greenkube_sustainability_dimension_score` | Per-dimension score (7 dimensions) |
-| `greenkube_recommendations_total` | Active recommendation counts by namespace, type, and priority |
-| `greenkube_recommendations_implemented_total` | Applied recommendation counts by namespace and type |
-| `greenkube_recommendations_savings_co2e_grams` | Projected annual CO₂e savings by recommendation type |
-| `greenkube_recommendations_savings_cost_dollars` | Projected annual cost savings by recommendation type |
-| `greenkube_co2e_savings_attributed_grams_total` | Cumulative CO₂e savings from applied recommendations |
-| `greenkube_cost_savings_attributed_dollars_total` | Cumulative cost savings from applied recommendations |
-| `greenkube_top_recommendations` | Ranked active recommendations by projected annual savings — labels: `rank`, `sort_metric`, `value_metric`, `namespace`, `type`, `resource`, `scope`, `priority` |
-| `greenkube_namespace_recommendation_savings_co2e_grams_total` | Total potential CO₂e savings from active recommendations per namespace |
-| `greenkube_namespace_recommendation_savings_cost_dollars_total` | Total potential cost savings from active recommendations per namespace |
+Template variables: `cluster`, `namespace`, the reporting window, and the ranking basis and number of recommendations shown.
 
-#### Grid Intensity Metrics
+## Troubleshooting
 
-| Metric | Description |
-|--------|-------------|
-| `greenkube_carbon_intensity_score` | Energy-weighted average grid intensity |
-| `greenkube_carbon_intensity_zone` | Grid intensity per zone from the selected provider or configured fallback |
-
-## Grafana Dashboard (v2)
-
-The dashboard includes an **Actionable Recommendations** row.
-
-### Import the Dashboard
-
-<Steps>
-
-1. **Get the dashboard JSON**
-
-   The dashboard file is at `dashboards/greenkube-grafana.json` in the [GreenKube repository](https://github.com/GreenKubeCloud/GreenKube).
-
-2. **Import in Grafana**
-
-   In Grafana, go to **Dashboards → Import**, then either:
-   - Upload the `greenkube-grafana.json` file, or
-   - Paste the JSON content directly
-
-3. **Select your data source**
-
-   Choose the Prometheus data source that scrapes GreenKube metrics.
-
-4. **Click Import**
-
-   The dashboard is ready to use immediately.
-
-</Steps>
-
-### Dashboard Structure (5 Sections)
-
-#### 1. GreenKube Impact Command Center
-Strategic overview of cluster sustainability and savings.
-
-- **Sustainability Score** — Composite 0–100 gauge from 7 dimensions (resource efficiency, carbon efficiency, waste elimination, node efficiency, scaling practices, carbon-aware scheduling, stability)
-- **Footprint Mix** — Pie chart: Scope 2 vs. Scope 3 CO₂e breakdown
-- **Impact Ledger** — Timeline of attributed CO₂e and cost savings from applied recommendations
-- **Action Priorities** — Bar chart: top recommendation types by count
-
-#### 2. Actionable Recommendations
-Highest-impact active recommendations ranked by projected annual savings.
-
-- **Top Actionable Recommendations** — Horizontal bar cards showing rank, type, target resource, and projected annual CO₂e + cost savings. Toggle ranking metric between CO₂e and Cost via the `$recommendation_metric` variable; adjust the number of displayed items via `$recommendation_limit`.
-
-#### 3. CO₂e and Cost by Namespace
-Operational carbon breakdown for per-team accountability.
-
-- Pie charts: Scope 2 CO₂e per namespace, Scope 3 CO₂e per namespace, Total CO₂e per namespace
-- Sorted by top emitters; filters by `$cluster` and `$namespace` variables
-
-#### 4. Regional Node Cleanliness
-Geographic view of infrastructure carbon intensity.
-
-- Geomap with node count bubbles; bubble color reflects grid carbon intensity per Electricity Maps zone
-- Filters by cluster
-
-#### 5. Top Emitters & Spenders
-Pod-level detail for targeted optimization.
-
-- Top-15 pods by CO₂e emissions (bar chart, instant query)
-- Top-15 pods by cost (bar chart, instant query)
-
-### Template Variables
-
-| Variable | Description |
-|----------|-------------|
-| `$cluster` | Filter all panels by cluster name |
-| `$namespace` | Filter all panels by namespace |
-| `$dashboard_window` | Reporting window: 1h, 6h, 24h, 7d, 30d, YTD, 1y |
-| `$recommendation_metric` | Ranking metric for Actionable Recommendations: CO₂e or Cost |
-| `$recommendation_limit` | Number of recommendations to show: 3, 5, or 10 |
-
-All panels respect `$cluster` and `$namespace` consistently.
-
-### PromQL Notes
-
-The dashboard uses correct aggregation for multi-instance metrics:
-- **Cluster scalars:** `sum(max by (cluster)(greenkube_cluster_co2e_grams_total{cluster="$cluster"}))`
-- **Namespace breakdowns:** `sum by (namespace)(greenkube_pod_co2e_grams{...})`
-- **Pod-level top-N:** `topk(15, max by (pod, namespace)(greenkube_pod_co2e_grams{...}))`
-
-This prevents value inflation from multiple Prometheus scrape instances.
-
-### Customization
-
-The dashboard is fully customizable in Grafana. Common additions:
-- Grafana alerts on `greenkube_sustainability_score` for carbon budget enforcement
-- Additional namespace filters
-- Custom panels using any of the GreenKube Prometheus metrics
-
-<Aside type="tip">
-  Set up a Grafana alert on `greenkube_sustainability_score < 60` to get notified when cluster sustainability degrades — enabling proactive carbon budget management.
-</Aside>
-
-## Related
-
-- [REST API](/guide/api/) — API endpoints powering the metrics
-- [Dashboard Guide](/guide/dashboard/) — Built-in web dashboard
-- [Configuration](/getting-started/configuration/) — Monitoring configuration options
+| Symptom | Check |
+|---|---|
+| No GreenKube target in Prometheus | The ServiceMonitor's namespace is selected by Prometheus, and its token Secret exists there (`secret not found` in the operator logs) |
+| "Datasource is not set" in every panel | The dashboard was imported through `/api/dashboards/db`; re-import through the import endpoint |
+| No data in all panels | GreenKube cannot reach Prometheus: set `config.prometheus.url` |

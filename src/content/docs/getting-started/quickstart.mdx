@@ -1,143 +1,140 @@
 ---
 title: Quick Start
-description: Get GreenKube running in your Kubernetes cluster in under 5 minutes.
+description: Try the GreenKube demo, install it with Helm using the quickstart values, and run the whole loop up to your first measured pull request.
 ---
 
-import { Steps, Aside, Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import { Steps, Aside, Tabs, TabItem, LinkCard, CardGrid } from '@astrojs/starlight/components';
 
-This guide will have GreenKube up and running in your cluster in under 5 minutes.
+Three steps, from zero to a merged and measured change:
 
-## Prerequisites
+1. **Look around** in the demo (one `docker run`, no cluster).
+2. **Install** GreenKube on a disposable cluster with the accelerated quickstart values.
+3. **Open your first pull request** against a sample GitOps repository, merge it, and watch GreenKube follow it through the sync to a measurement.
 
-Before you begin, make sure you have:
-
-- A running **Kubernetes cluster** (Minikube, EKS, GKE, AKS, etc.)
-- **Helm 3** installed ([install guide](https://helm.sh/docs/intro/install/))
-- **kubectl** configured to access your cluster
-- **Prometheus** deployed in your cluster (e.g., via kube-prometheus-stack)
-- **OpenCost** deployed for cost data (optional but recommended)
-
-<Aside type="tip">
-  Don't have Prometheus yet? The most common setup is the **kube-prometheus-stack** Helm chart, which includes Prometheus, Grafana, and commonly used exporters.
-</Aside>
-
-## Try the Demo First (No Cluster Required)
-
-Want to explore GreenKube without any infrastructure? Start with **Demo Mode** — it loads 30 days of realistic data for the fictional **GreenOptic** company: 22 pods across 5 namespaces with carbon emissions, costs, recommendations, and a pre-populated savings ledger.
+## 1. Try the demo
 
 <Tabs>
-  <TabItem label="Docker (no cluster needed)">
-
-The fastest way to try GreenKube. Only Docker is required — no Kubernetes, no Prometheus, no setup.
+  <TabItem label="Docker (no cluster)">
 
 ```bash
-docker run --rm -p 9000:9000 \
-  greenkube/greenkube:latest \
-  demo --no-browser --port 9000
+docker run --rm -p 9000:9000 greenkube/greenkube demo --no-browser --port 9000
+# Open http://localhost:9000, Ctrl+C to stop
 ```
-
-Open [http://localhost:9000](http://localhost:9000) in your browser. Press `Ctrl+C` to stop.
 
   </TabItem>
-  <TabItem label="Kubernetes (standalone pod)">
+  <TabItem label="Hosted">
 
-If you have a cluster available, you can run the demo as a temporary pod:
-
-```bash
-kubectl run greenkube-demo \
-  --image=greenkube/greenkube:latest \
-  --restart=Never \
-  --command -- greenkube demo --no-browser --port 9000
-
-kubectl wait --for=condition=Ready pod/greenkube-demo --timeout=60s
-kubectl port-forward pod/greenkube-demo 9000:9000
-```
-
-Open [http://localhost:9000](http://localhost:9000) in your browser.
-
-```bash
-# Clean up when done
-kubectl delete pod greenkube-demo
-```
+Open [demo.greenkube.cloud](https://demo.greenkube.cloud): the full dashboard with realistic sample data, nothing to install.
 
   </TabItem>
 </Tabs>
 
-<Aside type="tip">
-  Demo mode does not require Prometheus, OpenCost, or any live cluster. It's a great way to evaluate the dashboard and understand what metrics GreenKube collects before committing to a full installation.
+The demo runs on a temporary SQLite database with a two-year sample history: recommendations, costs, emissions and node history. Use it to see the Overview, the ranked recommendations with their evidence, the changes board and the ledger before you install anything. `greenkube demo --days N` changes the number of recent days generated at hourly resolution (30 by default).
+
+## 2. Install with the quickstart values
+
+The quickstart values ([`docs/examples/quickstart/values.yaml`](https://github.com/GreenKubeCloud/GreenKube/blob/main/docs/examples/quickstart/values.yaml)) accelerate evidence so that a rightsizing pull request can be opened minutes after install instead of days.
+
+<Aside type="danger" title="Never use the quickstart values in production">
+  They collect a sample every 30 seconds, accept 6 samples (3 minutes) as enough evidence, ignore observation coverage and decide a merged change after 6 minutes. Every number GreenKube shows is then based on a few minutes of data. The defaults require 36 samples, 7 days of history before a request decrease, and measure a change over 7 days, for good reasons.
 </Aside>
 
-## Installation
+| Setting | Quickstart | Default |
+|---|---|---|
+| `config.prometheus.queryRangeStep` | `30s` | `5m` |
+| `config.collection.maxBackfill` | `30m` | `24h` |
+| `config.recommendations.minSamples` | `6` | `36` |
+| `config.recommendations.minDecreaseCoverageDays` | `0.001` (about 90 seconds) | `7` |
+| `config.recommendations.scanInterval` | `1m` | `1h` |
+| `config.recommendations.verification.windowHours` | `0.1` (6 minutes) | `72` |
+| `automation.policy.minSamples` / `minCoverage` | `6` / `0` | `36` / `0.5` |
+| `automation.discoveryInterval` / `prPollIntervalSeconds` / `syncPollIntervalSeconds` | `30s` / `10` / `10` | `5m` / `120` / `30` |
+
+### Prerequisites
+
+A disposable cluster (the scripted path targets **Minikube** with the Docker runtime) with:
+
+| Component | Used for |
+|---|---|
+| Prometheus (kube-prometheus) with cAdvisor and kube-state-metrics | Usage and request samples |
+| Metrics Server | Per-container usage |
+| Argo CD | GitOps delivery of the sample app |
+| Flux (optional) | A second delivery path |
+| Gitea | Git server for the sample repository |
+| OpenCost (optional) | Observed costs |
+
+On your workstation: `kubectl`, `helm`, `curl`, `jq`, `minikube`, a clone of the [GreenKube repository](https://github.com/GreenKubeCloud/GreenKube), and a Gitea API token with read/write repository scope whose user owns the sample repository (`GITEA_OWNER`, default `greenkube`).
+
+### Install
+
+The scripted path builds the GreenKube image from your checkout inside Minikube (no registry needed), creates the sample repository and the Argo CD/Flux objects, and installs the chart with the quickstart values. It only runs against the `minikube` context (`E2E_KUBE_CONTEXT` to change it) and only touches objects labelled `greenkube.io/e2e=true`:
+
+```bash
+export GITEA_TOKEN=<gitea token>
+make quickstart
+```
+
+Under the hood, the install step is:
+
+```bash
+kubectl -n greenkube create secret generic greenkube-git --from-literal=token="$GITEA_TOKEN"
+helm upgrade --install greenkube ./helm-chart -n greenkube --create-namespace \
+  -f docs/examples/quickstart/values.yaml \
+  --set config.prometheus.url=http://prometheus-k8s.monitoring.svc.cluster.local:9090
+```
+
+The values declare one Gitea provider whose allowlist is the sample repository only. The sample app has two deliberately oversized workloads: `oversized-web` (raw YAML, deployed by Argo CD; requests `400m` CPU and `384Mi`) and `oversized-worker` (a Kustomize overlay deployed by Flux; `300m` and `256Mi`). Both use almost nothing.
+
+## 3. Your first pull request
 
 <Steps>
 
-1. **Add the Helm repository and install**
+1. **Open the UI.** `kubectl -n greenkube port-forward svc/greenkube-api 8000` and open `http://localhost:8000`. Sign in as `admin` with the initial password (`kubectl -n greenkube get secret greenkube-initial-admin -o jsonpath='{.data.password}' | base64 -d`); you choose a new one at the first sign-in. The **Setup** page shows which capabilities are active (discovery, delivery, sync tracking, measurement) and the fix for anything missing.
 
-   ```bash
-   helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube
-   helm repo update
-   helm install greenkube greenkube/greenkube \
-     -n greenkube \
-     --create-namespace
-   ```
+2. **Wait for evidence.** Within 3 to 5 minutes, CPU and memory rightsizing recommendations appear for `greenkube-e2e-apps/oversized-web`. Each one shows its evidence, projected impact (cost, CO₂e and released capacity), risk, confidence and delivery eligibility. A blocked recommendation lists each blocker with its fix.
 
-   This deploys the data collector, REST API, web dashboard, and a PostgreSQL database — all in one command.
+3. **Preview the plan.** Click **Open PR**. GreenKube resolves the workload's binding to the sample repository, renders the change and shows the exact diff with its `sha256:` digest.
 
-2. **Wait for pods to be ready**
+4. **Approve.** Approving binds to that digest: the reviewed change is exactly the committed change. The pull request opens in Gitea about 5 seconds later (`kubectl -n gitea port-forward svc/gitea-http 3000` to follow the link).
 
-   ```bash
-   kubectl get pods -n greenkube -w
-   ```
+5. **Merge it in Gitea.** GreenKube sees the merge, waits for Argo CD to sync the merge commit (the plan becomes `merged`, then `synced`), and detects the new requests in the cluster (the recommendation becomes `applied`). This takes about a minute.
 
-   You should see:
-   ```
-   NAME                         READY   STATUS    RESTARTS   AGE
-   greenkube-7b5f8c9d6-x2k4p   2/2     Running   0          30s
-   greenkube-postgres-0         1/1     Running   0          30s
-   ```
-
-3. **Access the dashboard**
-
-   ```bash
-   kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube
-   ```
-
-   Open [http://localhost:8000](http://localhost:8000) in your browser.
-
-4. **(Optional) Add an Electricity Maps token**
-
-   For accurate, region-specific carbon data instead of the default 500 gCO₂e/kWh:
-
-   ```bash
-   helm upgrade greenkube greenkube/greenkube \
-     -n greenkube \
-     --set secrets.electricityMapsToken="YOUR_TOKEN_HERE"
-   ```
-
-   Get a free token at [electricitymaps.com](https://www.electricitymaps.com/).
-
-5. **Export your first report**
-
-   ```bash
-   curl -O -J "http://localhost:8000/api/v1/report/export?format=csv&last=24h"
-   ```
-
-   Keep the dashboard port-forward open in another terminal. You can also
-   export from the dashboard's **Report** page.
+6. **See the verdict.** About 10 minutes after the merge the quickstart verifier decides. Follow the change on the **Changes** board (Plan → PR → Merged → Synced → Applied → Measuring → Outcome) and in the **Ledger**.
 
 </Steps>
 
-## What You'll See
+To run the whole loop unattended, use `make e2e`. It is **destructive by default** (`E2E_FRESH=1`): it first removes what a previous run created, including the GreenKube release, its PostgreSQL volume and the sample repository (only objects carrying the ownership marker). `make e2e-status` prints the result of every step and `make e2e-clean` removes everything the harness created.
 
-- **Dashboard** — KPI cards for estimated operational and embodied CO₂e, cost, energy, and monitored workloads, with time-series charts and namespace breakdown.
-- **Nodes** — Cluster node inventory with CPU/memory capacity, hardware profiles, cloud provider info, and utilization.
-- **Recommendations** — Suggestions with active, ignored, applied-savings, and pull-request views. The dashboard supports ignore/restore actions and eligible GitOps pull-request workflows.
-- **Report** — Time-range picker, namespace filter, granularity options, and CSV/JSON export for further analysis.
-- **Settings** — Service health overview (Prometheus, OpenCost, Electricity Maps or Wattnet, Boavizta), runtime config updates, and best-effort Kubernetes Secret persistence where available.
+### Measuring against a counterfactual in the demo
 
-## Next Steps
+The quickstart decides merged changes with the short verifier, so change measurement is off and `/changes` stays empty. To record merged changes and measure them against a counterfactual on accelerated windows (a 6-hour baseline and a 72-minute post-window, decided about 80 minutes after the merge), add `-f docs/examples/quickstart/values-change-measurement.yaml`.
 
-- [Full Installation Guide](/getting-started/installation/) — Advanced configuration options
-- [Configuration Reference](/getting-started/configuration/) — All environment variables and Helm values
-- [Dashboard Guide](/guide/dashboard/) — Learn to use the web interface
-- [CLI Reference](/guide/cli/) — Master the command-line interface
+<Aside type="caution" title="Accelerated measurements are not representative">
+  Accelerated measurements use 5-minute slots, the baseline mean as counterfactual and demo thresholds, so they reach a decided outcome. Each one records `representative: false`: it demonstrates the pipeline end to end, not a saving. Its measured saving never accrues in the savings ledger. See [Savings measurement](/methodology/savings-measurement/#accelerated-demo-mode).
+</Aside>
+
+## Install for real
+
+On a real cluster, use the chart defaults: one install, one sign-in, optionally one Secret for Git.
+
+```bash
+helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm repo update
+helm install greenkube greenkube/greenkube -n greenkube --create-namespace
+```
+
+Recommendations then need real evidence: request increases and the other sources appear after about 3 hours (36 samples at the default 5-minute step), request decreases only after 7 days of history so that a weekly cycle is seen.
+
+<CardGrid>
+  <LinkCard title="Installation" description="Sign-in, connecting Git, OpenCost, external PostgreSQL, Ingress, HA." href="/getting-started/installation/" />
+  <LinkCard title="The optimization loop" description="What happens between a recommendation and a ledger entry." href="/concepts/loop/" />
+</CardGrid>
+
+## Troubleshooting
+
+| Symptom | Check |
+|---|---|
+| No recommendation after 10 minutes | Prometheus URL and scraping of cAdvisor and kube-state-metrics; `kubectl -n greenkube logs deploy/greenkube-controller -c controller` |
+| Recommendation not eligible | Its blockers (`code`, `message`, `fix`) on the detail page; `warming_up` gives the time it becomes eligible |
+| Binding not resolved | The provider `apiBaseUrl` host must match the Argo CD or Flux repository URL, and the repository must be in `repositoryAllowlist` |
+| Plan stays `merged` | Argo CD or Flux has not synced the merge commit yet; check the Application or Kustomization |
+| PR link unreachable | Run `kubectl -n gitea port-forward svc/gitea-http 3000`, or set `automation.providers[].webBaseUrl` to your browser-facing Gitea origin |

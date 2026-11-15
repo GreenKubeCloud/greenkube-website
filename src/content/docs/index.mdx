@@ -1,187 +1,169 @@
 ---
-title: GreenKube — FinGreenOps for Kubernetes
-description: Give your tech team full visibility into the carbon footprint and cloud costs of your Kubernetes infrastructure. Open-source carbon monitoring and cost optimization for SMEs.
+title: GreenKube — Every recommendation. One pull request. Proven savings.
+description: GreenKube is an open-source optimization loop for Kubernetes run with GitOps. It aggregates recommendations from the tools you already run, opens one reviewable pull request for Argo CD or Flux, verifies the sync and measures what each change really saved in money, CO₂e and released capacity.
 template: splash
 hero:
   tagline: |
-    Give your engineering team full visibility into the carbon footprint and cloud costs of your Kubernetes infrastructure.
-    GreenKube is the open-source FinGreenOps tool built for tech SMEs — measure energy consumption, spot wasteful workloads, reduce CO₂ emissions, and cut cloud spending.
+    Every recommendation. One pull request. Proven savings.
+    GreenKube is the open-source optimization loop for Kubernetes clusters run with GitOps: it gathers advice from the tools you already run, delivers the best changes as pull requests to your Argo CD or Flux repository, and measures what each merged change actually saved.
   actions:
     - text: Get Started
       link: /getting-started/quickstart/
       icon: right-arrow
       variant: primary
+    - text: How the loop works
+      link: /concepts/loop/
+      variant: secondary
     - text: View on GitHub
       link: https://github.com/GreenKubeCloud/GreenKube
       icon: external
       variant: minimal
 ---
 
-import { LinkCard } from '@astrojs/starlight/components';
+import { LinkCard, CardGrid, Card, Aside } from '@astrojs/starlight/components';
 
 ---
 
-## Why GreenKube?
+## You don't lack advice. You lack proof.
 
-Whether you're a startup running a single cluster or a growing tech SME scaling across regions, **you deserve visibility into what your infrastructure really costs** — not just in dollars, but in carbon.
+VPA, Goldilocks, KRR, Kubecost, cloud consoles and in-house scripts all produce lists of things to optimize. The hard part comes next:
 
-GreenKube combines **FinOps** (cost optimization) with **GreenOps** (carbon reduction) into a single, open-source platform. It helps engineering teams understand their energy consumption, identify waste, and take concrete action — all without complex setup or expensive SaaS tools.
+- **Which advice should you trust?** Sources use different algorithms and observation windows, and they often disagree.
+- **How do you apply it safely?** In a GitOps setup the cluster mirrors Git. A tool that resizes pods inside the cluster creates drift, and Argo CD or Flux either reverts it or has to be told to ignore it.
+- **What did the change actually save?** Most tools report *potential* savings. Few measure what happened after the change, and fewer tie that result to the commit that caused it.
 
-<div class="feature-cards">
-  <a href="/features/real-time-dashboard/" class="feature-card-link">
-    <div class="feature-card">
-      <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg></div>
-      <h3>Dashboard</h3>
-      <p>SvelteKit dashboard with periodically refreshed carbon and cost summaries, namespace and top-pod charts, node inventory, and optimization recommendations — all served from a single container.</p>
-      <span class="card-arrow">Learn more →</span>
-    </div>
-  </a>
-  <a href="/features/carbon-tracking/" class="feature-card-link">
-    <div class="feature-card">
-      <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg></div>
-      <h3>Carbon Tracking</h3>
-      <p>Estimates CPU-based workload energy and CO₂e using available grid-intensity data and documented fallbacks; estimates are not a complete organizational inventory.</p>
-      <span class="card-arrow">Learn more →</span>
-    </div>
-  </a>
-  <a href="/features/cost-optimization/" class="feature-card-link">
-    <div class="feature-card">
-      <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
-      <h3>Cost Optimization</h3>
-      <p>Identifies zombie pods, oversized workloads, and autoscaling opportunities with estimated savings in both cost and carbon emissions.</p>
-      <span class="card-arrow">Learn more →</span>
-    </div>
-  </a>
-  <a href="/features/easy-deployment/" class="feature-card-link">
-    <div class="feature-card">
-      <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg></div>
-      <h3>Easy Deployment</h3>
-      <p>Production-ready Helm chart with PostgreSQL, auto-discovery of Prometheus and OpenCost, RBAC, and health probes. Deploy in minutes.</p>
-      <span class="card-arrow">Learn more →</span>
-    </div>
-  </a>
-</div>
+GreenKube closes that loop.
 
 ---
 
-## Key Features
+## The loop
 
 <div class="feature-cards cols-3">
-  <a href="/features/multi-resource-monitoring/" class="feature-card-link">
+  <a href="/sources/overview/" class="feature-card-link">
     <div class="feature-card compact">
-      <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg></div>
-      <h3>Multi-Resource Monitoring</h3>
-      <p>Collect CPU, memory, network I/O, disk I/O, storage, and pod restarts per pod. Energy and CO₂e estimation is currently CPU-based; additional dimensions are coming in future releases.</p>
-      <span class="card-arrow">Learn more →</span>
+      <h3>1. Aggregate</h3>
+      <p>Recommendations from GreenKube's own analyzers, VPA and Goldilocks, KRR, Kubecost, Polaris, the GKE recommender, Azure Advisor, Karpenter NodePools and a push API, converted into one model with their provenance.</p>
+      <span class="card-arrow">Sources →</span>
     </div>
   </a>
-  <a href="/features/smart-recommendations/" class="feature-card-link">
+  <a href="/concepts/recommendations/" class="feature-card-link">
     <div class="feature-card compact">
-      <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 1 1 7.072 0l-.548.547A3.374 3.374 0 0 0 14 18.469V19a2 2 0 1 1-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/></svg></div>
-      <h3>Smart Recommendations</h3>
-      <p>Workload analysis identifies idle pods, rightsizing opportunities, autoscaling candidates, and carbon-aware scheduling options.</p>
-      <span class="card-arrow">Learn more →</span>
+      <h3>2. Cross-analyse</h3>
+      <p>A consensus engine merges the votes of every source. Each recommendation carries evidence, a projected impact, a risk level, a confidence score and a risk-adjusted expected value.</p>
+      <span class="card-arrow">Recommendations →</span>
     </div>
   </a>
-  <a href="/features/flexible-storage/" class="feature-card-link">
+  <a href="/concepts/gitops-delivery/" class="feature-card-link">
     <div class="feature-card compact">
-      <div class="feature-icon"><img src="/postgres-logo.png" alt="Storage" class="feature-logo" /></div>
-      <h3>Flexible Storage</h3>
-      <p>Supports PostgreSQL for persistent deployments and SQLite for development or standalone use.</p>
-      <span class="card-arrow">Learn more →</span>
+      <h3>3. One-click pull request</h3>
+      <p>GreenKube finds the workload's Git source through Argo CD or Flux, renders the exact diff, and opens a pull request on GitHub, GitLab or Gitea once you approve that diff.</p>
+      <span class="card-arrow">GitOps delivery →</span>
     </div>
   </a>
-  <a href="/features/multi-cloud-support/" class="feature-card-link">
+  <a href="/concepts/gitops-delivery/#sync-and-apply-detection" class="feature-card-link">
     <div class="feature-card compact">
-      <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg></div>
-      <h3>Multi-Cloud Support</h3>
-      <p>Built-in profiles and region-to-carbon-zone mappings for AWS, GCP, Azure, OVHcloud, and Scaleway, with coverage varying by region.</p>
-      <span class="card-arrow">Learn more →</span>
+      <h3>4. Verify the sync</h3>
+      <p>After the merge, GreenKube waits for Argo CD or Flux to sync the merged revision and checks that the new configuration is really live in the cluster.</p>
+      <span class="card-arrow">Sync and apply →</span>
     </div>
   </a>
-  <a href="/features/historical-analysis/" class="feature-card-link">
+  <a href="/methodology/savings-measurement/" class="feature-card-link">
     <div class="feature-card compact">
-      <div class="feature-icon"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg></div>
-      <h3>Historical Analysis</h3>
-      <p>Report on any time period with flexible grouping (daily, monthly, yearly). Export to CSV or JSON for BI integration.</p>
-      <span class="card-arrow">Learn more →</span>
+      <h3>5. Measure</h3>
+      <p>Each change is measured against a counterfactual (what the workload would have cost without it), with a 90% confidence interval and confounder checks, and compared with its projection.</p>
+      <span class="card-arrow">Savings measurement →</span>
     </div>
   </a>
-  <a href="/features/rest-api/" class="feature-card-link">
+  <a href="/concepts/measurements-and-ledger/" class="feature-card-link">
     <div class="feature-card compact">
-      <div class="feature-icon"><img src="/fastapi-logo.svg" alt="REST API" class="feature-logo" /></div>
-      <h3>REST API</h3>
-      <p>FastAPI API with OpenAPI documentation for metrics, recommendations, configuration, and reports.</p>
-      <span class="card-arrow">Learn more →</span>
+      <h3>6. Record</h3>
+      <p>Outcomes go into an append-only, hash-chained ledger linked to the pull request, merge commit, synced revision and measurement. CSV and FOCUS-aligned exports.</p>
+      <span class="card-arrow">The ledger →</span>
     </div>
   </a>
 </div>
 
 ---
 
-## Architecture at a Glance
+## Three results, never mixed
 
-GreenKube follows a clean, hexagonal architecture. Here's how data flows through the system:
+Every change is reported in three dimensions, each with its own units and its own label (*projected* or *measured*):
 
-import ArchitectureDiagram from '../../components/diagrams/ArchitectureDiagram.astro';
+<CardGrid>
+  <Card title="Money" icon="approve-check">
+    Allocated cost from OpenCost, a bundled price catalog (AWS, GCP, Azure, OVHcloud, Scaleway) or your own rates. The share expected to reach the bill is shown separately, with its realization factor.
+  </Card>
+  <Card title="CO₂e" icon="star">
+    Operational emissions (energy times grid intensity from Electricity Maps, Wattnet or regional defaults) and embodied emissions, side by side with cost on every recommendation.
+  </Card>
+  <Card title="Released capacity" icon="rocket">
+    CPU cores and memory freed, projected and measured. Never converted to money, and the honest result on a fixed-capacity or on-premises cluster where the bill only moves when a node is removed.
+  </Card>
+</CardGrid>
 
-<ArchitectureDiagram />
-
-<LinkCard title="Learn more about the architecture →" href="/architecture/overview/" />
+<LinkCard title="What released capacity means →" href="/concepts/released-capacity/" />
 
 ---
 
-## Quick Install
+## Principles
 
-Get GreenKube running in your Kubernetes cluster in under 5 minutes:
+<div class="feature-cards">
+  <div class="feature-card">
+    <h3>Git is the only write path</h3>
+    <p>No admission webhooks, no in-place mutation, no <code>ignoreDifferences</code> drift. Every change is a pull request your team reviews, and a rollback is a pull request too.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Projected is never shown as realized</h3>
+    <p>Projected, measured allocated and realized (billed) savings are separate methods, labelled everywhere, and never added together.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Fail closed, explain why</h3>
+    <p>When a change cannot be automated safely, GreenKube refuses and says why, with the fix. A signal that cannot be read is reported as unavailable, never counted as a pass.</p>
+  </div>
+  <div class="feature-card">
+    <h3>Neutral by design</h3>
+    <p>GreenKube's own analyzers are one source among others. Each source is a plugin, and the evidence travels with the change into the pull request.</p>
+  </div>
+</div>
+
+---
+
+## Works where your clusters run
+
+GreenKube runs in the cluster it optimizes, **on-premises and on clouds**: AWS, GCP, Azure, OVHcloud, Scaleway, kubeadm, k3s or bare metal. One Helm install deploys the API, the controller, an isolated renderer and PostgreSQL. There is no profile and no feature flag: discovery, previews, delivery, sync tracking and measurement activate themselves when their prerequisites appear, and the **Setup** page lists what is active and the fix for anything missing.
+
+<Aside type="tip" title="On-premises">
+  Install [OpenCost](https://www.opencost.io/) next to GreenKube. Without it, configured rates are never trusted for measurement, so cost savings stay unverified on clusters without a bundled price catalog. Released capacity is measured either way.
+</Aside>
+
+---
+
+## Try it
 
 ```bash
-# Add the Helm repository
-helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube
-helm repo update
-
-# Install GreenKube
-helm install greenkube greenkube/greenkube \
-  -n greenkube --create-namespace
-
-# Access the dashboard
-kubectl port-forward svc/greenkube-api 8000:8000 -n greenkube
+# The demo: the full dashboard with sample data, no cluster needed
+docker run --rm -p 9000:9000 greenkube/greenkube demo --no-browser --port 9000
+# Open http://localhost:9000
 ```
-
-Then open [http://localhost:8000](http://localhost:8000) in your browser.
-
-<LinkCard title="Full installation guide →" href="/getting-started/installation/" />
-
----
-
-## Try It Without a Cluster
-
-Explore GreenKube instantly with **Demo Mode** — no live cluster metrics needed:
 
 ```bash
-# With Docker (no Kubernetes needed):
-docker run --rm -p 9000:9000 greenkube/greenkube:latest demo --no-browser --port 9000
-# → Open http://localhost:9000
-
-# Or deploy a standalone demo pod:
-kubectl run greenkube-demo \
-  --image=greenkube/greenkube:latest \
-  --restart=Never \
-  --command -- greenkube demo --no-browser --port 9000
-
-kubectl wait --for=condition=Ready pod/greenkube-demo --timeout=60s
-kubectl port-forward pod/greenkube-demo 9000:9000
+# Install in your cluster
+helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm repo update
+helm install greenkube greenkube/greenkube -n greenkube --create-namespace
 ```
 
-Then open [http://localhost:9000](http://localhost:9000) — you'll see **30 days** of realistic data for a fictional **GreenOptic** company — **22 pods** across **5 namespaces** with carbon emissions, costs, recommendations, and a pre-populated savings ledger tied to applied demo recommendations.
+You can also explore the hosted demo at [demo.greenkube.cloud](https://demo.greenkube.cloud).
 
-<LinkCard title="Learn more about Demo Mode →" href="/getting-started/quickstart/#try-the-demo-first-no-cluster-required" />
+<CardGrid>
+  <LinkCard title="Quick start" description="Demo, Helm install and your first pull request." href="/getting-started/quickstart/" />
+  <LinkCard title="Installation" description="Sign-in, connecting Git, external PostgreSQL, Ingress, high availability." href="/getting-started/installation/" />
+</CardGrid>
 
 ---
 
-## Community & Contributors
+## Community
 
-GreenKube is an open-source, community-driven project. We welcome contributions of all kinds!
+GreenKube is open source under the Apache 2.0 license. Contributions are welcome, especially new recommendation sources and support for more GitOps layouts.
 
 <div class="contributors-grid">
   <div class="contributor-card">
@@ -195,29 +177,6 @@ GreenKube is an open-source, community-driven project. We welcome contributions 
   <a href="https://github.com/GreenKubeCloud/GreenKube" class="btn-primary">Star on GitHub</a>
   <a href="/contributing/" class="btn-secondary">Contribute</a>
   <a href="/contact/" class="btn-secondary">Contact Us</a>
-</div>
-
----
-
-## Project Stats
-
-<div class="stats-grid">
-  <div class="stat-card">
-    <div class="stat-value">5</div>
-    <div class="stat-label">Cloud Providers</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-value">1250+</div>
-    <div class="stat-label">Unit Tests</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-value">2</div>
-    <div class="stat-label">Supported Storage Backends</div>
-  </div>
-  <div class="stat-card">
-    <div class="stat-value">Apache 2.0</div>
-    <div class="stat-label">License</div>
-  </div>
 </div>
 
 <div class="stats-badges">
