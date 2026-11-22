@@ -17,13 +17,13 @@ The GreenKube UI is a single-page application served by the API at `/`. Every pa
 | **Ledger** (`/ledger`) | Savings totals per method and every applied change with its measurement, confidence interval, original projection and split across recommendations |
 | **Sources** (`/sources`) | Every recommendation source: status, last run, counts, measured track record and recent runs |
 | **Setup** (`/setup`) | The setup checklist: the four capabilities (discovery, delivery, sync tracking, measurement), each check with its fix, and the repositories found by discovery |
-| **Footprint** (`/footprint`) | Cost, energy and CO₂e per workload, namespace and node, with Nodes and Report sections |
+| **Footprint** (`/footprint`) | Cost, energy and CO₂e per workload, namespace and node, with the allocated totals, the node idle share and the cluster total side by side, and Nodes and Report sections (CSV and JSON exports) |
 | **Automation** (`/automation`) | GitOps discovery, workload binding coverage and manual resolution |
-| **Settings** (`/settings`) | Account and API keys |
+| **Settings** (`/settings`) | Account, sessions, API keys and users |
 
 ### Recommendations
 
-![GreenKube Recommendations: ranked recommendations with filters, potential CO₂e and cost savings, and each card's evidence, risk, confidence and expected value (demo data)](/screenshots/demo-recommendations.png)
+The ranked list shows, on each card, the projected CO₂e and cost savings, the capacity it frees, its evidence, risk, confidence and expected value, with filters by namespace, source, risk and capability, **Rescan**, **Open PR** and **Apply manually**. Rightsizing (CPU and memory, decreases and reliability increases) and orphaned LoadBalancer and PersistentVolume deletions are the only types.
 
 ### Changes
 
@@ -49,6 +49,10 @@ Every page uses one vocabulary and shows each kind of saving in its own panel, w
 - **Pending verification** (`Projected`): the yearly projection of applied changes not measured yet.
 - **Opportunity** (`Projected`): the projected yearly savings of open recommendations. Reliability recommendations add resources on purpose and are counted apart, never as savings.
 - **User declared** (Ledger only): savings declared on manual applies, never counted as measured.
+
+## Signing in
+
+With accounts (`session`, `proxy` or `oidc` mode) you sign in with a username and password or through single sign-on. A headless install in `api_key` mode asks for an API key instead and keeps you signed in with a signed cookie (HTTPS or `localhost` only); see [Installation: SSO and accounts](/getting-started/installation/#optional-sso-and-accounts).
 
 ## Roles
 

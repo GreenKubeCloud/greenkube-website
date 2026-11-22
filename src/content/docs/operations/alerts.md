@@ -50,6 +50,9 @@ Group `greenkube.loop`, rendered with the controller alerts:
 | Alert | Meaning | What to do |
 |---|---|---|
 | `GreenKubeLedgerChainVerificationFailed` (critical, group `greenkube.ledger`) | A ledger entry no longer matches the hash chain (edited, deleted or reordered rows) | Treat the ledger as untrusted, export it and compare it with your last export before anything else writes to it |
+| `GreenKubeLedgerChainKeyDropped` | The ledger head was keyed with `LEDGER_CHAIN_KEY` in the last 30 days and is not any more: the chain may have been re-written without the key | Check that the controller still has the key; see [The ledger chain key](/concepts/measurements-and-ledger/#the-ledger-chain-key) |
+| `GreenKubeLedgerReconciliationFailed`, `GreenKubeLedgerProjectionBacklog` (warning, 3 hours) | The ledger v2 accrued book no longer equals the v1 accrual rows, or v1 rows are not projected | The savings totals may not reconcile with the report; check the controller logs |
+| `GreenKubeAttributionClockSkew`, `GreenKubeAccrualWatermarkAhead` | The controller clock disagrees with the database clock, or the accrual watermark is in the future | Fix the node clock; attribution refuses to accrue meanwhile |
 | `GreenKubeClusterIdentityMismatch` (critical) | Collection refuses the database because it belongs to another cluster (cluster rebuilt, backup restored into a new cluster) | See [Restoring into a new cluster](/operations/backup-restore/#restoring-into-a-new-or-rebuilt-cluster) |
 
 The ledger alert is rendered whenever the ServiceMonitor is enabled, even with the controller alerts off.
@@ -65,6 +68,7 @@ These are example operational objectives, not service guarantees.
 | SLO | Target | Signal |
 |---|---|---|
 | Successful optimization runs | ≥ 99% over 30 days | `greenkube_optimization_runs_total{status="succeeded"}` over all runs |
+| Ledger chain verified | 1 | `min(greenkube_ledger_chain_ok)` |
 | Fresh collection data | < 15 minutes old | `time() - greenkube_last_collection_timestamp_seconds` |
 | No abandoned collection windows | 0 per day | `increase(greenkube_collection_gap_windows_total[1d])` |
 | Collection coverage of the backfill horizon | 1.0 | `greenkube_collection_coverage_ratio` |
