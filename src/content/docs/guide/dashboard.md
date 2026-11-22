@@ -35,6 +35,8 @@ The change page shows the applied change, its measurement and the released capac
 
 ### Footprint
 
+See [Footprint](/guide/footprint/) for the idle share, the node badges and the report exports.
+
 ![GreenKube Footprint, Nodes section: node inventory with CPU and memory capacity (demo data)](/screenshots/demo-nodes.png)
 
 ![GreenKube Footprint, Report section: configure, preview and export the cost, energy and CO₂e report as CSV or JSON (demo data)](/screenshots/demo-report.png)

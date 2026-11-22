@@ -37,6 +37,8 @@ GreenKube is an optimization control loop for Kubernetes clusters managed with G
 | **Ledger** | The append-only, keyed hash-chained record of every amount saved, per hour, method and quantity, linked to the pull request, merge commit, synced revision and measurement. |
 | **Released capacity** | CPU cores and memory freed by a change, projected and measured, in their own units. Never converted to money. |
 
+Cost, energy and CO₂e per workload, namespace and node are collected all along: see [Footprint](/guide/footprint/) and, for how energy and carbon are estimated, [Energy & Carbon](/methodology/energy-and-carbon/).
+
 ## Projected, measured, realized
 
 GreenKube distinguishes several kinds of savings figures and **never adds them together**:

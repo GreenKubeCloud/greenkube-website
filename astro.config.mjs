@@ -7,6 +7,10 @@ import tailwind from '@astrojs/tailwind';
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://docs.greenkube.cloud',
+	redirects: {
+		'/architecture/energy-estimation/': '/methodology/energy-and-carbon/',
+		'/features/carbon-tracking/': '/guide/footprint/',
+	},
 	integrations: [
 		starlight({
 			title: 'GreenKube',
@@ -139,6 +143,7 @@ export default defineConfig({
 					items: [
 						{ label: 'Savings Measurement', slug: 'methodology/savings-measurement' },
 						{ label: 'Impact Model', slug: 'methodology/impact-model' },
+						{ label: 'Energy & Carbon', slug: 'methodology/energy-and-carbon' },
 						{ label: 'Limitations', slug: 'methodology/limitations' },
 					],
 				},
@@ -155,6 +160,7 @@ export default defineConfig({
 					label: 'Reference',
 					items: [
 						{ label: 'Web UI', slug: 'guide/dashboard' },
+						{ label: 'Footprint', slug: 'guide/footprint' },
 						{ label: 'API', slug: 'guide/api' },
 						{ label: 'CLI', slug: 'guide/cli' },
 						{ label: 'Architecture', slug: 'architecture/overview' },
