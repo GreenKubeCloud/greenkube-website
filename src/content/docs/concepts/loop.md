@@ -25,16 +25,16 @@ GreenKube is an optimization control loop for Kubernetes clusters managed with G
 
 | Term | Meaning |
 |---|---|
-| **Source** | Something that produces optimization advice: one of GreenKube's native analyzers, VPA, Goldilocks, KRR, Kubecost, Polaris, the GKE recommender, Azure Advisor, the Karpenter NodePool heuristic, or any tool using the push API. Each source is a plugin with its own health and run history. |
+| **Source** | Something that produces optimization advice: GreenKube's native analyzers (rightsizing, orphaned LoadBalancers and PersistentVolumes), VPA, Goldilocks, Robusta KRR reports, or any tool using the push API. Each source is a plugin with its own health and run history. |
 | **Signal** | One source's proposal for one target and one capability (for example "container `web` of `shop/api`: CPU request 500m → 250m"), in one public schema. Signals are not recommendations. |
-| **Recommendation** | One proposed change on one target, built by the consensus engine from the signals of every source. It carries evidence, a projected impact, a risk level, a confidence score, an expected value and its delivery eligibility. |
+| **Recommendation** | One proposed change on one target, built by the consensus engine from the signals of every source: GreenKube's measured value decides, the other sources move the confidence. It carries evidence, a projected impact, a risk level, a confidence score, an expected value and its delivery eligibility. |
 | **Binding** | Where a workload is defined in Git (repository, ref, path, renderer), found by reading Argo CD Applications and Flux Kustomizations or HelmReleases. |
 | **Plan** | A validated set of file edits implementing one or more recommendations on one binding, identified by a digest. Approval binds to that digest. |
 | **Pull request** | The plan committed on a deterministic branch and opened on GitHub, GitLab or Gitea, with the evidence a reviewer needs. |
 | **Sync** | Argo CD or Flux reporting the merged revision as applied and healthy. |
 | **Change** | One pod-template revision rolled out on one workload, recorded by apply detection with a frozen baseline snapshot of the 7 days before the merge. |
 | **Measurement** | The decision on a change after its post-window: counterfactual minus actual, with a 90% confidence interval, confounder checks and health gates. Outcome `realized`, `not_realized`, `inconclusive` or `contaminated`. |
-| **Ledger** | The append-only, hash-chained record of every amount saved, per hour, method and quantity, linked to the pull request, merge commit, synced revision and measurement. |
+| **Ledger** | The append-only, keyed hash-chained record of every amount saved, per hour, method and quantity, linked to the pull request, merge commit, synced revision and measurement. |
 | **Released capacity** | CPU cores and memory freed by a change, projected and measured, in their own units. Never converted to money. |
 
 ## Projected, measured, realized

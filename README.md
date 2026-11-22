@@ -6,7 +6,7 @@ This is the source for the **[docs.greenkube.cloud](https://docs.greenkube.cloud
 
 ## 🌿 About GreenKube
 
-GreenKube is an open-source **optimization loop for Kubernetes clusters run with GitOps**: it aggregates recommendations from many sources, opens one reviewable pull request for Argo CD or Flux, verifies the sync, and measures realized savings (money, CO₂e and released capacity) against a counterfactual in an append-only ledger.
+GreenKube is an open-source **optimization loop for Kubernetes clusters run with GitOps**: it turns measured usage into rightsizing recommendations, opens one reviewable pull request for Argo CD or Flux, verifies the sync, and measures realized savings (money, CO₂e and released capacity) against a counterfactual in an append-only, keyed hash-chained ledger.
 
 ## 🚀 Project Structure
 

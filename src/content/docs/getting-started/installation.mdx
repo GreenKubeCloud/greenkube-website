@@ -56,7 +56,7 @@ The **Evidence warm-up** check of the setup checklist shows both estimates. A pu
 
 ### Why OpenCost
 
-Without OpenCost, GreenKube still prices every pod: it charges the pod's reservation at its node's list price (bundled catalogs for AWS, GCP, Azure, OVHcloud and Scaleway, `cost_source: pricing_catalog`) or at the rates you configure (`impact.pricing.cpuCoreHour` / `ramGiBHour`, `cost_source: custom_rate`). Those are estimates, not an observed allocation. OpenCost observes the allocation itself and is what change measurements trust first.
+Without OpenCost, GreenKube still prices every pod: it charges the pod's reservation at its node's list price (bundled catalogs for AWS, Azure, OVHcloud and Scaleway, `cost_source: pricing_catalog`) or at the rates you configure (`impact.pricing.cpuCoreHour` / `ramGiBHour`, `cost_source: custom_rate`). Those are estimates, not an observed allocation. OpenCost observes the allocation itself and is what change measurements trust first.
 
 <Aside type="caution" title="On-premises and bare metal">
   On clusters without a bundled catalog (on-premises, kubeadm, k3s, bare metal and unknown providers), configured rates are never trusted for measurement. **Without OpenCost no cost saving is ever verified there**: recommendations, projections and pull requests work, but measurements end `inconclusive` for cost. [Released capacity](/concepts/released-capacity/) is still measured, since it needs no price.
@@ -176,6 +176,8 @@ httpRoute:
 
 Browser users sign in with accounts and server-side sessions; machines use scoped API keys created in **Settings > API keys** (`read`, `write`, `approve`, `plans:deliver`, `signals:write`, `signals:report`, `metrics:read`, `admin`). To provide the first admin password yourself (GitOps), set `auth.admin.existingSecret`. Single sign-on works through an authentication proxy (`config.apiAuthMode: proxy`) or native OpenID Connect (`config.apiAuthMode: oidc`), with IdP groups mapped to the `viewer`, `operator` and `admin` roles.
 
+A headless install in `config.apiAuthMode: api_key` has no accounts: its sign-in page asks for an API key (the bootstrap key `GREENKUBE_API_KEY` or a scoped `gk_` key with the `read` scope) and answers with a signed cookie, never the key itself. It needs HTTPS, or `kubectl port-forward` to `localhost`; plain HTTP to a remote host is refused. Revoking the key, or rotating the bootstrap key, signs its browsers out. Use `session` mode for per-person accounts, roles and audit.
+
 ## Optional: high availability
 
 High availability is two numbers, not another install:
@@ -240,7 +242,7 @@ The default 10 GiB volume holds roughly three years of history for 100 pods, or 
 
 ## Credentials under GitOps
 
-The chart never generates a credential at render time (no `lookup`, no random function), so `helm template` output is stable under Argo CD and Flux. A bootstrap hook (an Argo CD PreSync hook) creates the Secret `<release>` only when it is absent, never rotates a value, and creates `<release>-initial-admin` once. For a fully declarative setup, set `secrets.existingSecret` and `auth.admin.existingSecret`; the chart then renders no Secret and runs no hook.
+The chart never generates a credential at render time (no `lookup`, no random function), so `helm template` output is stable under Argo CD and Flux. A bootstrap hook (an Argo CD PreSync hook) creates the Secret `<release>` only when it is absent, never rotates a value, and creates `<release>-initial-admin` once. It generates the scrape token `GREENKUBE_METRICS_TOKEN`, the [ledger chain key](/concepts/measurements-and-ledger/#the-ledger-chain-key) `LEDGER_CHAIN_KEY`, `GREENKUBE_API_KEY` (`api_key` mode only) and the bundled PostgreSQL password. Back up the Secret with the database: entries chained with the ledger key only verify with it. For a fully declarative setup, set `secrets.existingSecret` and `auth.admin.existingSecret`; the chart then renders no Secret and runs no hook. Add a `LEDGER_CHAIN_KEY` key to that Secret (and `GREENKUBE_METRICS_TOKEN` with `secrets.existingSecretHasMetricsToken: true`).
 
 ## Uninstall
 

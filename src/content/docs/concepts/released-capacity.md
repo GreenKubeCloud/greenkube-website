@@ -16,7 +16,7 @@ Released capacity is the honest result in that situation. It needs **no price, n
 - Released capacity is **never converted to money** and **never added to a cost saving**.
 - It is always labelled **projected** (before the change) or **measured** (after it).
 - An increase is a negative release and is never shown as a saving.
-- It is not accrued in the savings ledger, which books cost and CO₂e only.
+- Measured on a verified change, it is booked in the savings ledger as its own quantities (`cpu_core_h` core-hours, `mem_gib_h` GiB-hours), never added to a savings total and left out of the FOCUS export.
 
 ## Projected
 

@@ -7,9 +7,9 @@ A **recommendation** is one proposed change on one target. GreenKube builds it f
 
 ## What a recommendation contains
 
-- **Target**: namespace, workload owner (kind and name), and container when the change is container-specific. Node-level and cluster-level recommendations target a node, a PersistentVolume or a Service.
+- **Target**: namespace, workload owner (kind and name), and container when the change is container-specific. Deletion recommendations target a PersistentVolume or a LoadBalancer Service.
 - **Type**: for example `RIGHTSIZING_CPU`, `RIGHTSIZING_MEMORY`, `ORPHANED_LOAD_BALANCER`.
-- **Proposal**: the current and proposed values (CPU request 500m → 200m), or a schedule for off-peak scaling.
+- **Proposal**: the current and proposed values (CPU request 500m → 200m), with the limit changes delivered with it.
 - **Evidence**: observation window, sample count and coverage; usage distribution (average, p50, p90, p95, p99, max); restarts and OOM kills; the method used to estimate savings; rollback conditions.
 - **Projected impact**: annual cost and CO₂e by component (operational energy, idle share, embodied), the realization factor, and the [released capacity](/concepts/released-capacity/) in cores and GiB.
 - **Risk** (`low`, `medium`, `high`) and **confidence** (0–1), each with the factors that explain it.
@@ -17,42 +17,45 @@ A **recommendation** is one proposed change on one target. GreenKube builds it f
 - **Consensus**: every source's vote, the agreement between them and whether the advice is contested.
 - **Eligibility**: whether the recommendation can become a pull request and, if not, each blocker with its code, message and fix.
 
-## Native analyzers
+## What GreenKube recommends
 
-GreenKube's own analyzers are one source among others:
+GreenKube recommends what it can deliver as a pull request and measure afterwards:
 
 | Type | Trigger (summary) |
 |---|---|
-| `RIGHTSIZING_CPU`, `RIGHTSIZING_MEMORY` | Two-way. **Decrease** when average usage is far below the request and at least 7 days are observed; **increase** (reliability) when p99 usage approaches the request or OOM kills occur. |
-| `ZOMBIE_POD` | A workload that costs money but uses almost no energy, for at least 7 days. Never for DaemonSets, operators, controllers or webhooks. |
-| `AUTOSCALING_CANDIDATE` | Spiky CPU usage and no HPA. |
-| `OFF_PEAK_SCALING` | Several consecutive idle hours every day; includes a suggested UTC scale-to-zero window. |
-| `IDLE_NAMESPACE` | A namespace with cost but almost no energy, for at least 7 days. |
-| `CARBON_AWARE_SCHEDULING` | A workload running on a grid much more carbon-intensive than its zone average. |
-| `OVERPROVISIONED_NODE` | A node whose average CPU (and memory) utilization is very low. |
-| `ORPHANED_PERSISTENT_VOLUME`, `ORPHANED_LOAD_BALANCER` | A volume or LoadBalancer that appears unused continuously for 7 days. |
+| `RIGHTSIZING_CPU`, `RIGHTSIZING_MEMORY` | Two-way. **Decrease** when average usage is far below the request and at least 7 days are observed; **increase** (reliability) when p99 usage approaches the request, a memory working set nears its limit, or OOM kills occur. |
+| `ORPHANED_PERSISTENT_VOLUME`, `ORPHANED_LOAD_BALANCER` | A volume or LoadBalancer that appears unused continuously for 7 days (`config.recommendations.deletionMinUnusedDays`). The reason lists the evidence; a deletion is never approved automatically. |
 
-Each analyzer can be disabled in `sources.settings`; its active advice then goes stale.
+Each native analyzer can be disabled in `sources.settings` (for example `greenkube.orphaned_lb: { enabled: false }`); its active advice then goes stale. Opt a Service or PersistentVolume out of deletion advice with the annotation `greenkube.io/ignore: "true"`.
+
+<details>
+<summary>Removed in this release: advisory analyzers</summary>
+
+The native advisory analyzers (zombie pods, idle namespaces, off-peak scaling, autoscaling candidates, carbon-aware scheduling, over- and under-provisioned nodes) and the Karpenter NodePool heuristic were removed: their advice could not become a pull request or be measured. On upgrade their open recommendations become `stale` with reason `type_removed`; applied and measured ones keep their status and the ledger is not touched. See [Upgrading](/operations/upgrading/#removed-advisory-analyzers).
+
+</details>
 
 ## Consensus across sources
 
-VPA, KRR and GreenKube's own analyzer may each size the CPU request of the same container. GreenKube groups their signals by target, capability and finding kind, and the consensus engine picks one value per group with `config.recommendations.consensusPolicy`:
+VPA, Goldilocks, KRR and GreenKube's own analyzer may each size the CPU request of the same container. GreenKube groups their signals by target, capability and finding kind and applies **one policy**:
 
-| Policy | Rule |
-|---|---|
-| `safest` (default) | The least aggressive value: the highest proposed request, for decreases and increases alike. |
-| `median` | The median per resource (a value a source actually proposed). |
-| `weighted` | The median weighted by each source's measured track record. |
-| `priority` | The highest-priority source wins. |
+- **GreenKube's measured value decides the size.** The consolidated request or limit is the value GreenKube's own analyzer proposed from its measurements.
+- **Other sources move the confidence.** VPA, Goldilocks, KRR and pushed signals never change the value. Agreement of 0.8 or more between two or more independent sources raises the confidence by 10%; disagreement (agreement below 0.5, or opposite directions) labels the recommendation `contested` and lowers it by 20%. A contested recommendation is never approved automatically.
+- **A source alone never creates a recommendation.** A container request or limit becomes a recommendation only when GreenKube's own analyzer proposed a change for that container. Advice from VPA, Goldilocks, KRR or a push with no native measurement stays a signal on the **Sources** page.
+
+There is nothing to configure: the former policies (`safest`, `median`, `weighted`, `priority`) and the source priority are accepted and ignored, with a warning ([Upgrading](/operations/upgrading/#removed-connectors-and-consensus-policies)).
 
 Rules that keep the vote honest:
 
 - **One vote per engine.** Goldilocks runs the VPA recommender, so Goldilocks and VPA on the same object count once. Both stay listed.
-- **Pushed signals count once.** All pushed signals together (every push client and the KRR and Polaris reports) are at most one independent vote.
-- **Agreement raises confidence.** Agreement of 0.8 or more between two or more independent sources raises the confidence by 10%.
-- **Contested advice is flagged.** Agreement below 0.5, or sources proposing opposite directions, labels the recommendation `contested`. A contested recommendation is never approved automatically.
+- **Pushed signals count once.** All pushed signals together (every push client and the KRR reports) are at most one independent vote.
+- **Floors and small changes are not votes.** A value on a tool's own minimum (KRR `simple` 10m and 100 Mi, the Fairwinds VPA chart 15m and 100 Mi per pod) is set aside, and a change below 5% (or 10m CPU / 16 MiB) votes to keep the current request. Both are listed in `consensus.ignored_votes`.
 - **GreenKube computes the impact.** A source's own savings claim is kept for comparison only; every projection comes from the same Impact Model.
 - **No empty changes.** A consolidated value equal to the current request produces no recommendation.
+
+### OOM floor
+
+A memory increase GreenKube proposes because the container was OOM-killed is a **lower bound**: no external proposal (VPA, Goldilocks, KRR, a pushed or plugin signal) can bring the consolidated value below it. Every OOM-driven increase carries a `consensus.floor` block (`source_id`, `signal_id`, `value`, `reason: oom_kills`, `policy_value`, and `applied`, true when the floor raised the value). An OOM-driven increase also raises the memory limit above the new request with headroom, because the kernel kills at the limit, not at the request. CPU has no equivalent: throttling only adds CPU limit advice.
 
 ## Ranking
 
@@ -62,8 +65,9 @@ Recommendations are ranked by a risk-adjusted expected value: the projected bill
 
 Recommendations need evidence first:
 
-- request increases and other recommendation types appear after `minSamples` samples (36, about 3 hours at the default 5-minute step);
-- request decreases appear only after 7 days of observed history, so that a weekly cycle is seen.
+- request increases appear after `minSamples` samples (36, about 3 hours at the default 5-minute step);
+- request decreases appear only after 7 days of observed history, so that a weekly cycle is seen;
+- a LoadBalancer or PersistentVolume deletion appears only after the resource looked unused for 7 days in a row.
 
 The setup checklist shows when the first recommendation becomes eligible.
 

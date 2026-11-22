@@ -40,7 +40,7 @@ Approval binds to that digest, so the reviewed change is exactly the committed c
 | Container resources | CPU and memory requests (decreases and reliability increases) and limits (set, raise, remove the CPU limit) of named containers, native sidecars and init containers of Deployments, StatefulSets, DaemonSets, Jobs, CronJobs, Argo Rollouts and more |
 | Resource deletion | Removes an orphaned LoadBalancer Service or PersistentVolume from Git (raw and Kustomize), after the full orphan check runs again against the live cluster |
 
-Other recommendation types (replicas, HPAs, off-peak schedules, NodePool changes, zombie workloads, idle namespaces) are advisory and show "Manual change required".
+Deletion pull requests are never approved automatically and have no automated rollback. Open deletion pull requests are re-checked every 5 minutes and closed with a "do not merge" comment when the resource is in use again.
 
 ## Pull request
 

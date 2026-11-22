@@ -14,11 +14,11 @@ The controller migrates the schema at startup and migrations only move forward. 
 | What | Where | How |
 |---|---|---|
 | The GreenKube schema | Bundled StatefulSet `<release>-postgres` or your external database | `pg_dump` (below) |
-| Generated credentials | Secret `<release>` (database password, connection string, API key, session secrets) and `<release>-initial-admin` | `kubectl get secret -o yaml`, stored encrypted (or manage them with `secrets.existingSecret`) |
+| Generated credentials | Secret `<release>` (database password, connection string, scrape token, ledger chain key `LEDGER_CHAIN_KEY`, API key, session secrets) and `<release>-initial-admin` | `kubectl get secret -o yaml`, stored encrypted (or manage them with `secrets.existingSecret`) |
 | Your values | Your values file or GitOps repository | Version control |
 | Git credentials | `greenkube-git-credentials` | Your secret manager |
 
-With the bundled PostgreSQL, the dump and the data volume are only usable with the password of the Secret `<release>`. Keep both.
+With the bundled PostgreSQL, the dump and the data volume are only usable with the password of the Secret `<release>`, and keyed ledger entries only verify with its `LEDGER_CHAIN_KEY`. Keep both.
 
 ## Scheduled backups
 
@@ -109,6 +109,15 @@ curl -s -H "Authorization: Bearer $GREENKUBE_API_KEY" http://localhost:8000/api/
 ```
 
 `chain.ok` must be `true`, with `verified_head_seq` equal to `head_seq` and a `verified_at` after the restart. `ok: false` names the first broken position, and `GreenKubeLedgerChainVerificationFailed` fires. A dump restored as a whole keeps the chain intact; a chain failure after a restore means a partial or edited restore: restore the dump again, completely.
+
+After a restore or a failover that lost the last entries, the stored anchor (and the head published in Prometheus) is ahead of the chain, so verification keeps failing until you accept the current head, once the incident is investigated, with the controller's `LEDGER_CHAIN_KEY` in the environment:
+
+```bash
+kubectl -n greenkube exec deploy/greenkube-controller -- \
+  greenkube db ledger-accept-head --cluster-uid <uid> --reason "restored from backup"
+```
+
+The acceptance is logged with its reason and the head it replaces; nothing is written to the ledger. A backup taken before a key rotation restores the old status row: record the rotation again ([The ledger chain key](/concepts/measurements-and-ledger/#the-ledger-chain-key)).
 
 ## Roll back an upgrade
 

@@ -5,7 +5,7 @@
 
 ## What is GreenKube?
 
-GreenKube collects Kubernetes optimization recommendations from many sources, cross-analyses their value and risk, delivers the best ones as reviewable pull requests to the GitOps repository (Argo CD or Flux), verifies that the change was synced and is live, and measures what each change actually saved against a counterfactual: in money, in CO₂e, and in released capacity (CPU cores and memory freed, projected and measured, never converted to money). Outcomes are recorded in an append-only, hash-chained savings ledger. It runs in the cluster it optimizes, on-premises and on clouds.
+GreenKube turns measured usage into rightsizing recommendations, corroborated by the tools you already run (VPA, Goldilocks, KRR, a push API), ranks them by value and risk, delivers the best ones as reviewable pull requests to the GitOps repository (Argo CD or Flux), verifies that the change was synced and is live, and measures what each change actually saved against a counterfactual: in money, in CO₂e, and in released capacity (CPU cores and memory freed, projected and measured, never converted to money). Outcomes are recorded in an append-only, keyed hash-chained savings ledger. It runs in the cluster it optimizes, on-premises and on clouds.
 
 - **License:** Apache 2.0
 - **Deployment:** one Helm chart (API, controller, isolated renderer, PostgreSQL); no profile, no feature flag
@@ -21,16 +21,16 @@ GreenKube collects Kubernetes optimization recommendations from many sources, cr
 - Git is the only write path: no admission webhooks, no in-place mutation.
 - Projected savings are never shown as realized; projected, measured allocated and realized (billed) savings are never summed.
 - Fail closed and explain why.
-- Neutral by design: GreenKube's own analyzers are one source among others.
+- GreenKube's measured value decides; VPA, KRR and pushed signals adjust the confidence; a source alone never creates a recommendation.
 
 ## The loop
 
-1. Aggregate: GreenKube analyzers, VPA and Goldilocks, Robusta KRR, Kubecost, Fairwinds Polaris, GKE recommender, Azure Advisor, Karpenter NodePools, and a push API with a public signal schema.
-2. Cross-analyse: consensus across sources, evidence, projected impact (Impact Model), risk, confidence, expected value, delivery eligibility.
+1. Aggregate: GreenKube's own measurements (CPU and memory rightsizing, orphaned LoadBalancers and PersistentVolumes), VPA and Goldilocks, Robusta KRR reports pushed to the API, and a push API with a public signal schema.
+2. Decide: one consensus policy (GreenKube's measured value decides, an OOM-driven memory increase is a floor), evidence, projected impact (Impact Model), risk, confidence, expected value, delivery eligibility.
 3. Deliver: plan rendered in an isolated sandbox, approved by digest, pull request on GitHub, GitLab or Gitea (raw YAML, Kustomize, Helm including remote charts).
 4. Verify: Argo CD or Flux sync tracking and apply detection.
 5. Measure: 7-day baseline, load-adjusted counterfactual, 90% confidence interval with a noise floor, confounder checks, health gates, drift monitor.
-6. Record: append-only, hash-chained ledger with CSV and FOCUS-aligned exports.
+6. Record: append-only, hash-chained ledger keyed with LEDGER_CHAIN_KEY (HMAC-SHA256), with CSV and FOCUS-aligned exports.
 
 ## Quick Start
 
@@ -58,5 +58,6 @@ helm install greenkube greenkube/greenkube -n greenkube --create-namespace
 - [Backup and Restore](https://docs.greenkube.cloud/operations/backup-restore/)
 - [Alerts and SLOs](https://docs.greenkube.cloud/operations/alerts/)
 - [Upgrading](https://docs.greenkube.cloud/operations/upgrading/)
+- [Prometheus and Grafana](https://docs.greenkube.cloud/guide/grafana/)
 - [API Reference](https://docs.greenkube.cloud/guide/api/)
 - [Releases](https://docs.greenkube.cloud/releases/)

@@ -70,7 +70,6 @@ Configured rates price projections but are never trusted for measurement: instal
 | `config.recommendations.rightsizingHeadroom` | `1.2` | Multiplier applied to the sizing percentile (p95 for decreases, p99 for increases). |
 | `config.recommendations.rightsizingIncreaseThreshold` | `0.9` | Recommend a request increase when p99 usage exceeds this share of the request. |
 | `config.recommendations.limitsPolicy` | `keep` | Limits advice: `keep`, `remove_cpu` or `memory_equals_request`. |
-| `config.recommendations.consensusPolicy` | `safest` | How several sources are combined: `safest` (least aggressive value), `median`, `weighted`. |
 | `config.recommendations.rankingProfile` | `balanced` | `balanced`, `cost_first`, `carbon_first`, `low_risk` or `quick_wins`. |
 | `config.recommendations.deletionMinUnusedDays` | `7` | Days a LoadBalancer or PersistentVolume must look unused before a deletion is recommended. |
 | `config.recommendations.ttlDays` | `14` | Recommendation expiry. |
@@ -91,6 +90,8 @@ Configured rates price projections but are never trusted for measurement: instal
 | `config.recommendations.verification.windowHours` | `72` | Health-gate window after the rollout. |
 | `config.recommendations.applyTolerance` | `0.25` | Relative deviation still counted as applied by apply detection. |
 | `config.ledger.chainVerifyInterval` | `1h` | Interval of the ledger catch-up and hash-chain verification (`1m` to `24h`). |
+| `secrets.ledgerChainKey` | generated once | Key of the ledger hash chain (`LEDGER_CHAIN_KEY`): new entries are chained with HMAC-SHA256. When omitted, the credentials bootstrap hook generates one once into the Secret `<release>`; with `secrets.existingSecret`, add a `LEDGER_CHAIN_KEY` key to it. Never lose it ([Ledger chain key](/concepts/measurements-and-ledger/#the-ledger-chain-key)). |
+| `secrets.ledgerChainPreviousKeys` | `""` | Verify-only previous chain keys, comma-separated, for a deliberate rotation with `greenkube db ledger-rotate-key`. |
 
 See [Savings measurement](/methodology/savings-measurement/) for what these windows mean statistically.
 
@@ -106,23 +107,27 @@ See [Savings measurement](/methodology/savings-measurement/) for what these wind
 
 ## Sources
 
+GreenKube's measured value decides every size; VPA, Goldilocks, KRR and pushed signals move the confidence. There is no consensus policy to choose.
+
 ```yaml
 sources:
   pluginsEnabled: true
   settings:
-    greenkube.carbon_aware: { enabled: false }   # turn one native analyzer off
+    greenkube.orphaned_lb: { enabled: false }    # turn one native analyzer off (its active advice goes stale)
     vpa: { enabled: auto }                       # auto: run when the VPA CRD exists
-    kubecost: { url: "http://kubecost-cost-analyzer.kubecost:9090", cluster_id: "prod-eu" }
     push: { max_age_hours: 72 }
-  krr:
-    job:
-      enabled: false        # run KRR as a CronJob that pushes its report
-  polaris:
-    job:
-      enabled: false        # run Polaris as a CronJob that pushes its audit
+  toolFloors:                                    # a proposal on a tool's own minimum is not a vote
+    krr: { cpu: 10m, memory: 100Mi }
+    vpa: { cpu: 15m, memory: 100Mi }
+  minChange:                                     # smaller external proposals vote "keep the current request"
+    percent: 5
+    cpuMillicores: 10
+    memoryBytes: 16777216
+  vpa:
+    minSampleHours: 24                           # hours of samples before a VPA votes; 0 disables the check
 ```
 
-Each source page lists its settings: [Sources overview](/sources/overview/).
+The chart runs no KRR job: run KRR yourself and push its report ([Robusta KRR](/sources/krr/)). Each source page lists its settings: [Sources overview](/sources/overview/).
 
 ## GitOps delivery
 
@@ -185,5 +190,5 @@ postgres:
 See [Backup and restore](/operations/backup-restore/).
 
 <Aside type="note" title="Removed and deprecated settings">
-  There is no profile and no `automation.enabled` flag any more, and the chart no longer offers SQLite. 0.3.x keys that still exist are accepted for one minor release and mapped to their replacements; see [Upgrading](/operations/upgrading/).
+  There is no profile and no `automation.enabled` flag any more, and the chart no longer offers SQLite. 0.3.x keys that still exist are accepted for one minor release and mapped to their replacements. The consensus policy and source priority, the settings of the removed connectors (Kubecost, GKE recommender, Azure Advisor, Polaris), the chart's KRR and Polaris CronJobs and the thresholds of the removed advisory analyzers are accepted and ignored, with a warning; see [Upgrading](/operations/upgrading/).
 </Aside>
