@@ -1,25 +1,31 @@
 ---
 title: Sources Overview
-description: GreenKube is a neutral aggregator. Every source of optimization advice, native or third-party, emits signals in one schema; consensus turns them into recommendations.
+description: Where GreenKube's recommendations come from - its own measurements, corroborated by VPA, Goldilocks, Robusta KRR and pushed signals - and how sources run.
 ---
 
-GreenKube is a **neutral aggregator**: its own analyzers are one source of advice among others. Every source, native or third-party, implements the same contract and emits **signals** in one public schema. The consensus engine then builds one recommendation per target from the signals of every source ([Recommendations](/concepts/recommendations/#consensus-across-sources)).
+GreenKube's own measurements decide every recommendation. Other tools corroborate them: every source, native or third-party, implements the same contract and emits **signals** in one public schema, and the consensus engine builds one recommendation per target from them ([Consensus across sources](/concepts/recommendations/#consensus-across-sources)).
+
+**GreenKube's measured value decides; VPA, KRR and pushed signals adjust the confidence; a source alone never creates a recommendation.**
 
 ## Available sources
 
 | Source | Kind | What it contributes | How it is enabled |
 |---|---|---|---|
-| GreenKube analyzers (`greenkube.*`) | native | Two-way CPU and memory rightsizing, zombie workloads, autoscaling and off-peak candidates, idle namespaces, carbon-aware scheduling, node utilization, orphaned PersistentVolumes and LoadBalancers | On by default; each can be disabled |
-| [VPA and Goldilocks](/sources/vpa-goldilocks/) (`vpa`, `goldilocks`) | open source | Container requests from VPAs in recommendation mode, including those Goldilocks creates | Automatic when the VPA CRD exists |
-| [Robusta KRR](/sources/krr/) (`krr`) | open source | Container requests from KRR JSON reports | Push a report, or enable the CronJob |
-| [Kubecost](/sources/kubecost/) (`kubecost`) | commercial | Request sizing, abandoned workloads, node-group sizing | Automatic when the Kubecost API answers in-cluster, or set its URL |
-| [Fairwinds Polaris](/sources/polaris/) (`polaris`) | open source | Hygiene findings, plus requests computed from usage when they are missing | Push an audit, or enable the CronJob |
-| [GKE recommender](/sources/gke/) (`gke`) | cloud | Over- and under-provisioned workload insights | Automatic on GKE with Workload Identity |
-| [Azure Advisor](/sources/azure-advisor/) (`azure_advisor`) | cloud | Cluster-level AKS advice (advisory) | Subscription, cluster name and Workload Identity |
-| [Karpenter and NodePools](/sources/nodepool/) (`greenkube.nodepool`) | native | NodePool consolidation and policy advice, realization context | Automatic when the Karpenter CRDs exist |
+| GreenKube analyzers (`greenkube.rightsizing_cpu`, `greenkube.rightsizing_memory`, `greenkube.orphaned_pv`, `greenkube.orphaned_lb`) | native | Two-way CPU and memory rightsizing from measured usage; orphaned PersistentVolumes and LoadBalancers | On by default; each can be disabled |
+| [VPA and Goldilocks](/sources/vpa-goldilocks/) (`vpa`, `goldilocks`) | open source | Container requests from mature VPAs in recommendation mode, including those Goldilocks creates | Automatic when the VPA CRD exists |
+| [Robusta KRR](/sources/krr/) (`krr`) | open source | Container requests from KRR JSON reports you push | Run KRR yourself (CI or your own CronJob) and push its report |
 | [Push API](/sources/push/) (`push:<client>`) | custom | Anything your tools produce, in the public signal schema | A `signals:write` API key |
 
-Third-party advice never reaches a pull request without going through consensus and risk review: a plugin or connector cannot create a recommendation on its own (fail closed). GreenKube's Impact Model computes every savings figure shown; a source's own estimate is kept for comparison only.
+Any other tool sends its advice through the push API. Third-party advice never reaches a pull request without going through consensus and risk review: a plugin or connector cannot create a recommendation on its own (fail closed). GreenKube's Impact Model computes every savings figure shown; a source's own estimate is kept for comparison only.
+
+Karpenter, the Cluster Autoscaler and HPAs are read for the [realization factor](/sources/nodepool/) and the rightsizing evidence, not as sources.
+
+<details>
+<summary>Removed in this release</summary>
+
+The Kubecost, GKE recommender, Azure Advisor and Polaris connectors, the chart's KRR and Polaris CronJobs, the Karpenter NodePool heuristic, the native advisory analyzers and the consensus policies (`safest`, `median`, `weighted`, `priority`) are gone. Their settings are accepted and ignored with a warning, and `POST /api/v1/sources/polaris/reports` answers `404`. Push the advice of those tools to `POST /api/v1/signals` instead. See [Upgrading](/operations/upgrading/#removed-connectors-and-consensus-policies).
+
+</details>
 
 ## Signals
 
@@ -27,17 +33,17 @@ Third-party advice never reaches a pull request without going through consensus 
 |---|---|
 | **Signal** | One source's proposal for one target and one capability |
 | **Target** | The cluster-qualified object a signal is about (`cluster/group.Kind/namespace/name[/container]`) |
-| **Capability** | `container_requests`, `container_limits`, `replicas`, `horizontal_autoscaling`, `schedule`, `cleanup`, `node_pool`, `placement`, `hygiene` |
-| **Proposal** | `container_resources`, `replicas`, `hpa`, `schedule`, `deletion`, `node_pool`, or `advisory` (never a pull request) |
+| **Capability** | The optimization domain, for example `container_requests`, `container_limits`, `cleanup` |
+| **Proposal** | The typed change, for example `container_resources` or `deletion`; `advisory` is never a pull request |
 | **Engine family** | Set when several sources relay one engine (Goldilocks and VPA): consensus counts one vote per engine |
 
 The public schemas are [`signal.v1alpha1.json`](https://github.com/GreenKubeCloud/GreenKube/blob/main/schemas/signal.v1alpha1.json) and [`signal-batch.v1alpha1.json`](https://github.com/GreenKubeCloud/GreenKube/blob/main/schemas/signal-batch.v1alpha1.json).
 
 ## How sources run
 
-Scans run in the leader controller. For each enabled source, the runner probes it (`unavailable` is not a failure), collects within a timeout, validates the batch (wrong source id, undeclared capability, oversized payloads), and records the run and its signals. A source that keeps failing has its circuit opened for a cool-down, and its last known advice is kept. Only a complete, successful run can resolve earlier advice of that source.
+Scans run in the leader controller. For each enabled source, the runner probes it (`unavailable` is not a failure), collects within a timeout, validates the batch (wrong source id, undeclared capability, a resource signal without a resource value, oversized payloads), and records the run and its signals. A source that keeps failing has its circuit opened for a cool-down, and its last known advice is kept. Only a complete, successful run can resolve earlier advice of that source.
 
-The **Sources** page of the UI (and `GET /api/v1/sources`) shows every source with its status (`healthy`, `degraded`, `failing`, `unavailable`, `disabled`, `misconfigured`, `pending`), last run, signal and recommendation counts, and its **measured track record** (for example "14/16 realized").
+The **Sources** page of the UI (and `GET /api/v1/sources`) shows every source with its status (`healthy`, `degraded`, `failing`, `unavailable`, `disabled`, `misconfigured`, `pending`, `unregistered`), last run, signal and recommendation counts, and its **measured track record**. Advice that never became a recommendation (no native measurement of the target) stays visible there as signals.
 
 ## Configuration
 
@@ -45,11 +51,12 @@ The **Sources** page of the UI (and `GET /api/v1/sources`) shows every source wi
 sources:
   pluginsEnabled: true          # load third-party sources installed in the image
   settings:                     # keyed by source id
-    greenkube.carbon_aware: { enabled: false }
+    greenkube.orphaned_lb: { enabled: false }
     vpa: { enabled: auto }      # auto: run when the VPA CRD exists
+    push: { max_age_hours: 72 }
 ```
 
-`enabled` is `true`, `false` or `auto`. An invalid entry disables that source only and is reported. Never put credentials in these settings: they live in a ConfigMap.
+`enabled` is `true`, `false` or `auto`. An invalid entry disables that source only and is reported. Never put credentials in these settings: they live in a ConfigMap. `sources.toolFloors`, `sources.minChange` and `sources.vpa.minSampleHours` decide which external proposals count as votes ([Configuration](/getting-started/configuration/#sources)).
 
 ## Writing your own source
 
