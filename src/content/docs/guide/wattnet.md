@@ -5,7 +5,7 @@ description: Use the free, EU-funded Wattnet API as an alternative to Electricit
 
 import { Aside, Steps } from '@astrojs/starlight/components';
 
-GreenKube's grid carbon intensity source is provider-agnostic. In addition to [Electricity Maps](https://www.electricitymaps.com/) (the default), you can select **[Wattnet](https://wattnet.eu)** — a free, EU-funded service tracking the environmental footprint of European electricity.
+GreenKube's grid carbon intensity source is provider-agnostic. In addition to [Electricity Maps](https://www.electricitymaps.com/) (the default), you can select **[Wattnet](https://wattnet.eu)** — a free, EU-funded service tracking the environmental footprint of European electricity. How intensity enters the CO₂e figures, and the fallbacks when no live value exists, are described in [Energy & Carbon](/methodology/energy-and-carbon/#grid-carbon-intensity).
 
 ## Why Wattnet?
 

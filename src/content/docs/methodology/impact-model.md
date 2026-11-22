@@ -44,7 +44,7 @@ Properties:
 2. Otherwise the node's CPU capacity scales a default profile.
 3. Otherwise a default profile is used, and the projection is flagged `unknown_node_profile`.
 
-Grid intensity comes from Electricity Maps or [Wattnet](/guide/wattnet/) for the node's electricity zone and hour, with zone defaults when no live value is available.
+Grid intensity comes from Electricity Maps or [Wattnet](/guide/wattnet/) for the node's electricity zone and hour, with zone defaults when no live value is available. Power profiles, the GPU model, embodied emissions, grid intensity, PUE and what is measured versus estimated are detailed in [Energy & Carbon](/methodology/energy-and-carbon/).
 
 ## Unit prices: the cost fallback chain
 
