@@ -25,7 +25,7 @@ import { Card, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
 
 Teams running Kubernetes do not lack optimization advice. The hard part comes after the advice:
 
-- **Trust.** VPA, KRR, Kubecost and cloud recommenders use different algorithms and windows, and they disagree. Which one is right for this workload?
+- **Trust.** VPA, Goldilocks, KRR and cloud recommenders use different algorithms and windows, and they disagree. Which one is right for this workload?
 - **Safe application.** With GitOps, the cluster mirrors Git. Resizing pods in place creates drift that Argo CD or Flux reverts, or that has to be hidden with `ignoreDifferences`.
 - **Proof.** Most tools stop at *potential* savings. Few measure what happened after the change, and fewer link the result to the commit that caused it.
 
@@ -33,8 +33,8 @@ Teams running Kubernetes do not lack optimization advice. The hard part comes af
 
 | Stage | What GreenKube does |
 |---|---|
-| **Aggregate** | Reads its own analyzers and the sources installed in your cluster (VPA and Goldilocks, KRR, Kubecost, Polaris, GKE recommender, Azure Advisor, Karpenter NodePools, a push API) and converts everything into one signal model, provenance kept. |
-| **Cross-analyse** | Merges the signals of every source by consensus: every vote is shown, two sources of the same engine count once, and contested advice is labelled and never approved automatically. Each recommendation carries evidence, a projected impact, a risk level, a confidence score and a risk-adjusted expected value. |
+| **Aggregate** | Starts from GreenKube's own measurements and reads the other sources of advice in your cluster (VPA and Goldilocks, Robusta KRR reports and anything sent to the push API) into one signal model, provenance kept. |
+| **Decide** | GreenKube's measured value decides each size; the other sources raise the confidence when they agree and lower it when they disagree (one vote per engine, contested advice labelled and never approved automatically). A source alone never creates a recommendation. Each recommendation carries evidence, a projected impact, a risk level, a confidence score and a risk-adjusted expected value. |
 | **Deliver** | Finds the workload's Git source through Argo CD or Flux, renders the change in an isolated sandbox, and opens a pull request on GitHub, GitLab or Gitea once a signed-in user approves the exact diff (its digest). |
 | **Verify** | Waits for Argo CD or Flux to sync the merged revision, then detects that the new configuration is live. |
 | **Measure** | Compares the workload after the change with a counterfactual built from the 7 days before it, with a 90% confidence interval, confounder checks and health gates, and compares the result with the projection. |
@@ -69,7 +69,7 @@ It runs in the cluster it optimizes, **on-premises and on clouds** (AWS, GCP, Az
 
 - It never changes a workload directly in the cluster. Without GitOps, [manual mode](/concepts/gitops-delivery/#without-gitops-manual-mode) gives you the `kubectl` steps and measures the change once you mark it applied.
 - It does not claim billed savings it has not measured. Today it measures **allocated** savings (what the changed workloads stop being charged) and shows the expected share that reaches the bill. Pool-level measurement of billed savings is on the roadmap.
-- Pull requests cover CPU and memory requests and limits (decreases and increases) and deletions of orphaned LoadBalancers and PersistentVolumes. Other recommendation types (replicas, HPAs, off-peak schedules, NodePool changes) are advisory for now.
+- It recommends what it can deliver and measure: CPU and memory requests and limits (decreases and increases) and deletions of orphaned LoadBalancers and PersistentVolumes. Advisory-only analyzers (zombie pods, idle namespaces, off-peak scaling, node and NodePool advice) were removed in this release.
 
 ## Next steps
 

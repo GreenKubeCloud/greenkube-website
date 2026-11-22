@@ -26,7 +26,7 @@ import { LinkCard, CardGrid, Card, Aside } from '@astrojs/starlight/components';
 
 ## You don't lack advice. You lack proof.
 
-VPA, Goldilocks, KRR, Kubecost, cloud consoles and in-house scripts all produce lists of things to optimize. The hard part comes next:
+VPA, Goldilocks, KRR, cloud consoles and in-house scripts all produce lists of things to optimize. The hard part comes next:
 
 - **Which advice should you trust?** Sources use different algorithms and observation windows, and they often disagree.
 - **How do you apply it safely?** In a GitOps setup the cluster mirrors Git. A tool that resizes pods inside the cluster creates drift, and Argo CD or Flux either reverts it or has to be told to ignore it.
@@ -42,14 +42,14 @@ GreenKube closes that loop.
   <a href="/sources/overview/" class="feature-card-link">
     <div class="feature-card compact">
       <h3>1. Aggregate</h3>
-      <p>Recommendations from GreenKube's own analyzers, VPA and Goldilocks, KRR, Kubecost, Polaris, the GKE recommender, Azure Advisor, Karpenter NodePools and a push API, converted into one model with their provenance.</p>
+      <p>GreenKube's own measurements, corroborated by VPA and Goldilocks, Robusta KRR and any tool through a push API, in one model with their provenance.</p>
       <span class="card-arrow">Sources →</span>
     </div>
   </a>
   <a href="/concepts/recommendations/" class="feature-card-link">
     <div class="feature-card compact">
-      <h3>2. Cross-analyse</h3>
-      <p>A consensus engine merges the votes of every source. Each recommendation carries evidence, a projected impact, a risk level, a confidence score and a risk-adjusted expected value.</p>
+      <h3>2. Decide</h3>
+      <p>GreenKube's measured value decides each size; the other sources raise or lower the confidence, and contested advice is labelled. Each recommendation carries evidence, a projected impact, a risk level, a confidence score and a risk-adjusted expected value.</p>
       <span class="card-arrow">Recommendations →</span>
     </div>
   </a>
@@ -91,7 +91,7 @@ Every change is reported in three dimensions, each with its own units and its ow
 
 <CardGrid>
   <Card title="Money" icon="approve-check">
-    Allocated cost from OpenCost, a bundled price catalog (AWS, GCP, Azure, OVHcloud, Scaleway) or your own rates. The share expected to reach the bill is shown separately, with its realization factor.
+    Allocated cost from OpenCost, a bundled price catalog (AWS, Azure, OVHcloud, Scaleway) or your own rates. The share expected to reach the bill is shown separately, with its realization factor.
   </Card>
   <Card title="CO₂e" icon="star">
     Operational emissions (energy times grid intensity from Electricity Maps, Wattnet or regional defaults) and embodied emissions, side by side with cost on every recommendation.
@@ -122,7 +122,7 @@ Every change is reported in three dimensions, each with its own units and its ow
   </div>
   <div class="feature-card">
     <h3>Neutral by design</h3>
-    <p>GreenKube's own analyzers are one source among others. Each source is a plugin, and the evidence travels with the change into the pull request.</p>
+    <p>Every source is a plugin of the same Source SDK, and the evidence travels with the change into the pull request. A source alone never creates a recommendation: GreenKube's own measurement is required.</p>
   </div>
 </div>
 

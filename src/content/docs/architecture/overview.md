@@ -6,9 +6,9 @@ description: GreenKube's components and process topology - a stateless API, one 
 GreenKube has four parts:
 
 - **Measurement layer**: collectors and storage. It produces per-workload usage, cost, energy and CO₂e, which feed both the recommendation evidence and the before/after comparison used for measurement.
-- **Optimization engine**: sources, analyzers, consensus, evidence and ranking.
+- **Optimization engine**: sources, analyzers, consensus (GreenKube's measured value decides, the other sources move the confidence), evidence and ranking.
 - **GitOps delivery**: discovery, bindings, plans, the renderer sandbox, plan execution, and sync.
-- **Measurement and savings ledger**: apply detection, change measurement, the drift monitor and the hash-chained ledger.
+- **Measurement and savings ledger**: apply detection, change measurement, the drift monitor and the keyed, hash-chained ledger.
 
 ## Inputs
 
@@ -21,7 +21,8 @@ GreenKube has four parts:
 | Electricity Maps or Wattnet | Grid carbon intensity per zone |
 | Boavizta | Embodied emissions per instance type |
 | Argo CD and Flux | Workload bindings and sync status |
-| Recommendation sources | VPA, KRR, Kubecost, Polaris, GKE, Azure Advisor, Karpenter, push API |
+| Recommendation sources | VPA (with Goldilocks provenance), Robusta KRR reports and the push API, next to GreenKube's own analyzers |
+| Karpenter, Cluster Autoscaler, HPA | Realization factor and rightsizing evidence (read only; they never produce recommendations) |
 | GitHub, GitLab, Gitea | Repository snapshots, pull requests, merge events |
 
 ## Process topology
@@ -46,7 +47,7 @@ One rule: **the API handles requests, the controller runs every loop.**
 | `controller` | Every periodic loop, declared once in a loop registry. Leader-only loops run on the Lease holder; standbys take over within the Lease duration. Migrates the database at startup. | One leader plus optional hot standbys |
 | `worker` (optional) | Claims and executes queued plan operations, nothing else | Any number of replicas |
 | `renderer` | Isolated Helm and Kustomize rendering: no Secret, no service-account token, egress denied | Independent |
-| PostgreSQL | All state. SQLite remains for `greenkube demo` and local development | — |
+| PostgreSQL | All state; the recommended database. SQLite remains for `greenkube demo` and local development | — |
 
 Each loop has its own task: an exception or a timeout fails only that tick, and a failing loop backs off. The controller serves `/healthz`, `/readyz` (every loop alive with a fresh heartbeat) and `/loops`, and writes a heartbeat to the database every 30 seconds so that the API can report the loop state.
 
@@ -62,6 +63,6 @@ Each loop has its own task: an exception or a timeout fails only that tick, and 
 - **Git is the only write path.** No component writes workloads to the cluster.
 - **Fail closed.** Evidence is never frozen from a failed read; a gate whose input cannot be read is `not_available`, never a pass; unsupported GitOps layouts are refused with a typed reason.
 - **Same model for estimate and measurement.** Projections and stored rows come from one versioned Impact Model.
-- **Append-only accounting.** Ledger rows are never updated or deleted, and their chain is verified.
+- **Append-only accounting.** Ledger rows are never updated or deleted, and their chain is verified; with the chain key (`LEDGER_CHAIN_KEY`) a database writer without the key cannot re-chain them.
 
 The detailed architecture document is [docs/architecture.md](https://github.com/GreenKubeCloud/GreenKube/blob/main/docs/architecture.md).

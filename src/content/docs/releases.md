@@ -20,18 +20,24 @@ GreenKube becomes an optimization loop: aggregate recommendations, deliver them 
 #### Highlights
 
 - **One install, automation always on.** One topology (API, controller, isolated renderer, PostgreSQL), no profile and no feature flag. Delivery activates when the Git credentials Secret exists; `automation.policy.pauseDelivery` is the one off switch. Guided setup checklist.
-- **Sources and consensus.** A Source SDK and new connectors: Goldilocks, Robusta KRR, Kubecost 2.x/3.x, Fairwinds Polaris, GKE recommender, Azure Advisor, Karpenter NodePool advice and a push API with a public signal schema. A consensus engine merges every vote; contested advice is never auto-approved.
-- **Impact Model.** Reservation-aware allocation of cost, energy, operational and embodied CO₂e, a cost fallback chain with bundled price catalogs, a per-pool realization factor, and released capacity in cores and GiB.
+- **Sources and consensus.** A Source SDK; VPA with Goldilocks provenance (maturity checks), Robusta KRR via push and a push API with a public signal schema. One consensus policy: GreenKube's measured value decides, the other sources move the confidence, and a source alone never creates a recommendation. Tool floors and minimum changes are not votes; an OOM-driven memory increase is a floor no external source can lower. Contested advice is never auto-approved.
+- **Impact Model.** Reservation-aware allocation of cost, energy, operational and embodied CO₂e with an explicit node idle share, a cost fallback chain with bundled price catalogs, a per-pool realization factor, and released capacity in cores and GiB.
 - **Pull requests.** Request decreases and increases, limits, native sidecars, init containers and Argo Rollouts; deletion of orphaned LoadBalancers and PersistentVolumes; remote Helm charts (HTTP and OCI) for Argo CD and Flux; GitHub App, GitLab and Gitea; delivery modes `direct`, `patch` and `ci`; optional auto-approval; manual mode without GitOps.
 - **Change measurement.** Every applied change is recorded with a frozen 7-day baseline and measured once against a load-adjusted counterfactual, with a 90% confidence interval, a noise floor, confounder checks, health gates and a drift monitor.
-- **Savings ledger.** Append-only and hash-chained, with projected, measured allocated and user-declared methods never summed, and CSV and FOCUS-aligned exports.
-- **Operations.** Accounts, sessions, SSO (proxy or OpenID Connect) and scoped API keys; scheduled PostgreSQL backups; installation identity per cluster; operations, loop and ledger alerts; high availability with PodDisruptionBudgets.
+- **Savings ledger.** Append-only and hash-chained, keyed with `LEDGER_CHAIN_KEY` (HMAC-SHA256) and maintained with `greenkube db ledger-rotate-key` and `ledger-accept-head`. Projected, measured allocated and user-declared methods are never summed; released capacity and the cost of reliability fixes are booked as their own quantities; CSV and FOCUS-aligned exports.
+- **Operations.** Accounts, sessions, SSO (proxy or OpenID Connect), scoped API keys and API-key sign-in for headless installs; PostgreSQL recommended, with scheduled backups; installation identity per cluster; a trimmed Prometheus exposition (GreenKube's own health and the ledger counters), operations, loop and ledger alerts and the **GreenKube Operations** Grafana dashboard; high availability with PodDisruptionBudgets.
 
 #### Removed
 
 - The install profiles, `values-production.yaml`, the migration Job and SQLite in the Helm chart (SQLite stays for `greenkube demo`).
 - Runtime data-source configuration from the UI (`POST /api/v1/config/services` answers `410 Gone`): data sources are configuration as code.
-- `UNDERUTILIZED_NODE` recommendations, batch-relative ranking, and the `apply-pr` routes (use the plans API).
+- Batch-relative ranking, and the `apply-pr` routes (use the plans API).
+- The native advisory analyzers (zombie pods, idle namespaces, off-peak scaling, autoscaling candidates, carbon-aware scheduling, over- and under-provisioned nodes) and the Karpenter NodePool heuristic.
+- The Kubecost, GKE recommender, Azure Advisor and Polaris connectors, `POST /api/v1/sources/polaris/reports` (now `404`), the chart's KRR and Polaris CronJobs, and the consensus policies `safest`, `median`, `weighted` and `priority` with the source priority.
+- The network, disk, ephemeral-storage and PVC usage dimensions.
+- The sustainability score, the per-pod, per-namespace and per-node footprint series on `/prometheus/metrics`, and the former large Grafana dashboard (replaced by GreenKube Operations under the same Grafana.com id, 25377).
+
+Removed settings are accepted and ignored for this release, with a warning; see [Upgrading](/operations/upgrading/) for every removed setting, route and series.
 
 </div>
 
