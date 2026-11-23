@@ -9,7 +9,7 @@ One `helm install`, one sign-in, optionally one Secret for Git. There is **no pr
 
 ## Install
 
-You need a Kubernetes cluster you administer, Helm 3.10+ and `kubectl`. Prometheus and [OpenCost](https://www.opencost.io/docs/installation/install) are strongly recommended; GreenKube discovers both in the cluster.
+This page installs GreenKube **0.4.0**, the current release. You need a Kubernetes cluster you administer, Helm 3.10+ and `kubectl`. Prometheus and [OpenCost](https://www.opencost.io/docs/installation/install) are strongly recommended; GreenKube discovers both in the cluster.
 
 <Steps>
 
@@ -17,7 +17,7 @@ You need a Kubernetes cluster you administer, Helm 3.10+ and `kubectl`. Promethe
 
    ```bash
    helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm repo update
-   helm install greenkube greenkube/greenkube --namespace greenkube --create-namespace
+   helm install greenkube greenkube/greenkube --namespace greenkube --create-namespace --version 0.4.0
    ```
 
 2. **Sign in**
@@ -86,7 +86,7 @@ What activates when:
 
 ## Optional: configure your installation
 
-Create a values file instead of `--set` flags, then `helm upgrade greenkube greenkube/greenkube -n greenkube -f my-values.yaml`:
+Create a values file instead of `--set` flags, then `helm upgrade greenkube greenkube/greenkube -n greenkube --version 0.4.0 -f my-values.yaml`:
 
 ```yaml
 # my-values.yaml
