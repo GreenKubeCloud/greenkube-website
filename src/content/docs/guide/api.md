@@ -22,6 +22,7 @@ Unauthenticated requests answer `401`. A production instance never serves anonym
 | `GET` | `/setup/status` | The setup checklist: capabilities, checks, and the fix for anything missing |
 | `GET` | `/config` | Non-sensitive runtime configuration, including the pricing `currency` |
 | `GET` | `/health/services` | Health of the configured data sources |
+| `GET` | `/collection/coverage` | Collection coverage ratio and holes |
 
 ## Recommendations and sources
 
@@ -30,13 +31,15 @@ Unauthenticated requests answer `401`. A production instance never serves anonym
 | `GET` | `/recommendations/active` | Active and `pr_open` recommendations with their expected value and delivery `eligibility`, ranked |
 | `GET` | `/recommendations/{id}` | One recommendation |
 | `GET` | `/recommendations/{id}/events` | Its lifecycle audit trail |
-| `GET` | `/api/v2/recommendations/{id}` | The v2 shape: consensus, votes and revisions |
+| `GET` | `/api/v2/recommendations`, `/api/v2/recommendations/{id}` | The v2 shape: typed proposal, impact, risk, value, consensus and revisions |
 | `GET` | `/recommendations/savings` | Projected, run-rate and realized-to-date savings blocks, never summed |
 | `GET` | `/recommendations/export` | Active recommendations as CSV or JSON |
 | `PATCH` / `DELETE` | `/recommendations/{id}/ignore` | Ignore or restore |
 | `GET` | `/recommendations/{id}/manual` | Manual mode: the `kubectl` steps |
 | `POST` | `/recommendations/{id}/manual/applied` | Mark as applied by hand; the change is then measured |
+| `POST` | `/recommendations/{id}/remeasure`, `/recommendations/{id}/rollback-review/dismiss` | Start a new measurement of a `not_realized` or `inconclusive` change; dismiss a rollback review |
 | `POST` | `/optimization/runs` | Queue a scan for the controller (`202`) |
+| `GET` | `/optimization/runs`, `/optimization/runs/{id}` | Scan runs with per-source health and the diff against the previous set |
 | `GET` | `/sources` | Every source with its status, last run and counts |
 | `GET` | `/sources/{id}/runs`, `/sources/{id}/signals` | A source's runs and signals |
 | `GET` | `/sources/track-record` | Measured realization rate per source and capability |
@@ -57,6 +60,7 @@ Unauthenticated requests answer `401`. A production instance never serves anonym
 | `GET` | `/automation/plans/{plan_id}/patch` | The approved plan as a `git format-patch` (patch and CI modes) |
 | `POST` | `/automation/plans/{plan_id}/delivery` | Report a PR opened outside GreenKube (`plans:deliver`) |
 | `POST` | `/automation/plans/{plan_id}/rollback-preview` | Inverse preview for a change in rollback review |
+| `POST` / `DELETE` | `/automation/plans/{plan_id}/cancel`, `/automation/plans/{plan_id}/abandon`, `/automation/plans/{plan_id}` | Cancel, abandon or delete a plan (`cancelled` status with `status_reason`) |
 | `GET` | `/automation/pull-requests` | Pending and open pull requests |
 | `POST` | `/webhooks/{provider_id}` | Signed GitHub, GitLab or Gitea pull-request events |
 
@@ -92,6 +96,6 @@ api /automation/plans/<plan_id>                                      # pr_open â
 curl -fsS -H "Authorization: Bearer $GREENKUBE_API_KEY" http://localhost:8000/api/v2/changes
 ```
 
-## Removed in this release
+## Removed in 0.4.0
 
-`POST /api/v1/sources/polaris/reports` answers `404` for every key; nothing is stored. Footprint, recommendation and dashboard series are no longer exported on `/prometheus/metrics`: read them from `/report/summary`, `/report/export`, `/metrics/summary`, `/metrics/dashboard-summary`, `/nodes` and `/recommendations` instead ([Upgrading](/operations/upgrading/#prometheus-metrics-sustainability-score-and-grafana-dashboard)).
+`POST /api/v1/recommendations/{id}/apply-pr`, `GET â€¦/apply-pr/eligibility` and `GET /api/v1/automation/operations/{operation_id}` are removed: use the plans API and each recommendation's `eligibility`. `POST /api/v1/repository-bindings` is removed, `POST /api/v1/config/services` answers `410 Gone` (data sources are configuration as code), and `POST /api/v1/sources/polaris/reports` answers `404` for every key; nothing is stored. Footprint, recommendation and dashboard series are no longer exported on `/prometheus/metrics`: read them from `/report/summary`, `/report/export`, `/metrics/summary`, `/metrics/dashboard-summary`, `/nodes` and `/recommendations` instead ([Upgrading](/operations/upgrading/#prometheus-metrics-sustainability-score-and-grafana-dashboard)).

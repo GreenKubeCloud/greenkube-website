@@ -5,7 +5,7 @@ description: How GreenKube measures what an applied change saved - a 7-day basel
 
 GreenKube measures every applied change **once**, against a **counterfactual**: what the workload would have cost **without** the change. The method follows the spirit of IPMVP Option B (retrofit isolation with measurement of the affected system): a baseline period before the change, a reporting period after it, a model that adjusts the baseline to the reporting period's conditions, and an uncertainty statement.
 
-This page summarizes the method for reviewers. The reference, with every formula and its version history, is [docs/methodology/savings-measurement.md](https://github.com/GreenKubeCloud/GreenKube/blob/main/docs/methodology/savings-measurement.md) (strategy `request_rightsizing`, version 2.5).
+This page summarizes the method for reviewers. The reference, with every formula and its version history, is [docs/methodology/savings-measurement.md](https://github.com/GreenKubeCloud/GreenKube/blob/main/docs/methodology/savings-measurement.md) (strategy `request_rightsizing`, version 2.6).
 
 ## What is measured
 

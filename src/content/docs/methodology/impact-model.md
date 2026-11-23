@@ -67,7 +67,7 @@ All window totals are annualized over the target's **observed coverage** (not th
 | Container requests (rightsizing) | The reservation released, priced at the sample's unit prices, plus the idle-power and embodied share that follows it |
 | Asset deletion (orphaned PV or LoadBalancer) | The asset's cost (the OpenCost per-asset cost, or a configured default per GiB-month or per LoadBalancer); realization factor 1; CO₂e not modelled |
 
-The workload deletion, replica schedule and node-pool consolidation projections were removed in this release with the advisory analyzers that produced them; projections already stored keep their `impact` object as written.
+The workload deletion, replica schedule and node-pool consolidation projections were removed in 0.4.0 with the advisory analyzers that produced them; projections already stored keep their `impact` object as written.
 
 CO₂e is reported by component (operational energy, idle share, embodied). A measurement is only ever compared with the projected value of the components it sees, on the same allocated basis.
 
@@ -95,7 +95,18 @@ Released requests only remove cost and emissions from the bill when nodes are re
 
 Blockers include `do-not-disrupt` and `safe-to-evict: "false"` pods, scale-down-disabled nodes, PodDisruptionBudgets that allow no disruption, Karpenter `DisruptionBlocked` events, an unhealthy Cluster Autoscaler, and no consolidation decision while nodes are eligible. Inputs that cannot be read are never treated as "no autoscaler". Before the controller has observed the cluster, the factor is 1.0 and labelled `unobserved`.
 
-`impact.autoscalerHint` declares an autoscaler detection cannot see; `impact.realizationFactor` overrides the factor for every projection.
+`impact.autoscalerHint` declares an autoscaler detection cannot see (`none`, `cluster_autoscaler` or `karpenter`); `impact.realizationFactor` overrides the factor for every projection.
+
+### What the controller reads
+
+Karpenter and the Cluster Autoscaler are **not recommendation sources**: the Karpenter NodePool connector was removed in 0.4.0. The controller reads them, read only, for the realization factor and the risk model:
+
+- the Cluster Autoscaler status ConfigMap `kube-system/cluster-autoscaler-status`;
+- Karpenter NodePools (consolidation policy, disruption budgets) and NodeClaims (claim → pool);
+- Karpenter `DisruptionBlocked` events (a blocker: the pool's factor is halved) and `Unconsolidatable` events (reported, factor unchanged);
+- `do-not-disrupt` / `safe-to-evict` annotations and blocking PodDisruptionBudgets.
+
+Events that cannot be read (RBAC) are reported as such, never as "no blocker". The chart's ClusterRole grants `get`/`list` on `karpenter.sh` NodePools and NodeClaims and `list` on core `events`. HPA reads feed the rightsizing evidence and the risk model.
 
 On a fixed-capacity cluster the expected billable saving of a rightsizing is therefore zero: the honest result there is the [released capacity](/concepts/released-capacity/), and the allocated saving still shows what the workload stops being charged.
 

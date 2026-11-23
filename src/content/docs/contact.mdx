@@ -76,7 +76,7 @@ Yes! GreenKube is **100% open source** under the Apache 2.0 license. It's free t
 
 ### Do I need an Electricity Maps token?
 
-No. GreenKube works without an Electricity Maps token by using a default carbon intensity value (500 gCO₂e/kWh). For more accurate, region-specific data, we recommend getting a free token at [electricitymaps.com](https://www.electricitymaps.com/).
+No. Without a token, GreenKube uses the bundled annual mean intensity of each zone or country (2024 values from Ember), and a global default of 500 gCO₂e/kWh only when nothing else is known. For hourly values, set an [Electricity Maps](https://www.electricitymaps.com/) token or use the free, EU-funded [Wattnet](/guide/wattnet/) provider. See [Energy & Carbon](/methodology/energy-and-carbon/#grid-carbon-intensity).
 
 ### Which Kubernetes distributions are supported?
 
@@ -95,7 +95,7 @@ Yes. Without OpenCost, GreenKube prices pods from a bundled price catalog (AWS, 
 
 ### How much resources does GreenKube consume?
 
-With default settings, GreenKube requests 100m CPU and 128Mi memory, with limits of 500m CPU and 512Mi memory. The actual usage is typically well below the limits.
+With default values, the whole install (API, controller, renderer and the bundled PostgreSQL) requests about 325m CPU and 600 MiB of memory, small enough for kind or minikube. See [What gets installed](/getting-started/installation/#what-gets-installed) for each component.
 
 ### Can I contribute?
 

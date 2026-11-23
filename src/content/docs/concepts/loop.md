@@ -55,7 +55,7 @@ GreenKube distinguishes several kinds of savings figures and **never adds them t
 
 | Process | Responsibilities |
 |---|---|
-| **Controller** (`greenkube start`) | Every periodic loop: collection, carbon intensity, compression, recommendation scans, GitOps discovery, sync observation, apply detection, measurement, savings attribution, ledger verification, plan execution. Leader election in production. |
+| **Controller** (`greenkube start`) | Every periodic loop: collection, carbon intensity, compression, recommendation scans, GitOps discovery, sync observation, apply detection, measurement, savings attribution, ledger verification, plan execution. Only the holder of the `<release>-leader` Lease runs the loops. |
 | **API** (`greenkube-api`) | Stateless: REST API and dashboard, plan preview and approval, webhook ingress. Runs no background loop, so it scales horizontally. |
 | **Renderer sandbox** | Renders Kustomize and Helm snapshots with no access to the database, provider tokens or service-account token. |
 | **Automation worker** (optional) | Executes approved plan operations only, as extra capacity next to the controller. |

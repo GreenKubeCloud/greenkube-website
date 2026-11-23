@@ -6,7 +6,7 @@ description: What GreenKube is, the problem it solves, and the principles behind
 import { Card, CardGrid, LinkCard, Aside } from '@astrojs/starlight/components';
 
 <Aside type="note" title="Version covered">
-  This documentation describes the current development version of GreenKube, which ships in the next release (0.4; see the *Unreleased* section of the [changelog](https://github.com/GreenKubeCloud/GreenKube/blob/main/CHANGELOG.md)). The latest published release is 0.3.1; [Upgrading](/operations/upgrading/) covers the move from 0.3.x.
+  This documentation describes GreenKube **0.4.0**, the current release (November 22, 2026; see the [changelog](https://github.com/GreenKubeCloud/GreenKube/blob/main/CHANGELOG.md) and [Releases](/releases/)). [Upgrading](/operations/upgrading/) covers the move from 0.3.x.
 </Aside>
 
 ## What is GreenKube?
@@ -69,7 +69,7 @@ It runs in the cluster it optimizes, **on-premises and on clouds** (AWS, GCP, Az
 
 - It never changes a workload directly in the cluster. Without GitOps, [manual mode](/concepts/gitops-delivery/#without-gitops-manual-mode) gives you the `kubectl` steps and measures the change once you mark it applied.
 - It does not claim billed savings it has not measured. Today it measures **allocated** savings (what the changed workloads stop being charged) and shows the expected share that reaches the bill. Pool-level measurement of billed savings is on the roadmap.
-- It recommends what it can deliver and measure: CPU and memory requests and limits (decreases and increases) and deletions of orphaned LoadBalancers and PersistentVolumes. Advisory-only analyzers (zombie pods, idle namespaces, off-peak scaling, node and NodePool advice) were removed in this release.
+- It recommends what it can deliver and measure: CPU and memory requests and limits (decreases and increases) and deletions of orphaned LoadBalancers and PersistentVolumes. The advisory-only analyzers (zombie pods, idle namespaces, off-peak scaling, autoscaling candidates, carbon-aware scheduling, node utilization) and the Karpenter NodePool connector were removed in 0.4.0.
 
 ## Next steps
 

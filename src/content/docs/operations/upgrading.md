@@ -1,6 +1,6 @@
 ---
 title: Upgrading
-description: Back up first, then upgrade. What changes from GreenKube 0.3.x to 0.4 - one topology, automation always on, PostgreSQL in Helm, removed connectors, analyzers and Prometheus series - and how to move a SQLite install.
+description: Back up first, then upgrade. What changes from GreenKube 0.3.x to 0.4.0 - one topology, automation always on, PostgreSQL only in Helm, removed connectors, analyzers and Prometheus series - and how to move a SQLite install.
 ---
 
 ## Before every upgrade: back up the database
@@ -23,24 +23,27 @@ helm -n greenkube history greenkube   # note the revision to roll back to
 
 Then check the free space of the data volume (a migration that backfills a large table needs about as much free space as that table) and upgrade with `--wait` and a generous `--timeout`.
 
-## From 0.3.x to 0.4
+## From 0.3.x to 0.4.0
 
-GreenKube 0.4 replaces the two install profiles with one topology (api, controller, renderer, PostgreSQL) and turns automation on for everyone: there is no feature flag left, only `automation.policy.pauseDelivery`. Your data is preserved: the bundled PostgreSQL StatefulSet, its volume and its Secret keep their names.
+GreenKube 0.4.0 (released November 22, 2026) replaces the two install profiles with one topology (api, controller, renderer, PostgreSQL) and turns automation on for everyone: there is no feature flag left, only `automation.policy.pauseDelivery`. Your data is preserved: the bundled PostgreSQL StatefulSet, its volume and its Secret keep their names.
 
-| 0.3.x | 0.4 |
+| 0.3.x | 0.4.0 |
 |---|---|
 | `profile: standalone` or `production` | One topology: `<release>-api` and `<release>-controller` Deployments, an optional worker |
 | Migrations in a Helm hook Job or at every pod start | The controller migrates at startup under an advisory lock; API replicas report not ready until the schema is current |
 | `automation.enabled`, `automation.mode` | Always on; delivery activates when Git credentials exist; `pauseDelivery` pauses it |
 | Mandatory `automation.providers[]` with an allowlist | Providers inferred from discovered repositories; one Secret `greenkube-git-credentials`; allowlist `["@discovered"]` |
 | Renderer only with automation | Renderer always deployed |
-| SQLite in Helm | PostgreSQL only; SQLite stays for `greenkube demo` and local development |
+| SQLite in Helm | PostgreSQL only; `config.db.type=sqlite` fails before Helm changes anything. SQLite stays for `greenkube demo` and local development |
 | Three `minSamples` knobs | One: `config.recommendations.minSamples` |
-| `config.recommendations.sourcePriority`, `vpaEnabled`, `karpenterEnabled` | `sources.settings.<id>.enabled`; the source priority and the Karpenter NodePool source are removed (see below) |
+| `config.recommendations.vpaEnabled` | `sources.settings.vpa.enabled` |
+| `config.recommendations.sourcePriority`, `karpenterEnabled` | Removed with the source priority and the Karpenter NodePool connector (see below) |
 
 ### Deprecated values
 
-An upgrade that reuses a 0.3.x values file keeps working for this minor release: the chart maps the old keys and lists each one under **DEPRECATED VALUES** in the install notes. In 0.5 the values schema rejects them. Note that `automation.enabled: false` now means *discovery, previews and measurement run, no pull request is opened*.
+An upgrade that reuses a 0.3.x values file keeps working for this minor release: the chart maps the renamed keys (`profile`, `replicaCount`, `production.*`, `automation.enabled`, `automation.mode`, `automation.workerMetricsPort`, `rendererSandbox.*`, `collector.*`, `resources`, `apiResources`, `config.recommendations.vpaEnabled` and the SQLite values) and lists each one under **DEPRECATED VALUES** in the install notes. They are mapped for one minor release only. Note that `automation.enabled: false` now maps to `automation.policy.pauseDelivery: true`: discovery, previews and measurement run, no pull request is opened.
+
+Values and environment variables of **removed features** (the sections below) are different: they no longer exist, are not listed and are silently ignored. Remove them from your values file.
 
 ### Removed connectors and consensus policies
 
@@ -48,21 +51,21 @@ GreenKube's measured value now decides every size; VPA, Goldilocks, KRR and push
 
 | Removed | On upgrade |
 |---|---|
-| The Kubecost, GKE recommender, Azure Advisor and Polaris connectors | Their `sources.settings.<id>` entries (`kubecost`, `gke`, `azure_advisor`, `polaris`) are accepted and ignored, with one warning at start and a line under DEPRECATED VALUES. Push their advice to `POST /api/v1/signals` instead ([Push API](/sources/push/)). |
+| The Kubecost, GKE recommender, Azure Advisor and Polaris connectors | Their settings no longer exist and are ignored; a leftover `sources.settings` entry (`kubecost`, `gke`, `azure_advisor`, `polaris`) is reported as `unknown_source` by `GET /api/v1/sources`. Push their advice to `POST /api/v1/signals` instead ([Push API](/sources/push/)). |
 | `POST /api/v1/sources/polaris/reports` | Answers `404` for every key; nothing is stored. Delete any job that calls it. |
-| The chart's KRR and Polaris CronJobs (`sources.krr.job.*`, `sources.polaris.job.*`) | Ignored with a line under DEPRECATED VALUES; the CronJobs, their ServiceAccounts and ClusterRoles are deleted by the upgrade. Run KRR yourself and push its report: [Robusta KRR](/sources/krr/) has a ready-made CronJob. |
-| `RECOMMENDATION_CONSENSUS_POLICY` (`safest`, `median`, `weighted`, `priority`; Helm `config.recommendations.consensusPolicy`) | Accepted and ignored, with one warning at start. |
-| `RECOMMENDATION_SOURCE_PRIORITY` (Helm `sources.priority`, `config.recommendations.sourcePriority`) | Accepted and ignored, with one warning at start. |
+| The chart's KRR and Polaris CronJobs (`sources.krr.job.*`, `sources.polaris.job.*`) | Ignored; the upgrade deletes the CronJobs, their ServiceAccounts and ClusterRoles. Run KRR yourself and push its report: [Robusta KRR](/sources/krr/) has a ready-made CronJob. |
+| Consensus policies other than "GreenKube's measured value decides" (`RECOMMENDATION_CONSENSUS_POLICY`, Helm `config.recommendations.consensusPolicy`) | Ignored: there is one policy and nothing to choose. |
+| `RECOMMENDATION_SOURCE_PRIORITY` (Helm `config.recommendations.sourcePriority`) | Ignored. |
 
-Migration `0310` marks the **active** recommendations whose chosen source was a removed connector `stale` (reason `type_removed`). Recommendations in a pull request, being measured or already in the ledger are untouched, and the ledger is never rewritten. The next scan rebuilds the other recommendations with the native value, which may change their proposed value (a new revision). These values are refused in a later release: remove them from your values file.
+Migration `0310` marks the **active** recommendations whose chosen source was a removed connector `stale` (reason `type_removed`). Recommendations in a pull request, being measured or already in the ledger are untouched, and the ledger is never rewritten. The next scan rebuilds the other recommendations with the native value, which may change their proposed value (a new revision).
 
 ### Removed advisory analyzers
 
-The native advisory analyzers (zombie pods, idle namespaces, off-peak scaling, autoscaling candidates, carbon-aware scheduling, over- and under-provisioned nodes) and the Karpenter NodePool heuristic are gone: their advice could not become a pull request or be measured. Rightsizing and the orphaned LoadBalancer and PersistentVolume detection stay.
+The native advisory analyzers (zombie pods, idle namespaces, off-peak scaling, autoscaling candidates, carbon-aware scheduling, node utilization with over- and under-provisioned nodes) and the Karpenter NodePool connector are gone: their advice could not become a pull request or be measured. Native CPU and memory rightsizing and the orphaned LoadBalancer and PersistentVolume detection stay.
 
 - Migration `0300` marks the open recommendations of the retired types (`ZOMBIE_POD`, `IDLE_NAMESPACE`, `OFF_PEAK_SCALING`, `AUTOSCALING_CANDIDATE`, `CARBON_AWARE_SCHEDULING`, `OVERPROVISIONED_NODE`, `UNDERUTILIZED_NODE`), active or ignored, `stale` with reason `type_removed`. No row is deleted, applied and measured ones keep their status, and the savings ledger is not touched.
-- `RECOMMENDATION_KARPENTER_ENABLED` and the analyzer thresholds (`ZOMBIE_COST_THRESHOLD`, `ZOMBIE_ENERGY_THRESHOLD`, `AUTOSCALING_CV_THRESHOLD`, `AUTOSCALING_SPIKE_RATIO`, `OFF_PEAK_IDLE_THRESHOLD`, `OFF_PEAK_MIN_IDLE_HOURS`, `IDLE_NAMESPACE_ENERGY_THRESHOLD`, `CARBON_AWARE_THRESHOLD`, `NODE_UTILIZATION_THRESHOLD`; Helm `config.recommendations.zombieCostThreshold` and siblings, `karpenterEnabled`) are accepted and ignored for this release, with one warning at start.
-- `sources.settings` entries of the removed sources (`greenkube.zombie`, `greenkube.autoscaling`, `greenkube.off_peak`, `greenkube.idle_namespace`, `greenkube.carbon_aware`, `greenkube.nodes`, `greenkube.nodepool`) are accepted and ignored, named in the same warning.
+- `RECOMMENDATION_KARPENTER_ENABLED` and the analyzer thresholds (`ZOMBIE_COST_THRESHOLD`, `ZOMBIE_ENERGY_THRESHOLD`, `AUTOSCALING_CV_THRESHOLD`, `AUTOSCALING_SPIKE_RATIO`, `OFF_PEAK_IDLE_THRESHOLD`, `OFF_PEAK_MIN_IDLE_HOURS`, `IDLE_NAMESPACE_ENERGY_THRESHOLD`, `CARBON_AWARE_THRESHOLD`, `NODE_UTILIZATION_THRESHOLD`; Helm `config.recommendations.karpenterEnabled` and the matching `config.recommendations.*` thresholds) no longer exist and are silently ignored. `LOW_NODE_CPU_THRESHOLD`, `PROMETHEUS_QUERY_RANGE_MAX_SAMPLES` and `SERVICE_URL_ALLOWLIST` are gone too. Remove them.
+- A leftover `sources.settings` entry of a removed source is reported as `unknown_source` by `GET /api/v1/sources` and otherwise ignored.
 
 The Karpenter, Cluster Autoscaler and HPA reads stay: the realization factor and the rightsizing evidence use them.
 
@@ -106,11 +109,11 @@ The upgrade hook generates the savings ledger chain key `LEDGER_CHAIN_KEY` once 
 
 ### From an install with PostgreSQL
 
-Use `--reset-then-reuse-values` (Helm 3.14 or later) or pass your values file again. Plain `--reuse-values` does not work for this upgrade: the keys added in 0.4 would be missing, and the chart stops before changing anything.
+Use `--reset-then-reuse-values` (Helm 3.14 or later) or pass your values file again. Plain `--reuse-values` does not work for this upgrade: the keys added in 0.4.0 would be missing, and the chart stops before changing anything.
 
 ```bash
 helm repo update
-helm upgrade greenkube greenkube/greenkube -n greenkube --reset-then-reuse-values --wait --timeout 10m
+helm upgrade greenkube greenkube/greenkube -n greenkube --version 0.4.0 --reset-then-reuse-values --wait --timeout 10m
 kubectl -n greenkube rollout status deployment/greenkube-controller
 kubectl -n greenkube rollout status deployment/greenkube-api
 kubectl -n greenkube delete configmap greenkube --ignore-not-found   # the old hook ConfigMap
@@ -123,7 +126,7 @@ An upgrade with `config.db.type=sqlite` fails before Helm changes anything and p
 1. Switch to the bundled PostgreSQL with the controller stopped, keeping the old claim:
 
    ```bash
-   helm upgrade greenkube greenkube/greenkube -n greenkube --reset-then-reuse-values \
+   helm upgrade greenkube greenkube/greenkube -n greenkube --version 0.4.0 --reset-then-reuse-values \
      --set config.db.type=postgres --set controller.replicas=0
    ```
 
@@ -141,6 +144,6 @@ The upgrade adds the scrape token `GREENKUBE_METRICS_TOKEN` and the ServiceMonit
 
 The bundled PostgreSQL now accepts connections only from the api, controller and worker pods. A Job of yours that connects to it (backup, `greenkube db copy`) needs the label `greenkube.cloud/postgres-client: "true"` on its pod template.
 
-## Within 0.4
+## Within 0.4.x
 
 Back up first, then `helm upgrade` with your values file. The controller migrates the schema at startup and the API replicas report ready once it is current. To go back after a migration, restore the backup: `helm rollback` alone does not undo migrations.

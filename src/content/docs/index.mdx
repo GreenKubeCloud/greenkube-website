@@ -1,11 +1,11 @@
 ---
-title: GreenKube — Every recommendation. One pull request. Proven savings.
-description: GreenKube is an open-source optimization loop for Kubernetes run with GitOps. It aggregates recommendations from the tools you already run, opens one reviewable pull request for Argo CD or Flux, verifies the sync and measures what each change really saved in money, CO₂e and released capacity.
+title: GreenKube — Rightsizing you can review. Savings you can measure.
+description: GreenKube is an open-source optimization loop for Kubernetes run with GitOps. It sizes container requests from measured usage, opens one reviewable pull request per change for Argo CD or Flux, verifies the sync and measures what each change really saved in money, CO₂e and released capacity.
 template: splash
 hero:
   tagline: |
-    Every recommendation. One pull request. Proven savings.
-    GreenKube is the open-source optimization loop for Kubernetes clusters run with GitOps: it gathers advice from the tools you already run, delivers the best changes as pull requests to your Argo CD or Flux repository, and measures what each merged change actually saved.
+    Rightsizing you can review. Savings you can measure.
+    GreenKube is the open-source optimization loop for Kubernetes clusters run with GitOps: it sizes CPU and memory requests from what your workloads really use, delivers each change as a pull request to your Argo CD or Flux repository, and measures what each merged change actually saved.
   actions:
     - text: Get Started
       link: /getting-started/quickstart/
@@ -142,14 +142,14 @@ GreenKube runs in the cluster it optimizes, **on-premises and on clouds**: AWS, 
 
 ```bash
 # The demo: the full dashboard with sample data, no cluster needed
-docker run --rm -p 9000:9000 greenkube/greenkube demo --no-browser --port 9000
+docker run --rm -p 9000:9000 greenkube/greenkube:0.4.0 demo --no-browser --port 9000
 # Open http://localhost:9000
 ```
 
 ```bash
-# Install in your cluster
+# Install GreenKube 0.4.0 in your cluster
 helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm repo update
-helm install greenkube greenkube/greenkube -n greenkube --create-namespace
+helm install greenkube greenkube/greenkube -n greenkube --create-namespace --version 0.4.0
 ```
 
 You can also explore the hosted demo at [demo.greenkube.cloud](https://demo.greenkube.cloud).

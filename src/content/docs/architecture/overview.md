@@ -17,9 +17,10 @@ GreenKube has four parts:
 | Prometheus (cAdvisor, kube-state-metrics) | Usage, requests, restarts, readiness, throttling, load drivers |
 | Metrics Server | Per-container usage |
 | Kubernetes API | Pods, nodes, workloads, Services, volumes, autoscalers (read-only RBAC; never Secrets) |
-| OpenCost | Observed per-pod and per-asset cost allocation |
+| OpenCost | Observed per-pod and per-asset cost allocation; without it, bundled price catalogs (AWS, Azure, OVHcloud, Scaleway) or your custom rates |
 | Electricity Maps or Wattnet | Grid carbon intensity per zone |
 | Boavizta | Embodied emissions per instance type |
+| NVIDIA DCGM exporter (through Prometheus, optional) | Measured GPU board power and utilization |
 | Argo CD and Flux | Workload bindings and sync status |
 | Recommendation sources | VPA (with Goldilocks provenance), Robusta KRR reports and the push API, next to GreenKube's own analyzers |
 | Karpenter, Cluster Autoscaler, HPA | Realization factor and rightsizing evidence (read only; they never produce recommendations) |
@@ -47,7 +48,7 @@ One rule: **the API handles requests, the controller runs every loop.**
 | `controller` | Every periodic loop, declared once in a loop registry. Leader-only loops run on the Lease holder; standbys take over within the Lease duration. Migrates the database at startup. | One leader plus optional hot standbys |
 | `worker` (optional) | Claims and executes queued plan operations, nothing else | Any number of replicas |
 | `renderer` | Isolated Helm and Kustomize rendering: no Secret, no service-account token, egress denied | Independent |
-| PostgreSQL | All state; the recommended database. SQLite remains for `greenkube demo` and local development | — |
+| PostgreSQL | All state; the only database of a Helm install (bundled StatefulSet or external). SQLite remains for `greenkube demo` and local development | — |
 
 Each loop has its own task: an exception or a timeout fails only that tick, and a failing loop backs off. The controller serves `/healthz`, `/readyz` (every loop alive with a fresh heartbeat) and `/loops`, and writes a heartbeat to the database every 30 seconds so that the API can report the loop state.
 

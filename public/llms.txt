@@ -1,14 +1,15 @@
 # GreenKube
 
 > GreenKube is an open-source optimization loop for Kubernetes clusters run with GitOps.
-> Every recommendation. One pull request. Proven savings.
+> Rightsizing you can review. Savings you can measure.
 
 ## What is GreenKube?
 
 GreenKube turns measured usage into rightsizing recommendations, corroborated by the tools you already run (VPA, Goldilocks, KRR, a push API), ranks them by value and risk, delivers the best ones as reviewable pull requests to the GitOps repository (Argo CD or Flux), verifies that the change was synced and is live, and measures what each change actually saved against a counterfactual: in money, in CO₂e, and in released capacity (CPU cores and memory freed, projected and measured, never converted to money). Outcomes are recorded in an append-only, keyed hash-chained savings ledger. It runs in the cluster it optimizes, on-premises and on clouds.
 
+- **Current release:** 0.4.0 (November 22, 2026)
 - **License:** Apache 2.0
-- **Deployment:** one Helm chart (API, controller, isolated renderer, PostgreSQL); no profile, no feature flag
+- **Deployment:** one Helm chart (API, controller, isolated renderer, PostgreSQL only); no profile, no feature flag
 - **GitHub:** https://github.com/GreenKubeCloud/GreenKube
 - **Docker Hub:** https://hub.docker.com/r/greenkube/greenkube
 - **Artifact Hub:** https://artifacthub.io/packages/helm/greenkube/greenkube
@@ -35,9 +36,9 @@ GreenKube turns measured usage into rightsizing recommendations, corroborated by
 ## Quick Start
 
 ```bash
-docker run --rm -p 9000:9000 greenkube/greenkube demo --no-browser --port 9000
+docker run --rm -p 9000:9000 greenkube/greenkube:0.4.0 demo --no-browser --port 9000
 helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm repo update
-helm install greenkube greenkube/greenkube -n greenkube --create-namespace
+helm install greenkube greenkube/greenkube -n greenkube --create-namespace --version 0.4.0
 ```
 
 ## Documentation Sections
@@ -52,6 +53,8 @@ helm install greenkube greenkube/greenkube -n greenkube --create-namespace
 - [Measurements and Ledger](https://docs.greenkube.cloud/concepts/measurements-and-ledger/)
 - [Released Capacity](https://docs.greenkube.cloud/concepts/released-capacity/)
 - [Sources](https://docs.greenkube.cloud/sources/overview/)
+- [Energy and Carbon Methodology](https://docs.greenkube.cloud/methodology/energy-and-carbon/)
+- [Footprint](https://docs.greenkube.cloud/guide/footprint/)
 - [Savings Measurement Methodology](https://docs.greenkube.cloud/methodology/savings-measurement/)
 - [Impact Model](https://docs.greenkube.cloud/methodology/impact-model/)
 - [Limitations](https://docs.greenkube.cloud/methodology/limitations/)

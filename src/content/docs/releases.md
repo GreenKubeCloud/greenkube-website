@@ -7,15 +7,17 @@ import { Aside, Steps } from '@astrojs/starlight/components';
 
 This page preserves release notes. Notes of older versions describe the behaviour of those versions; for the current behaviour, use the [Concepts](/concepts/loop/), [Configuration](/getting-started/configuration/) and [API](/guide/api/) pages. The complete history is in the [changelog](https://github.com/GreenKubeCloud/GreenKube/blob/main/CHANGELOG.md).
 
-## Next Release (unreleased)
+## Current Release
 
 <div class="release-card">
 
-### v0.4 — The optimization loop
+### 🚀 v0.4.0 — The optimization loop
 
-<span class="release-tag">Upcoming</span>
+<span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
 
-GreenKube becomes an optimization loop: aggregate recommendations, deliver them as GitOps pull requests, prove the savings. This documentation describes this version. Read [Upgrading](/operations/upgrading/) before moving from 0.3.x.
+**Release Date:** November 22, 2026
+
+GreenKube becomes an optimization loop: recommend from its own measurements, deliver the change as a GitOps pull request, then measure the saving and book it in a savings ledger. This documentation describes this version. Read [Upgrading](/operations/upgrading/) and back up the database before moving from 0.3.x.
 
 #### Highlights
 
@@ -25,31 +27,39 @@ GreenKube becomes an optimization loop: aggregate recommendations, deliver them 
 - **Pull requests.** Request decreases and increases, limits, native sidecars, init containers and Argo Rollouts; deletion of orphaned LoadBalancers and PersistentVolumes; remote Helm charts (HTTP and OCI) for Argo CD and Flux; GitHub App, GitLab and Gitea; delivery modes `direct`, `patch` and `ci`; optional auto-approval; manual mode without GitOps.
 - **Change measurement.** Every applied change is recorded with a frozen 7-day baseline and measured once against a load-adjusted counterfactual, with a 90% confidence interval, a noise floor, confounder checks, health gates and a drift monitor.
 - **Savings ledger.** Append-only and hash-chained, keyed with `LEDGER_CHAIN_KEY` (HMAC-SHA256) and maintained with `greenkube db ledger-rotate-key` and `ledger-accept-head`. Projected, measured allocated and user-declared methods are never summed; released capacity and the cost of reliability fixes are booked as their own quantities; CSV and FOCUS-aligned exports.
-- **Operations.** Accounts, sessions, SSO (proxy or OpenID Connect), scoped API keys and API-key sign-in for headless installs; PostgreSQL recommended, with scheduled backups; installation identity per cluster; a trimmed Prometheus exposition (GreenKube's own health and the ledger counters), operations, loop and ledger alerts and the **GreenKube Operations** Grafana dashboard; high availability with PodDisruptionBudgets.
+- **Operations.** Accounts, sessions, SSO (proxy or OpenID Connect), scoped API keys and API-key sign-in for headless installs (auth modes `session`, `api_key`, `proxy`, `oidc`); PostgreSQL only in Helm installs, with optional scheduled backups; installation identity per cluster; a trimmed Prometheus exposition (GreenKube's own health and the ledger counters), operations, loop and ledger alerts and the **GreenKube Operations** Grafana dashboard; high availability with PodDisruptionBudgets.
 
 #### Removed
 
 - The install profiles, `values-production.yaml`, the migration Job and SQLite in the Helm chart (SQLite stays for `greenkube demo`).
 - Runtime data-source configuration from the UI (`POST /api/v1/config/services` answers `410 Gone`): data sources are configuration as code.
 - Batch-relative ranking, and the `apply-pr` routes (use the plans API).
-- The native advisory analyzers (zombie pods, idle namespaces, off-peak scaling, autoscaling candidates, carbon-aware scheduling, over- and under-provisioned nodes) and the Karpenter NodePool heuristic.
-- The Kubecost, GKE recommender, Azure Advisor and Polaris connectors, `POST /api/v1/sources/polaris/reports` (now `404`), the chart's KRR and Polaris CronJobs, and the consensus policies `safest`, `median`, `weighted` and `priority` with the source priority.
+- The native advisory analyzers (zombie pods, idle namespaces, off-peak scaling, autoscaling candidates, carbon-aware scheduling, node utilization with over- and under-provisioned nodes, `UNDERUTILIZED_NODE`) and the Karpenter NodePool connector.
+- The Kubecost, GKE recommender, Azure Advisor and Polaris connectors, `POST /api/v1/sources/polaris/reports` (now `404`), the chart's KRR and Polaris CronJobs, and every consensus policy other than "GreenKube's measured value decides", with the source priority.
 - The network, disk, ephemeral-storage and PVC usage dimensions.
 - The sustainability score, the per-pod, per-namespace and per-node footprint series on `/prometheus/metrics`, and the former large Grafana dashboard (replaced by GreenKube Operations under the same Grafana.com id, 25377).
 
-Removed settings are accepted and ignored for this release, with a warning; see [Upgrading](/operations/upgrading/) for every removed setting, route and series.
+Settings of removed features no longer exist: leftover values are silently ignored, so remove them. Renamed Helm values are mapped for this minor release and listed under DEPRECATED VALUES. See [Upgrading](/operations/upgrading/) for every removed setting, route and series.
+
+#### 📦 Downloads
+
+| Asset | Link |
+|-------|------|
+| Docker Image | `docker pull greenkube/greenkube:0.4.0` |
+| Helm Chart | `helm install greenkube greenkube/greenkube -n greenkube --create-namespace --version 0.4.0` |
+| Source Code | [GitHub Release v0.4.0](https://github.com/GreenKubeCloud/GreenKube/releases/tag/v0.4.0) |
 
 </div>
 
 ---
 
-## Current Release
+## Previous Releases
 
 <div class="release-card">
 
 ### 🚀 v0.3.1 — GitOps plan workflow, apply detection and verification
 
-<span class="release-tag">Latest</span> <span class="release-tag">Stable</span>
+<span class="release-tag">Previous</span>
 
 **Release Date:** October 25, 2026
 
@@ -75,8 +85,6 @@ Removed settings are accepted and ignored for this release, with a warning; see 
 </div>
 
 ---
-
-## Previous Releases
 
 <div class="release-card">
 
@@ -559,7 +567,7 @@ The first public release of GreenKube, establishing the core carbon tracking cap
 
 ## Upgrade Guide
 
-To upgrade from 0.3.x to 0.4, follow [Upgrading](/operations/upgrading/): back up the database first. The steps below are kept for older versions.
+To upgrade from 0.3.x to 0.4.0, follow [Upgrading](/operations/upgrading/): back up the database first. The steps below are kept for older versions.
 
 ### From v0.2.12 to v0.3.0
 
@@ -714,6 +722,6 @@ GreenKube follows [Semantic Versioning](https://semver.org/):
 
 | Channel | Description | Docker Tag |
 |---------|-------------|-----------|
-| **Stable** | Current tested release | `greenkube/greenkube:0.3.0` |
-| **Latest** | Most recent stable | `greenkube/greenkube:latest` |
+| **Stable** | Current tested release | `greenkube/greenkube:0.4.0` |
+| **Latest** | Tracks the newest release only (0.4.0 today) | `greenkube/greenkube:latest` |
 | **Dev** | Development builds (unstable) | `greenkube/greenkube:dev-latest` |

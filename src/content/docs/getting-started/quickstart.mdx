@@ -17,7 +17,7 @@ Three steps, from zero to a merged and measured change:
   <TabItem label="Docker (no cluster)">
 
 ```bash
-docker run --rm -p 9000:9000 greenkube/greenkube demo --no-browser --port 9000
+docker run --rm -p 9000:9000 greenkube/greenkube:0.4.0 demo --no-browser --port 9000
 # Open http://localhost:9000, Ctrl+C to stop
 ```
 
@@ -47,7 +47,7 @@ The quickstart values ([`docs/examples/quickstart/values.yaml`](https://github.c
 | `config.recommendations.minDecreaseCoverageDays` | `0.001` (about 90 seconds) | `7` |
 | `config.recommendations.scanInterval` | `1m` | `1h` |
 | `config.recommendations.verification.windowHours` | `0.1` (6 minutes) | `72` |
-| `automation.policy.minSamples` / `minCoverage` | `6` / `0` | `36` / `0.5` |
+| `automation.policy.minCoverage` | `0` | `0.5` |
 | `automation.discoveryInterval` / `prPollIntervalSeconds` / `syncPollIntervalSeconds` | `30s` / `10` / `10` | `5m` / `120` / `30` |
 
 ### Prerequisites
@@ -107,7 +107,7 @@ To run the whole loop unattended, use `make e2e`. It is **destructive by default
 
 ### Measuring against a counterfactual in the demo
 
-The quickstart decides merged changes with the short verifier, so change measurement is off and `/changes` stays empty. To record merged changes and measure them against a counterfactual on accelerated windows (a 6-hour baseline and a 72-minute post-window, decided about 80 minutes after the merge), add `-f docs/examples/quickstart/values-change-measurement.yaml`.
+The quickstart decides merged changes with the short verifier: change measurement is off, so no change is recorded or measured against a counterfactual (`GET /api/v2/changes` stays empty). To record merged changes and measure them against a counterfactual on accelerated windows (a 6-hour baseline and a 72-minute post-window, decided about 80 minutes after the merge), add `-f docs/examples/quickstart/values-change-measurement.yaml`.
 
 <Aside type="caution" title="Accelerated measurements are not representative">
   Accelerated measurements use 5-minute slots, the baseline mean as counterfactual and demo thresholds, so they reach a decided outcome. Each one records `representative: false`: it demonstrates the pipeline end to end, not a saving. Its measured saving never accrues in the savings ledger. See [Savings measurement](/methodology/savings-measurement/#accelerated-demo-mode).
@@ -115,11 +115,11 @@ The quickstart decides merged changes with the short verifier, so change measure
 
 ## Install for real
 
-On a real cluster, use the chart defaults: one install, one sign-in, optionally one Secret for Git.
+On a real cluster, use the chart defaults: one install, one sign-in, optionally one Secret for Git. The current release is **0.4.0**.
 
 ```bash
 helm repo add greenkube https://GreenKubeCloud.github.io/GreenKube && helm repo update
-helm install greenkube greenkube/greenkube -n greenkube --create-namespace
+helm install greenkube greenkube/greenkube -n greenkube --create-namespace --version 0.4.0
 ```
 
 Recommendations then need real evidence: request increases and the other sources appear after about 3 hours (36 samples at the default 5-minute step), request decreases only after 7 days of history so that a weekly cycle is seen.
