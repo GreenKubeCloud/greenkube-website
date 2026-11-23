@@ -19,7 +19,7 @@ The GreenKube UI is a single-page application served by the API at `/`. Every pa
 | **Setup** (`/setup`) | The setup checklist: the four capabilities (discovery, delivery, sync tracking, measurement), each check with its fix, and the repositories found by discovery |
 | **Footprint** (`/footprint`) | Cost, energy and CO₂e per workload, namespace and node, with the allocated totals, the node idle share and the cluster total side by side, and Nodes and Report sections (CSV and JSON exports) |
 | **Automation** (`/automation`) | GitOps discovery, workload binding coverage and manual resolution |
-| **Settings** (`/settings`) | Account, sessions, API keys and users |
+| **Settings** (`/settings`) | Read-only: service health of the data sources, the Helm values that configure them (configuration as code), the current configuration and API information. **Account** (`/settings/account`: password, sessions, and users and roles for admins) and **API keys** (`/settings/api-keys`) are reached from Settings and from the user menu |
 
 ### Recommendations
 

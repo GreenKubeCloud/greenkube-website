@@ -3,7 +3,7 @@ title: Limitations
 description: What GreenKube's numbers do not capture yet - stated plainly, so that you know how far to trust each figure.
 ---
 
-GreenKube fails closed and explains why. This page collects the limits documented across the methodology so that you can judge each number before you rely on it. The project is in active development; an internal data-quality audit is under way and its fixes are tracked in the [changelog](https://github.com/GreenKubeCloud/GreenKube/blob/main/CHANGELOG.md).
+GreenKube fails closed and explains why. This page collects the limits documented across the methodology so that you can judge each number before you rely on it. It describes release 0.4.0; known issues and their fixes are tracked in the [changelog](https://github.com/GreenKubeCloud/GreenKube/blob/main/CHANGELOG.md).
 
 ## Savings measurement
 

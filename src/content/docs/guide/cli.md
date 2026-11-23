@@ -1,9 +1,9 @@
 ---
 title: CLI Reference
-description: The greenkube command line - start the controller, run the demo, recompute stored rows after a model change, copy a SQLite database into PostgreSQL, and maintain the savings ledger chain key.
+description: The greenkube command line - start the controller, run the demo, recompute stored rows after a model change, copy a SQLite database into PostgreSQL, maintain the savings ledger chain key, deliver plans in patch and CI modes, and reset a password.
 ---
 
-The `greenkube` CLI has two runtime modes: `start` runs the controller and `demo` launches a self-contained sample environment. `recompute`, `db copy`, `db ledger-rotate-key` and `db ledger-accept-head` are maintenance commands. Recommendations, plans and reports are served by the REST API and the dashboard, not by the CLI.
+The `greenkube` CLI has two runtime modes: `start` runs the controller and `demo` launches a self-contained sample environment. `recompute`, `db copy`, `db ledger-rotate-key`, `db ledger-accept-head` and `auth reset-password` are maintenance commands; `plan apply-patch` and `plan report-delivery` serve the `patch` and `ci` delivery modes. Recommendations, plans and reports are served by the REST API and the dashboard, not by the CLI.
 
 In a Kubernetes deployment the controller already runs `greenkube start`; run maintenance commands inside it:
 
@@ -31,7 +31,7 @@ Starts GreenKube with pre-populated sample data, no cluster required: a temporar
 | `--no-browser` | Do not open the browser |
 
 ```bash
-docker run --rm -p 9000:9000 greenkube/greenkube demo --no-browser --port 9000
+docker run --rm -p 9000:9000 greenkube/greenkube:0.4.0 demo --no-browser --port 9000
 ```
 
 ## `greenkube recompute`
@@ -82,6 +82,25 @@ greenkube db ledger-accept-head --cluster-uid <uid> --reason "restored from back
 
 Run it with the controller's `LEDGER_CHAIN_KEY` (and `LEDGER_CHAIN_PREVIOUS_KEYS`). `--trust-entry-keys` rebuilds the key boundaries from the entries' own keys when the signed status row was lost; `--rebuild-boundaries` moves recorded boundaries later to match entries written with an old key (never weaker, printed before and after).
 
+## `greenkube plan apply-patch` and `greenkube plan report-delivery`
+
+For the `patch` and `ci` [delivery modes](/concepts/gitops-delivery/#delivery-modes), where GreenKube holds no write credentials. Both read `GREENKUBE_API_URL` (or `--api-url`) and the API key from `GREENKUBE_API_KEY`, never from the command line.
+
+```bash
+greenkube plan apply-patch pln-0123 --repo ./gitops --push
+greenkube plan report-delivery pln-0123 --pr-url https://github.com/acme/gitops/pull/42
+```
+
+`apply-patch` downloads the approved plan as a patch and applies it as one commit on the plan's deterministic branch (`--repo`, `--remote`, `--fetch/--no-fetch`, `--push`). `report-delivery` links the pull request you opened back to the plan (`--pr-url`, optional `--head-sha`).
+
+## `greenkube auth reset-password`
+
+Gives a local account (default `admin`) a new random password, to be changed at its next sign-in, and signs out its sessions. Run it in the controller pod:
+
+```bash
+greenkube auth reset-password admin
+```
+
 ## `greenkube version`
 
-Prints the GreenKube version. `--help` shows help for any command.
+Prints the GreenKube version (also `greenkube --version`). `--help` shows help for any command.

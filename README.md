@@ -42,9 +42,14 @@ All commands are run from this directory (`greenkube-website/`):
 Documentation pages live in `src/content/docs/`. Each `.md` or `.mdx` file maps directly to a URL route.
 
 - **Getting Started** → `src/content/docs/getting-started/`
-- **Features** → `src/content/docs/features/`
+- **Concepts** → `src/content/docs/concepts/`
+- **Sources** → `src/content/docs/sources/`
+- **Methodology** → `src/content/docs/methodology/`
+- **Operations** → `src/content/docs/operations/`
+- **Reference (Web UI, Footprint, API, CLI, Prometheus & Grafana)** → `src/content/docs/guide/`
 - **Architecture** → `src/content/docs/architecture/`
-- **Guide (CLI / Dashboard)** → `src/content/docs/guide/`
+
+Removed pages keep a redirect in `astro.config.mjs` (`redirects`).
 
 Brand colours and layout overrides are in `src/styles/custom.css`.
 

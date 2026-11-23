@@ -85,8 +85,8 @@ npm run build  # Build for production
 
 ### Error Handling
 
-- **Never crash the pipeline** — Log errors with context and continue
-- **Use default values** on failure — Flag as `is_estimated: true`
+- **Fail closed and explain why.** A value that cannot be read is missing, never zero or a silent default; a gate whose input cannot be read is `not_available`, never a pass. Estimated inputs are flagged (`is_estimated` with its reasons).
+- **One failure stays local.** A failing source, loop tick or collection window is reported with context and retried; it never stops the others.
 - **Standard logging:** Use `logging.getLogger(__name__)`
 
 ### Code Quality
@@ -136,12 +136,12 @@ perf: optimize batch database inserts
 ## Pull Request Process
 
 1. **Fork** the repository
-2. **Create a branch** from `main`: `git checkout -b feat/my-feature`
+2. **Create a branch** from `dev` (the integration branch): `git checkout dev && git checkout -b feat/my-feature`
 3. **Write tests** for your changes (TDD approach)
 4. **Run the test suite** and ensure all tests pass
 5. **Format and lint** your code with Ruff
 6. **Commit** with a conventional commit message
-7. **Push** to your fork and open a Pull Request
+7. **Push** to your fork and open a Pull Request targeting `dev`
 8. **Describe** your changes and link relevant issues
 
 ### PR Checklist
