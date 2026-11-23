@@ -18,12 +18,12 @@ GreenKube's own measurements decide every recommendation. Other tools corroborat
 
 Any other tool sends its advice through the push API. Third-party advice never reaches a pull request without going through consensus and risk review: a plugin or connector cannot create a recommendation on its own (fail closed). GreenKube's Impact Model computes every savings figure shown; a source's own estimate is kept for comparison only.
 
-Karpenter, the Cluster Autoscaler and HPAs are read for the [realization factor](/sources/nodepool/) and the rightsizing evidence, not as sources.
+Karpenter, the Cluster Autoscaler and HPAs are read for the [realization factor](/methodology/impact-model/#realization-factor) and the rightsizing evidence, not as sources.
 
 <details>
-<summary>Removed in this release</summary>
+<summary>Removed in 0.4.0</summary>
 
-The Kubecost, GKE recommender, Azure Advisor and Polaris connectors, the chart's KRR and Polaris CronJobs, the Karpenter NodePool heuristic, the native advisory analyzers and the consensus policies (`safest`, `median`, `weighted`, `priority`) are gone. Their settings are accepted and ignored with a warning, and `POST /api/v1/sources/polaris/reports` answers `404`. Push the advice of those tools to `POST /api/v1/signals` instead. See [Upgrading](/operations/upgrading/#removed-connectors-and-consensus-policies).
+The Kubecost, GKE recommender, Azure Advisor, Polaris and Karpenter NodePool connectors, the chart's KRR and Polaris CronJobs, the native advisory analyzers and every consensus policy other than "GreenKube's measured value decides" are gone. Their settings no longer exist: leftover values are ignored, so remove them (a leftover `sources.settings` entry is reported as `unknown_source` by `GET /api/v1/sources`). `POST /api/v1/sources/polaris/reports` answers `404`. Push the advice of those tools to `POST /api/v1/signals` instead. See [Upgrading](/operations/upgrading/#removed-connectors-and-consensus-policies).
 
 </details>
 

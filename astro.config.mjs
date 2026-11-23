@@ -10,6 +10,7 @@ export default defineConfig({
 	redirects: {
 		'/architecture/energy-estimation/': '/methodology/energy-and-carbon/',
 		'/features/carbon-tracking/': '/guide/footprint/',
+		'/sources/nodepool/': '/methodology/impact-model/',
 	},
 	integrations: [
 		starlight({
@@ -68,6 +69,7 @@ export default defineConfig({
 						downloadUrl: 'https://hub.docker.com/r/greenkube/greenkube',
 						releaseNotes: 'https://docs.greenkube.cloud/releases/',
 						datePublished: '2026-08-30',
+						softwareVersion: '0.4.0',
 						license: 'https://opensource.org/licenses/Apache-2.0',
 								keywords: 'kubernetes, gitops, argo cd, flux, rightsizing, finops, greenops, co2e, savings measurement, helm',
 						featureList: [
@@ -135,7 +137,6 @@ export default defineConfig({
 						{ label: 'VPA & Goldilocks', slug: 'sources/vpa-goldilocks' },
 						{ label: 'Robusta KRR', slug: 'sources/krr' },
 						{ label: 'Push API', slug: 'sources/push' },
-						{ label: 'Karpenter & Cluster Autoscaler', slug: 'sources/nodepool' },
 					],
 				},
 				{
