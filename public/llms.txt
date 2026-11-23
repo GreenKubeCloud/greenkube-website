@@ -1,7 +1,7 @@
 # GreenKube
 
 > GreenKube is an open-source optimization loop for Kubernetes clusters run with GitOps.
-> Every recommendation. One pull request. Proven savings.
+> Rightsizing you can review. Savings you can measure.
 
 ## What is GreenKube?
 

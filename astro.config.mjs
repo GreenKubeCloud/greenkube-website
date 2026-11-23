@@ -15,7 +15,7 @@ export default defineConfig({
 	integrations: [
 		starlight({
 			title: 'GreenKube',
-			description: 'GreenKube is an open-source optimization loop for Kubernetes run with GitOps: turn measured usage into rightsizing recommendations, open one pull request, verify the sync and measure realized savings in money, CO₂e and released capacity.',
+			description: 'GreenKube is an open-source optimization loop for Kubernetes run with GitOps: turn measured usage into rightsizing recommendations, open one pull request per change, verify the sync and measure realized savings in money, CO₂e and released capacity.',
 			favicon: '/favicon.ico',
 			components: {
 				Header: './src/components/Header.astro',
