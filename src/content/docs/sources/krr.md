@@ -188,20 +188,6 @@ monitoring:
           - {protocol: TCP, port: 8000}
 ```
 
-Every pod runs as non-root with a read-only root filesystem, so the job passes the `restricted` Pod Security profile. When the chart's `monitoring.networkPolicy.enabled` is set, admit the job's pods to the API:
-
-```yaml
-monitoring:
-  networkPolicy:
-    additionalIngress:
-      - from:
-          - podSelector:
-              matchLabels:
-                app.kubernetes.io/name: greenkube-krr
-        ports:
-          - {protocol: TCP, port: 8000}
-```
-
 ## Example: push from CI
 
 ```bash
@@ -215,7 +201,7 @@ curl -sS --fail-with-body -X POST "$GREENKUBE_URL/api/v1/sources/krr/reports" \
 <details>
 <summary>Upgrading from the chart's KRR CronJob</summary>
 
-The chart no longer runs KRR: `sources.krr.job.*` is ignored with a line under DEPRECATED VALUES, and the upgrade deletes the chart's KRR CronJob, ServiceAccount and ClusterRole. Apply the manifest above (or push from CI) instead; your existing `signals:report` key keeps working.
+The chart no longer runs KRR (removed in 0.4.0): `sources.krr.job.*` no longer exists and is silently ignored, so remove it from your values. The upgrade deletes the chart's KRR CronJob, ServiceAccount and ClusterRole. Apply the manifest above (or push from CI) instead; your existing `signals:report` key keeps working.
 
 </details>
 

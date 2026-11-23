@@ -29,9 +29,9 @@ GreenKube recommends what it can deliver as a pull request and measure afterward
 Each native analyzer can be disabled in `sources.settings` (for example `greenkube.orphaned_lb: { enabled: false }`); its active advice then goes stale. Opt a Service or PersistentVolume out of deletion advice with the annotation `greenkube.io/ignore: "true"`.
 
 <details>
-<summary>Removed in this release: advisory analyzers</summary>
+<summary>Removed in 0.4.0: advisory analyzers</summary>
 
-The native advisory analyzers (zombie pods, idle namespaces, off-peak scaling, autoscaling candidates, carbon-aware scheduling, over- and under-provisioned nodes) and the Karpenter NodePool heuristic were removed: their advice could not become a pull request or be measured. On upgrade their open recommendations become `stale` with reason `type_removed`; applied and measured ones keep their status and the ledger is not touched. See [Upgrading](/operations/upgrading/#removed-advisory-analyzers).
+The native advisory analyzers (zombie pods, idle namespaces, off-peak scaling, autoscaling candidates, carbon-aware scheduling, node utilization with over- and under-provisioned nodes, including `UNDERUTILIZED_NODE`) and the Karpenter NodePool connector were removed: their advice could not become a pull request or be measured. On upgrade their open recommendations become `stale` with reason `type_removed`; applied and measured ones keep their status and the ledger is not touched. See [Upgrading](/operations/upgrading/#removed-advisory-analyzers).
 
 </details>
 
@@ -43,7 +43,7 @@ VPA, Goldilocks, KRR and GreenKube's own analyzer may each size the CPU request 
 - **Other sources move the confidence.** VPA, Goldilocks, KRR and pushed signals never change the value. Agreement of 0.8 or more between two or more independent sources raises the confidence by 10%; disagreement (agreement below 0.5, or opposite directions) labels the recommendation `contested` and lowers it by 20%. A contested recommendation is never approved automatically.
 - **A source alone never creates a recommendation.** A container request or limit becomes a recommendation only when GreenKube's own analyzer proposed a change for that container. Advice from VPA, Goldilocks, KRR or a push with no native measurement stays a signal on the **Sources** page.
 
-There is nothing to configure: the former policies (`safest`, `median`, `weighted`, `priority`) and the source priority are accepted and ignored, with a warning ([Upgrading](/operations/upgrading/#removed-connectors-and-consensus-policies)).
+There is nothing to configure: the other consensus policies and the source priority were removed in 0.4.0, and their settings no longer exist ([Upgrading](/operations/upgrading/#removed-connectors-and-consensus-policies)).
 
 Rules that keep the vote honest:
 

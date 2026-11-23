@@ -53,7 +53,7 @@ Configured rates price projections but are never trusted for measurement: instal
 |---|---|---|
 | `config.prometheus.url`, `config.opencost.url` | `""` | Empty attempts in-cluster discovery. |
 | `config.prometheus.queryRangeStep` | `5m` | One sample per step. |
-| `config.prometheus.scrapeInterval` | — | Set it to your real scrape interval: below 2 scrapes in the rate window every window is a hole. |
+| `config.prometheus.scrapeInterval` | `30s` | Set it to your real scrape interval: below 2 scrapes in the rate window every window is a hole. |
 | `config.collection.maxBackfill` | `24h` | How far back a fresh install, or a controller back from an outage, catches up. |
 | `config.collection.allowClusterUidChange` | `false` | Allow one start on a database recorded for another cluster ([restore into a new cluster](/operations/backup-restore/#restoring-into-a-new-or-rebuilt-cluster)). Set it back to `false` afterwards. |
 | `config.metricsRawRetentionDays` | `7` | Raw samples, then compressed into hourly rows. |
@@ -190,5 +190,5 @@ postgres:
 See [Backup and restore](/operations/backup-restore/).
 
 <Aside type="note" title="Removed and deprecated settings">
-  There is no profile and no `automation.enabled` flag any more, and the chart no longer offers SQLite. 0.3.x keys that still exist are accepted for one minor release and mapped to their replacements. The consensus policy and source priority, the settings of the removed connectors (Kubecost, GKE recommender, Azure Advisor, Polaris), the chart's KRR and Polaris CronJobs and the thresholds of the removed advisory analyzers are accepted and ignored, with a warning; see [Upgrading](/operations/upgrading/).
+  There is no profile and no `automation.enabled` flag any more, and the chart no longer offers SQLite: Helm installs use PostgreSQL only. Renamed 0.3.x keys are mapped to their replacements for this minor release and listed under **DEPRECATED VALUES** in the install notes. Settings of features removed in 0.4.0 no longer exist and are silently ignored: the consensus policy and source priority, the Karpenter NodePool, Kubecost, GKE recommender, Azure Advisor and Polaris connectors, the chart's KRR and Polaris CronJobs, and the thresholds of the removed advisory analyzers. Remove them from your values; see [Upgrading](/operations/upgrading/).
 </Aside>
